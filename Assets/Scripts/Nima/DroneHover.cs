@@ -3,35 +3,65 @@ using UnityEngine;
 [RequireComponent(typeof(DroneTargetMover))]
 public sealed class DroneHover : MonoBehaviour
 {
+    [Header("Hover")]
     [SerializeField] private float hoverAmount = 0.2f;
     [SerializeField] private float hoverFrequency = 1.5f;
 
+    [Header("Tilt")]
     [SerializeField] private float tiltAmount = 3f;
     [SerializeField] private float tiltSpeed = 2f;
 
+    [Header("Randomization")]
+    [SerializeField] private float randomStartDelay = 1f;
+
     private DroneTargetMover targetMover;
-    private Quaternion initialRotation;
+
+    private Vector3 initialLocalPosition;
+    private Quaternion initialLocalRotation;
+
+    private float randomPhase;
+    private float startTime;
 
     private void Awake()
     {
         targetMover = GetComponent<DroneTargetMover>();
-        initialRotation = transform.rotation;
+
+        initialLocalPosition = transform.localPosition;
+        initialLocalRotation = transform.localRotation;
+
+        // هر Drone از یک نقطه متفاوت از حرکت شروع می‌کند
+        randomPhase = Random.Range(0f, Mathf.PI * 2f);
+
+        // کمی تأخیر تصادفی در شروع
+        startTime = Time.time + Random.Range(0f, randomStartDelay);
     }
 
-    private void LateUpdate()               // LateUpdate مهمه: بعد از Update اجرا میشه
+    private void LateUpdate()
     {
-        float time = Time.time;
+        // اگر هنوز زمان شروعش نرسیده، ثابت بماند
+        if (Time.time < startTime)
+            return;
 
-        float verticalOffset = Mathf.Sin(time * hoverFrequency) * hoverAmount;
+        float time = Time.time - startTime;
 
-        // موقعیت پایه رو از BasePosition منطقیِ DroneTargetMover می‌گیریم،
-        // نه از transform.position فعلی (که خودش شامل offset فریم قبل بود)
-        transform.position = targetMover.BasePosition + Vector3.up * verticalOffset;
+        // Hover
+        float verticalOffset =
+            Mathf.Sin(time * hoverFrequency + randomPhase) * hoverAmount;
 
-        // تیلت
-        float tiltX = Mathf.Sin(time * tiltSpeed) * tiltAmount;
-        float tiltZ = Mathf.Cos(time * tiltSpeed * 0.8f) * tiltAmount;
+        transform.localPosition =
+            initialLocalPosition + Vector3.up * verticalOffset;
 
-        transform.rotation = initialRotation * Quaternion.Euler(tiltX, 0f, tiltZ);
+        // Tilt
+        float tiltTime = time + randomPhase;
+
+        float tiltX =
+            Mathf.Sin(tiltTime * tiltSpeed) * tiltAmount;
+
+        float tiltZ =
+            Mathf.Cos(tiltTime * tiltSpeed * 0.8f) * tiltAmount;
+
+        transform.localRotation =
+            initialLocalRotation *
+            Quaternion.Euler(tiltX, 0f, tiltZ);
     }
 }

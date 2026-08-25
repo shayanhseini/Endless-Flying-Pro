@@ -189,7 +189,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4136319653917368502, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4136319653917368502, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: tiltSpeed
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4136319653917368502, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: tiltAmount
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 4136319653917368502, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: hoverFrequency
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4632739762024455780, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name

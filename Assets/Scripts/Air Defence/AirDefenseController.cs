@@ -9,6 +9,7 @@ public class AirDefenseController : MonoBehaviour
     [SerializeField] private Radar radar;
     [SerializeField] private Transform missileSpawnPoint;
     [SerializeField] private Missile missile;
+    [SerializeField] private AudioSource launchSound;
 
 
     [Header("Rotation")]
@@ -119,11 +120,14 @@ public class AirDefenseController : MonoBehaviour
             player == null)
             return;
 
+        GameEvents.RaiseLaunchMissile();
 
         hasFired = true;
         
         missile.gameObject.SetActive(true);
         
         missile.SetTarget(player);
+        
+        launchSound.Play();
     }
 }

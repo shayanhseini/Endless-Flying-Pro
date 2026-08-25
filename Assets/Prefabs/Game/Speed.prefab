@@ -219,6 +219,22 @@ PrefabInstance:
       propertyPath: MinDistance
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 7019259728843014238, guid: c1e706f6a12220444b23e1cbc2b2ee41, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019259728843014238, guid: c1e706f6a12220444b23e1cbc2b2ee41, type: 3}
+      propertyPath: tiltSpeed
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019259728843014238, guid: c1e706f6a12220444b23e1cbc2b2ee41, type: 3}
+      propertyPath: tiltAmount
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019259728843014238, guid: c1e706f6a12220444b23e1cbc2b2ee41, type: 3}
+      propertyPath: hoverFrequency
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7969134148398810396, guid: c1e706f6a12220444b23e1cbc2b2ee41, type: 3}
       propertyPath: m_Name
       value: Drone

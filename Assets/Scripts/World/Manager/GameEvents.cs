@@ -15,6 +15,8 @@ public static class GameEvents
     public static event Action SpeedBoostActivated;
     public static event Action SpeedBoostDeactivated;
 
+    public static event Action LaunchMissile;
+
 
     public static void RaiseGameStarted()
     {
@@ -60,4 +62,10 @@ public static class GameEvents
     {
         SpeedBoostDeactivated?.Invoke();
     }
+
+    public static void RaiseLaunchMissile()
+    {
+        LaunchMissile?.Invoke();
+    }
+    
 }

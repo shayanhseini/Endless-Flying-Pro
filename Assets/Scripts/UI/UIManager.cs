@@ -51,8 +51,12 @@ public class UIManager : MonoBehaviour
 
     [SerializeField, Range(0f, 1f)]
     private float shieldActiveAlpha = 1f;
-
-
+    
+    [Header("Warning")]
+    [SerializeField] private Image targetImage;
+    [SerializeField] private float duration = 2f;
+    [SerializeField] private float flashSpeed = 0.15f;
+    
     [Header("References")]
     [SerializeField] private GameManager gameManager;
     [SerializeField] private WorldMovementManager worldMovement;
@@ -92,6 +96,8 @@ public class UIManager : MonoBehaviour
 
         GameEvents.ShieldActivated += HandleShieldActivated;
         GameEvents.ShieldDeactivated += HandleShieldDeactivated;
+
+        GameEvents.LaunchMissile += StartWarning;
     }
 
 
@@ -103,6 +109,8 @@ public class UIManager : MonoBehaviour
 
         GameEvents.ShieldActivated -= HandleShieldActivated;
         GameEvents.ShieldDeactivated -= HandleShieldDeactivated;
+        
+        GameEvents.LaunchMissile -= StartWarning;
     }
 
 
@@ -459,5 +467,35 @@ public class UIManager : MonoBehaviour
     {
         if (panel != null)
             panel.SetActive(true);
+    }
+    
+    // ==================================================
+    // Warning
+    // ==================================================
+    
+    public void StartWarning()
+    {
+        StopAllCoroutines();
+        StartCoroutine(WarningRoutine());
+    }
+
+    private IEnumerator WarningRoutine()
+    {
+        targetImage.color = Color.white;
+
+        float elapsed = 0f;
+        bool isRed = false;
+
+        while (elapsed < duration)
+        {
+            isRed = !isRed;
+            targetImage.color = isRed ? Color.red : Color.white;
+
+            yield return new WaitForSeconds(flashSpeed);
+
+            elapsed += flashSpeed;
+        }
+        
+        targetImage.color = Color.white;
     }
 }

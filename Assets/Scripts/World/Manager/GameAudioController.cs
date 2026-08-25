@@ -19,6 +19,13 @@ public class GameAudioController : MonoBehaviour
     [Header("UI")]
     [SerializeField] private AudioSource uiSource;
     [SerializeField] private AudioClip uiButtonClip;
+    
+    [Header("Explosion")]
+    [SerializeField] private AudioSource expSound;
+    [SerializeField] private AudioClip[] explosionClips;
+    
+    [Header("Launch Missile")]
+    [SerializeField] private AudioSource dangerSource;
 
 
     private void OnEnable()
@@ -28,6 +35,7 @@ public class GameAudioController : MonoBehaviour
         GameEvents.ShieldDeactivated += PlayShieldDeActiveSound;
         GameEvents.SpeedBoostActivated += PlaySpeedBoostActivateSound;
         GameEvents.SpeedBoostDeactivated += PlaySpeedBoostDeActiveSound;
+        GameEvents.LaunchMissile += PlayDangerSound;
     }
 
     private void OnDisable()
@@ -37,6 +45,7 @@ public class GameAudioController : MonoBehaviour
         GameEvents.ShieldDeactivated -= PlayShieldDeActiveSound;
         GameEvents.SpeedBoostActivated -= PlaySpeedBoostActivateSound;
         GameEvents.SpeedBoostDeactivated -= PlaySpeedBoostDeActiveSound;
+        GameEvents.LaunchMissile -= PlayDangerSound;
     }
 
     private void PlayShieldSound()
@@ -67,5 +76,22 @@ public class GameAudioController : MonoBehaviour
     public void PlayButtonSound()
     {
         uiSource.PlayOneShot(uiButtonClip);
+    }
+    
+    public void PlayExplosionSound(Transform target)
+    {
+        if (expSound == null)
+            return;
+        
+        expSound.transform.position =
+            target.position;
+
+        int index = Random.Range(0, explosionClips.Length);
+        expSound.PlayOneShot(explosionClips[index]);
+    }
+
+    public void PlayDangerSound()
+    {
+        dangerSource.Play();
     }
 }

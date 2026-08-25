@@ -26,7 +26,10 @@ public class SpeedPowerUpController : MonoBehaviour
 
     private float initialParticleRate;
 
+    private float remainingTime;
+
     private Coroutine powerUpCoroutine;
+    private Coroutine speedTransitionCoroutine;
 
 
     public bool IsActive { get; private set; }
@@ -36,7 +39,8 @@ public class SpeedPowerUpController : MonoBehaviour
     {
         if (speedParticle != null)
         {
-            var emission = speedParticle.emission;
+            var emission =
+                speedParticle.emission;
 
             initialParticleRate =
                 emission.rateOverTime.constant;
@@ -46,57 +50,99 @@ public class SpeedPowerUpController : MonoBehaviour
 
     public void Activate()
     {
-        if (powerUpCoroutine != null)
-            StopCoroutine(powerUpCoroutine);
+        // اگر PowerUp از قبل فعال است،
+        // فقط زمان آن را Refresh کن.
+        if (IsActive)
+        {
+            remainingTime = duration;
+
+            return;
+        }
 
 
-        powerUpCoroutine =
-            StartCoroutine(
-                PowerUpRoutine()
-            );
-        GameEvents.RaiseSpeedBoostActivated();
-    }
-
-
-    private IEnumerator PowerUpRoutine()
-    {
         IsActive = true;
 
+        remainingTime = duration;
 
-        // Particle ×2
+
+        // Particle
         SetParticleRate(
             particleMultiplier
         );
 
 
-        // افزایش FOV
+        // FOV
         if (planeCameraController != null)
         {
             planeCameraController.SetSpeedFOV(true);
         }
 
 
-        // افزایش سرعت
-        yield return StartCoroutine(
-            ChangeSpeedMultiplier(
-                worldMovement.SpeedMultiplier,
-                speedMultiplier
-            )
-        );
+        // Event فقط یک بار
+        GameEvents.RaiseSpeedBoostActivated();
 
 
-        // مدت Power-up
-        yield return new WaitForSeconds(
-            duration
-        );
+        // اگر Transition قبلی وجود دارد متوقفش کن
+        if (speedTransitionCoroutine != null)
+        {
+            StopCoroutine(
+                speedTransitionCoroutine
+            );
+        }
 
+
+        speedTransitionCoroutine =
+            StartCoroutine(
+                ChangeSpeedMultiplier(
+                    worldMovement.SpeedMultiplier,
+                    speedMultiplier
+                )
+            );
+
+
+        // مدیریت زمان
+        if (powerUpCoroutine != null)
+        {
+            StopCoroutine(
+                powerUpCoroutine
+            );
+        }
+
+
+        powerUpCoroutine =
+            StartCoroutine(
+                PowerUpRoutine()
+            );
+    }
+
+
+    private IEnumerator PowerUpRoutine()
+    {
+        while (remainingTime > 0f)
+        {
+            remainingTime -=
+                Time.deltaTime;
+
+            yield return null;
+        }
+
+
+        // PowerUp تمام شده
+        IsActive = false;
+
+
+        powerUpCoroutine = null;
+
+
+        // Event فقط یک بار
         GameEvents.RaiseSpeedBoostDeactivated();
 
-        // برگشت Particle
+
+        // Particle
         SetParticleRate(1f);
 
 
-        // برگشت FOV
+        // FOV
         if (planeCameraController != null)
         {
             planeCameraController.SetSpeedFOV(false);
@@ -104,25 +150,30 @@ public class SpeedPowerUpController : MonoBehaviour
 
 
         // برگشت سرعت
-        yield return StartCoroutine(
-            ChangeSpeedMultiplier(
-                worldMovement.SpeedMultiplier,
-                1f
-            )
-        );
+        if (speedTransitionCoroutine != null)
+        {
+            StopCoroutine(
+                speedTransitionCoroutine
+            );
+        }
 
 
-        IsActive = false;
+        speedTransitionCoroutine =
+            StartCoroutine(
+                ChangeSpeedMultiplier(
+                    worldMovement.SpeedMultiplier,
+                    1f
+                )
+            );
 
-        powerUpCoroutine = null;
 
-
-        // پاداش پایان Power-up
-        gameManager.AddScore(
-            bonusScore
-        );
-        
-        
+        // پاداش پایان PowerUp
+        if (gameManager != null)
+        {
+            gameManager.AddScore(
+                bonusScore
+            );
+        }
     }
 
 
@@ -133,9 +184,12 @@ public class SpeedPowerUpController : MonoBehaviour
         float elapsed = 0f;
 
 
-        while (elapsed < speedTransitionDuration)
+        while (
+            elapsed <
+            speedTransitionDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed +=
+                Time.deltaTime;
 
 
             float t =
@@ -169,7 +223,12 @@ public class SpeedPowerUpController : MonoBehaviour
         }
 
 
-        worldMovement.SetSpeedMultiplier(to);
+        worldMovement.SetSpeedMultiplier(
+            to
+        );
+
+
+        speedTransitionCoroutine = null;
     }
 
 
