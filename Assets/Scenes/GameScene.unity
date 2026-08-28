@@ -6441,8 +6441,8 @@ MonoBehaviour:
   maxScore: 200
   startCoinCount: 10
   maxCoinCount: 25
-  startObstacleCount: 0
-  maxObstacleCount: 0
+  startObstacleCount: 5
+  maxObstacleCount: 27
   startWithShield: 1
   shieldDisableScore: 100
   startWithSpeedPowerUp: 1
@@ -7824,7 +7824,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &4630575218323219144
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7967,7 +7967,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 256dd2aee00f33c48a5141261df78bb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlaneInteraction
-  shield: {fileID: 0}
+  shield: {fileID: 9071348200630908510}
   gameManager: {fileID: 4439528306922798773}
   gameAudioController: {fileID: 2116496927}
   hitEffect: {fileID: 2067943244}
@@ -15437,7 +15437,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!54 &8911170589392543322
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -15656,6 +15656,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShieldController
   shieldDuration: 5
+  visualLeadTime: 0.25
   shieldVisual: {fileID: 919132148891567498}
   shieldScale: 1.5
   scaleDuration: 0.25
