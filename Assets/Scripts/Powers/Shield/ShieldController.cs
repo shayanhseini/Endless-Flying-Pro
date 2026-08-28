@@ -5,6 +5,7 @@ public class ShieldController : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private float shieldDuration = 5f;
+    [SerializeField] private float visualLeadTime = 0.25f;
 
 
     [Header("Visual")]
@@ -12,11 +13,13 @@ public class ShieldController : MonoBehaviour
 
     [SerializeField] private float shieldScale = 1.4f;
     [SerializeField] private float scaleDuration = 0.25f;
-    
-    
+
+
     private float remainingTime;
 
     private Coroutine scaleCoroutine;
+
+    private bool visualDeactivated;
 
 
     public bool IsActive =>
@@ -49,6 +52,16 @@ public class ShieldController : MonoBehaviour
         remainingTime -= Time.deltaTime;
 
 
+        // Visual کمی زودتر از خود Shield خاموش شود
+        if (!visualDeactivated &&
+            remainingTime <= visualLeadTime)
+        {
+            visualDeactivated = true;
+
+            DeactivateShieldVisual();
+        }
+
+
         if (remainingTime <= 0f)
         {
             remainingTime = 0f;
@@ -60,10 +73,16 @@ public class ShieldController : MonoBehaviour
 
     public void Activate()
     {
-        remainingTime = shieldDuration;
-        
+        remainingTime =
+            shieldDuration;
+
+
+        visualDeactivated = false;
+
+
         ActivateShieldVisual();
-        
+
+
         GameEvents.RaiseShieldActivated();
     }
 
@@ -84,7 +103,8 @@ public class ShieldController : MonoBehaviour
     private void DeactivateShield()
     {
         DeactivateShieldVisual();
-        
+
+
         GameEvents.RaiseShieldDeactivated();
     }
 
@@ -93,6 +113,9 @@ public class ShieldController : MonoBehaviour
     {
         if (shieldVisual == null)
             return;
+
+
+        shieldVisual.SetActive(true);
 
 
         StartScaleAnimation(
@@ -134,10 +157,11 @@ public class ShieldController : MonoBehaviour
         Vector3 from,
         Vector3 to)
     {
+        shieldVisual.transform.localScale =
+            from;
+
+
         float elapsed = 0f;
-
-
-        shieldVisual.transform.localScale = from;
 
 
         while (elapsed < scaleDuration)
@@ -146,10 +170,12 @@ public class ShieldController : MonoBehaviour
 
 
             float t =
-                elapsed / scaleDuration;
+                Mathf.Clamp01(
+                    elapsed /
+                    scaleDuration
+                );
 
 
-            // Smooth cinematic interpolation
             t = Mathf.SmoothStep(
                 0f,
                 1f,
@@ -169,7 +195,8 @@ public class ShieldController : MonoBehaviour
         }
 
 
-        shieldVisual.transform.localScale = to;
+        shieldVisual.transform.localScale =
+            to;
 
 
         scaleCoroutine = null;
