@@ -143,14 +143,13 @@ public class UIManager : MonoBehaviour
         HidePanel(startPanel);
 
         FadeOut(gameCanvasGroup);
-
+        
         ShowPanel(gameOverPanel);
         FadeIn(gameOverCanvasGroup);
 
         UpdateFinalScore(gameManager.Score);
     }
-
-
+    
     // ==================================================
     // Score
     // ==================================================
