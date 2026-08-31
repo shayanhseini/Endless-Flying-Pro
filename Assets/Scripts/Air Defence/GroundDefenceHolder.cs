@@ -3,13 +3,19 @@ using UnityEngine;
 
 public class GroundDefenceHolder : MonoBehaviour
 {
-    [SerializeField] private Radar radar;
-    [SerializeField] private Missile missile;
+    [SerializeField] private Radar[] radars;
+    [SerializeField] private Missile[] missiles;
 
     public void ResetMissile()
     {
-        radar.SetDetectedPlayer(false);
+        foreach (Radar radar in radars)
+        {
+            radar.SetDetectedPlayer(false);
+        }
 
-        missile.StopAndReset();
+        foreach (Missile missile in missiles)
+        {
+            missile.StopAndReset();
+        }
     }
 }
