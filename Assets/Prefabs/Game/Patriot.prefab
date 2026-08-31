@@ -136,8 +136,8 @@ GameObject:
   - component: {fileID: 4348547649916730529}
   - component: {fileID: 14546089918765597}
   - component: {fileID: 1116506896830764065}
-  - component: {fileID: 8294877865109460340}
   - component: {fileID: 411897378625764965}
+  - component: {fileID: 290947744559809115}
   m_Layer: 0
   m_Name: Radar
   m_TagString: Untagged
@@ -154,7 +154,7 @@ Transform:
   m_GameObject: {fileID: 1439802740264354952}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 41.7, y: 51.1, z: -137.9}
+  m_LocalPosition: {x: 41.7, y: 40, z: -150}
   m_LocalScale: {x: 40, y: 40, z: 40}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -217,8 +217,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &8294877865109460340
-SphereCollider:
+--- !u!114 &411897378625764965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1439802740264354952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radar
+  airDefense: {fileID: 2507444463326558516}
+--- !u!65 &290947744559809115
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -236,21 +249,8 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: -0.00000011920928, y: 0.000000026077032, z: -0.00000023841856}
---- !u!114 &411897378625764965
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1439802740264354952}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Radar
-  airDefense: {fileID: 2507444463326558516}
+  m_Size: {x: 9.707266, y: 0.99999994, z: 0.6033868}
+  m_Center: {x: -0.8634614, y: -0.00000022288546, z: -0.1983062}
 --- !u!1 &1994285425612162650
 GameObject:
   m_ObjectHideFlags: 0
@@ -524,6 +524,39 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &3013255247972957123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2727783481763472539}
+  m_Layer: 0
+  m_Name: Patriot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2727783481763472539
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3013255247972957123}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1909269047259645241}
+  - {fileID: 125837874079433311}
+  m_Father: {fileID: 6596291555600429010}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4473619604631000873
 GameObject:
   m_ObjectHideFlags: 0
@@ -638,17 +671,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5819051576530613608}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.07418084, y: 0.23707624, z: 0.018158797, w: 0.9684846}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.751, y: 0.046, z: -2.238}
   m_LocalScale: {x: 0.026742278, y: 0.026742278, z: 0.026742278}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1909269047259645241}
-  - {fileID: 125837874079433311}
+  - {fileID: 2727783481763472539}
   - {fileID: 4348547649916730529}
   - {fileID: 4063286809419072897}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -8.76, y: 27.51, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6163703740187954836
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,14 +924,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8207186329949414977}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8474629069557617940}
   - {fileID: 5875649041511367111}
-  m_Father: {fileID: 6596291555600429010}
+  m_Father: {fileID: 2727783481763472539}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8793129969670339915
 GameObject:
@@ -928,15 +960,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8793129969670339915}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 11.22, y: 2.94, z: 0.03}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 11.219995, y: 2.9399998, z: 0.03000038}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7273370903427993984}
   - {fileID: 5848627088788604469}
   - {fileID: 7559704284530869222}
-  m_Father: {fileID: 6596291555600429010}
+  m_Father: {fileID: 2727783481763472539}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!33 &4550235555187391105
 MeshFilter:

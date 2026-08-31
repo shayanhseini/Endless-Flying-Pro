@@ -98,6 +98,8 @@ public class UIManager : MonoBehaviour
         GameEvents.ShieldDeactivated += HandleShieldDeactivated;
 
         GameEvents.LaunchMissile += StartWarning;
+
+        StartGameOnStay();
     }
 
 
@@ -111,6 +113,17 @@ public class UIManager : MonoBehaviour
         GameEvents.ShieldDeactivated -= HandleShieldDeactivated;
         
         GameEvents.LaunchMissile -= StartWarning;
+    }
+    
+    public void StartGameOnStay()
+    {
+        StartCoroutine(StartGameRoutine());
+    }
+
+    private IEnumerator StartGameRoutine()
+    {
+        yield return new WaitForSeconds(3);
+        StartGame();
     }
 
 
@@ -143,14 +156,13 @@ public class UIManager : MonoBehaviour
         HidePanel(startPanel);
 
         FadeOut(gameCanvasGroup);
-
+        
         ShowPanel(gameOverPanel);
         FadeIn(gameOverCanvasGroup);
 
         UpdateFinalScore(gameManager.Score);
     }
-
-
+    
     // ==================================================
     // Score
     // ==================================================

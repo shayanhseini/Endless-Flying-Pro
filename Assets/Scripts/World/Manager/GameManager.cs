@@ -1,8 +1,14 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+    
+    [Header("References")]
+    [SerializeField] private FadeController fadeController;
+    
     public int Score { get; private set; }
 
     public GameState State { get; private set; }
@@ -14,6 +20,19 @@ public class GameManager : MonoBehaviour
         Score = 0;
     }
 
+    
+    private void OnEnable()
+    {
+        GameEvents.GameOver += RestartGameOnStay;
+        
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.GameOver -= RestartGameOnStay;
+    }
+    
+    
 
     public void StartGame()
     {
@@ -25,7 +44,7 @@ public class GameManager : MonoBehaviour
         GameEvents.RaiseGameStarted();
     }
 
-
+    
     public void AddScore(int amount)
     {
         if (State != GameState.Playing)
@@ -45,6 +64,20 @@ public class GameManager : MonoBehaviour
         State = GameState.GameOver;
 
         GameEvents.RaiseGameOver();
+    }
+
+    private void RestartGameOnStay()
+    {
+        StartCoroutine(RestartGameRoutine());
+    }
+    
+    private IEnumerator RestartGameRoutine()
+    {
+        yield return new WaitForSeconds(2f);
+        fadeController.FadeOut();
+        yield return new WaitForSeconds(1f);
+        
+        RestartGame();
     }
     
     public void RestartGame()
