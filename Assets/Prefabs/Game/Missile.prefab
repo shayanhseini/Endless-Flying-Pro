@@ -129,7 +129,7 @@ MonoBehaviour:
   speed: 50
   rotationSpeed: 280
   maxTurnSpeed: 180
-  guidancePercent: 0.9
+  guidancePercent: 1
   maxPredictionTime: 0.5
   initialLocalPosition: {x: -4.069999, y: -0.5499902, z: -5.369999}
   initialLocalRotation: {x: 0, y: -120, z: 0}
