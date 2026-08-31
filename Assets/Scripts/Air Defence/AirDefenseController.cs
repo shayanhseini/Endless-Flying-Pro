@@ -18,8 +18,7 @@ public class AirDefenseController : MonoBehaviour
 
     private bool hasFired;
 
-    private float initialX;
-    private float initialZ;
+    private float initialY;
 
 
     private void Awake()
@@ -30,20 +29,16 @@ public class AirDefenseController : MonoBehaviour
                 GameObject.FindGameObjectWithTag("Player");
 
             if (playerObject != null)
-                player =
-                    playerObject.transform;
+            {
+                player = playerObject.transform;
+                Debug.Log("Plane Found");
+            }
         }
 
-
-        Vector3 initialEuler =
-            transform.rotation.eulerAngles;
-
-
-        initialX =
-            initialEuler.x;
-
-        initialZ =
-            initialEuler.z;
+        if (player != null)
+        {
+            SetInitialRotation();
+        }
     }
 
 
@@ -51,15 +46,11 @@ public class AirDefenseController : MonoBehaviour
     {
         hasFired = false;
 
-
         if (radar != null)
             radar.gameObject.SetActive(true);
 
-
         if (missile != null)
-        {
             missile.gameObject.SetActive(false);
-        }
     }
 
 
@@ -68,45 +59,54 @@ public class AirDefenseController : MonoBehaviour
         if (player == null)
             return;
 
-
         RotateTowardsPlayer();
+    }
+
+
+    private void SetInitialRotation()
+    {
+        Vector3 direction = player.position - transform.position;
+
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude <= 0.001f)
+            return;
+
+        direction.Normalize();
+
+        // زاویه افقی نسبت به Forward
+        float targetY = Quaternion.LookRotation(direction).eulerAngles.y;
+
+        // چون Forward مدل ما -Right است، 90 درجه Offset داریم
+        targetY += 90f;
+
+        initialY = targetY;
+
+        transform.rotation = Quaternion.Euler(90f, initialY, 0f);
     }
 
 
     private void RotateTowardsPlayer()
     {
-        Vector3 direction =
-            player.position -
-            transform.position;
-
-
+        Vector3 direction = player.position - transform.position;
         direction.y = 0f;
 
-
-        if (direction.sqrMagnitude <= 0.001f)
+        if (direction.sqrMagnitude < 0.001f)
             return;
 
+        float targetY = Quaternion.LookRotation(direction).eulerAngles.y + 90f;
 
-        float targetY =
-            Quaternion.LookRotation(direction)
-                .eulerAngles.y;
+        Quaternion targetRotation = Quaternion.Euler(
+            90f,
+            targetY,
+            0f
+        );
 
-
-        Quaternion targetRotation =
-            Quaternion.Euler(
-                initialX,
-                targetY + 90f,
-                initialZ
-            );
-
-
-        transform.rotation =
-            Quaternion.Lerp(
-                transform.rotation,
-                targetRotation,
-                rotationSpeed *
-                Time.deltaTime
-            );
+        transform.rotation = Quaternion.Lerp(
+            transform.rotation,
+            targetRotation,
+            rotationSpeed * Time.deltaTime
+        );
     }
 
 
@@ -115,7 +115,6 @@ public class AirDefenseController : MonoBehaviour
         if (hasFired)
             return;
 
-
         if (missile == null ||
             player == null)
             return;
@@ -123,11 +122,11 @@ public class AirDefenseController : MonoBehaviour
         GameEvents.RaiseLaunchMissile();
 
         hasFired = true;
-        
+
         missile.gameObject.SetActive(true);
-        
+
         missile.SetTarget(player);
-        
+
         launchSound.Play();
     }
 }
