@@ -99,7 +99,7 @@ public class UIManager : MonoBehaviour
 
         GameEvents.LaunchMissile += StartWarning;
 
-        StartGameOnStay();
+        //StartGameOnStay();
     }
 
 
