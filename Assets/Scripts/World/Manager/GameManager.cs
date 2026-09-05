@@ -19,21 +19,7 @@ public class GameManager : MonoBehaviour
         State = GameState.Waiting;
         Score = 0;
     }
-
     
-    private void OnEnable()
-    {
-        GameEvents.GameOver += RestartGameOnStay;
-        
-    }
-
-    private void OnDisable()
-    {
-        GameEvents.GameOver -= RestartGameOnStay;
-    }
-    
-    
-
     public void StartGame()
     {
         if (State != GameState.Waiting)
@@ -66,17 +52,15 @@ public class GameManager : MonoBehaviour
         GameEvents.RaiseGameOver();
     }
 
-    private void RestartGameOnStay()
+    public void RestartGameWithEffect()
     {
         StartCoroutine(RestartGameRoutine());
     }
     
     private IEnumerator RestartGameRoutine()
     {
-        yield return new WaitForSeconds(2f);
         fadeController.FadeOut();
         yield return new WaitForSeconds(1f);
-        
         RestartGame();
     }
     
