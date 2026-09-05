@@ -6397,7 +6397,7 @@ Transform:
   m_GameObject: {fileID: 2143560248}
   serializedVersion: 2
   m_LocalRotation: {x: 0.06104851, y: 0, z: 0, w: 0.99813485}
-  m_LocalPosition: {x: 0, y: 1.3, z: -182.1}
+  m_LocalPosition: {x: 0, y: 1.3, z: -184}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7574,11 +7574,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlaneController
   moveSpeed: 10
+  touchSensitivity: 0.015
+  movementSmoothness: 10
   xLimit: 5
   yLimit: 4
   maxRoll: 25
   maxPitch: 25
-  rotationSpeed: 5
+  rotationSpeed: 10
   leftWing: {fileID: 5869799714807742907}
   rightWing: {fileID: 4886891317703029454}
   wingRollAmount: 50
@@ -14460,9 +14462,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4439528306922798773}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: RestartGame
+      - m_Target: {fileID: 2116496927}
+        m_TargetAssemblyTypeName: GameAudioController, Assembly-CSharp
+        m_MethodName: PlayButtonSound
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -14472,9 +14474,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 2116496927}
-        m_TargetAssemblyTypeName: GameAudioController, Assembly-CSharp
-        m_MethodName: PlayButtonSound
+      - m_Target: {fileID: 4439528306922798773}
+        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+        m_MethodName: RestartGameWithEffect
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -16192,7 +16194,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8249100717123085968}
   - component: {fileID: 4439528306922798773}
-  - component: {fileID: 8800919533257655905}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -16200,18 +16201,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &8800919533257655905
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8800919533257655904}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21a5e4243d61c0945a739b2613efdf9b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PauseController
 --- !u!1 &8808963596241003681
 GameObject:
   m_ObjectHideFlags: 0
