@@ -26,6 +26,7 @@ public class UIManager : MonoBehaviour
     [Header("Score")]
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text finalScoreText;
+    [SerializeField] private TMP_Text highScoreText;
 
 
     [Header("Flight Info")]
@@ -59,6 +60,7 @@ public class UIManager : MonoBehaviour
     
     [Header("References")]
     [SerializeField] private GameManager gameManager;
+    [SerializeField] private SaveManager saveManager;
     [SerializeField] private WorldMovementManager worldMovement;
     [SerializeField] private Transform player;
 
@@ -99,6 +101,7 @@ public class UIManager : MonoBehaviour
 
         GameEvents.LaunchMissile += StartWarning;
         
+        HandleLoadGame();
     }
 
 
@@ -130,6 +133,15 @@ public class UIManager : MonoBehaviour
     // Game State
     // ==================================================
 
+    private void HandleLoadGame()
+    {
+                
+        int highScore =
+            saveManager.GetHighScore();
+
+        highScoreText.text = highScore.ToString("D4");
+    }
+    
     private void HandleGameStarted()
     {
         FadeOut(startCanvasGroup);
