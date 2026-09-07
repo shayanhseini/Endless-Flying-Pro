@@ -21,6 +21,14 @@ namespace Game.Enemies.Fighter
             }
         }
 
+        private void OnDisable()
+        {
+            if (_currentJet != null)
+            {
+                _currentJet.gameObject.SetActive(false);
+            }
+        }
+
         public void Enable()
         {
             if (_singleUse && _hasSpawned)
