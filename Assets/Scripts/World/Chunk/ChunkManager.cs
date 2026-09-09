@@ -4,12 +4,12 @@ public class ChunkManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private WorldChunk[] chunks;
-
     [SerializeField] private GameObject startChunk;
 
     [SerializeField] private Transform player;
     [SerializeField] private WorldMovementManager worldMovement;
     [SerializeField] private DifficultyManager difficultyManager;
+    [SerializeField] private GameManager gameManager;
 
 
     public int InitialChunkCount => chunks.Length;
@@ -39,7 +39,8 @@ public class ChunkManager : MonoBehaviour
         foreach (WorldChunk chunk in chunks)
         {
             chunk.ResetContent(
-                difficultyManager
+                difficultyManager,
+                gameManager.CurrentGroundType
             );
         }
     }
@@ -107,8 +108,6 @@ public class ChunkManager : MonoBehaviour
 
     private float GetStartChunkLength()
     {
-        // طول زمین استارت را از Scale/اندازه‌اش می‌توانی
-        // به صورت دستی تعیین کنی.
         return 20f;
     }
 
@@ -152,7 +151,8 @@ public class ChunkManager : MonoBehaviour
 
 
         chunk.ResetContent(
-            difficultyManager
+            difficultyManager,
+            gameManager.CurrentGroundType
         );
 
 

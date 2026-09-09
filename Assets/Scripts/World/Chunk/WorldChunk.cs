@@ -11,20 +11,24 @@ public class WorldChunk : MonoBehaviour
 
     [Header("Environment Variants")]
     [SerializeField]
-    private GameObject[] environmentVariants;
+    private GameObject[] desertVariants;
+    [SerializeField]
+    private GameObject[] dirtVariants;
 
-    [Header("Event")] public UnityEvent onResetContent;
+    [Header("Event")]
+    public UnityEvent onResetContent;
 
 
     public float Length => length;
 
 
     public void ResetContent(
-        DifficultyManager difficultyManager)
+        DifficultyManager difficultyManager,
+        GroundType groundType)
     {
         onResetContent?.Invoke();
-        
-        RandomizeEnvironment();
+
+        RandomizeEnvironment(groundType);
 
         content.ApplyDifficulty(
             difficultyManager.CoinCount,
@@ -35,40 +39,67 @@ public class WorldChunk : MonoBehaviour
     }
 
 
-    private void RandomizeEnvironment()
+    private void RandomizeEnvironment(GroundType groundType)
     {
-        if (environmentVariants == null ||
-            environmentVariants.Length == 0)
+        DisableAllEnvironments();
+
+        GameObject[] variants = GetVariants(groundType);
+
+        if (variants == null || variants.Length == 0)
             return;
 
+        int randomIndex =
+            Random.Range(0, variants.Length);
 
-        foreach (GameObject environment
-                 in environmentVariants)
+        GameObject selectedEnvironment =
+            variants[randomIndex];
+
+        if (selectedEnvironment == null)
+            return;
+
+        selectedEnvironment.SetActive(true);
+
+        GroundDefenceHolder holder =
+            selectedEnvironment.GetComponent<GroundDefenceHolder>();
+
+        if (holder != null)
+            holder.ResetMissile();
+    }
+
+
+    private GameObject[] GetVariants(GroundType groundType)
+    {
+        switch (groundType)
+        {
+            case GroundType.Desert:
+                return desertVariants;
+
+            case GroundType.Dirt:
+                return dirtVariants;
+
+            default:
+                return null;
+        }
+    }
+
+
+    private void DisableAllEnvironments()
+    {
+        DisableVariants(desertVariants);
+        DisableVariants(dirtVariants);
+    }
+
+
+    private void DisableVariants(GameObject[] variants)
+    {
+        if (variants == null)
+            return;
+
+        foreach (GameObject environment in variants)
         {
             if (environment != null)
                 environment.SetActive(false);
         }
-
-
-        int randomIndex =
-            Random.Range(
-                0,
-                environmentVariants.Length
-            );
-
-
-        GameObject selectedEnvironment =
-            environmentVariants[randomIndex];
-
-
-        if (selectedEnvironment != null)
-        {
-            selectedEnvironment.SetActive(true);
-            
-            selectedEnvironment.GetComponent<GroundDefenceHolder>().ResetMissile();
-        }
-            
-        
     }
 
 
