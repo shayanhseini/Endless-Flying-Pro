@@ -167,6 +167,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5430363565294157268}
     m_Modifications:
+    - target: {fileID: 510813219021115459, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1025718220748889845, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}
       propertyPath: m_Name
       value: Shield Box
@@ -195,6 +199,10 @@ PrefabInstance:
       propertyPath: hoverFrequency
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 3780669473290974180, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3967371269453260794, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}
       propertyPath: m_ConstrainProportionsScale
       value: 1
@@ -205,6 +213,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6367731764264253421, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}
       propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7076495874671750219, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7720497478430868042, guid: 025e6a283301f8d4999bcfb3db9ecfbd, type: 3}

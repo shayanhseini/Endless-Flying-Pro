@@ -2825,7 +2825,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &761238929
 Transform:
   m_ObjectHideFlags: 0
@@ -14816,6 +14816,7 @@ GameObject:
   - component: {fileID: 8006014556197631762}
   - component: {fileID: 4034465171513220723}
   - component: {fileID: 8313013160506271266}
+  - component: {fileID: 8313013160506271267}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -14840,6 +14841,19 @@ MonoBehaviour:
   gameManager: {fileID: 4439528306922798773}
   moveDuration: 1
   gameStartProgress: 0.5
+--- !u!114 &8313013160506271267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8313013160506271265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e354d0a20cfe9a640ae99295da740225, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraDistanceCulling
+  renderDistance: 130
 --- !u!1 &8347696111246641775
 GameObject:
   m_ObjectHideFlags: 0

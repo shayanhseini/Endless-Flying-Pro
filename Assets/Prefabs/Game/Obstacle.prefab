@@ -53,7 +53,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7697471679822373935}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -183,6 +183,10 @@ PrefabInstance:
       propertyPath: rolloffMode
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 585709841838669179, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2733955479255844701, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name
       value: Box
@@ -223,6 +227,10 @@ PrefabInstance:
       propertyPath: 'droneTargets.Array.data[1]'
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 6801485079031194324, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7497820527595780247, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name
       value: Sound
@@ -230,6 +238,10 @@ PrefabInstance:
     - target: {fileID: 7537368007599871364, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name
       value: Bomb_Drone
+      objectReference: {fileID: 0}
+    - target: {fileID: 7855084330937090419, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8616977872990215763, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name
