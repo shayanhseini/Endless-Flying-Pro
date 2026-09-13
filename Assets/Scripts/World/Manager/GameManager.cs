@@ -7,9 +7,12 @@ public class GameManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private FadeController fadeController;
+    [SerializeField] private WorldMovementManager worldMovement;
 
     public int Score { get; private set; }
 
+    public float Distance { get; private set; }
+    
     public GameState State { get; private set; }
 
     public GroundType CurrentGroundType { get; private set; }
@@ -19,9 +22,17 @@ public class GameManager : MonoBehaviour
     {
         State = GameState.Waiting;
         Score = 0;
+        Distance = 0;
     }
 
+    private void Update()
+    {
+        if (State != GameState.Playing)
+            return;
 
+        UpdateDistance();
+    }
+    
     private void OnEnable()
     {
         SelectRandomGround();
@@ -61,6 +72,16 @@ public class GameManager : MonoBehaviour
         Score += amount;
 
         GameEvents.RaiseScoreChanged(Score);
+    }
+    
+    private void UpdateDistance()
+    {
+        if (worldMovement == null)
+            return;
+
+        Distance +=
+            (worldMovement.RealSpeed *
+            Time.deltaTime);
     }
 
 

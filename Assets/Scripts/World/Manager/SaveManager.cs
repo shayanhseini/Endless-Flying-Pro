@@ -6,35 +6,52 @@ public class SaveManager : MonoBehaviour
     [SerializeField] private GameManager gameManager;
 
 
+    private const string TotalCoinKey = "TotalCoin";
     private const string HighScoreKey = "HighScore";
 
 
     private void OnEnable()
     {
+        GameEvents.GameOver += SaveTotalCoin;
         GameEvents.GameOver += SaveHighScore;
     }
 
 
     private void OnDisable()
     {
+        GameEvents.GameOver -= SaveTotalCoin;
         GameEvents.GameOver -= SaveHighScore;
     }
 
 
-    private void SaveHighScore()
+    private void SaveTotalCoin()
     {
-        int currentScore =
+        int currentCoin =
             gameManager.Score;
 
-        int highScore =
-            GetHighScore();
-
-
-        if (currentScore <= highScore)
-            return;
-
-
+        int totalCoin =
+            GetTotalCoin() + currentCoin;
+        
         PlayerPrefs.SetInt(
+            TotalCoinKey,
+            totalCoin
+        );
+
+        PlayerPrefs.Save();
+    }
+
+    private void SaveHighScore()
+    {
+        float currentScore =
+            gameManager.Distance;
+
+        float highestScore =
+            GetHighestScore();
+        
+        if (currentScore < highestScore)
+            return;
+        
+        PlayerPrefs.SetFloat(
             HighScoreKey,
             currentScore
         );
@@ -43,21 +60,19 @@ public class SaveManager : MonoBehaviour
     }
 
 
-    public int GetHighScore()
+    public int GetTotalCoin()
     {
         return PlayerPrefs.GetInt(
-            HighScoreKey,
+            TotalCoinKey,
             0
         );
     }
 
-
-    public void ResetHighScore()
+    public float GetHighestScore()
     {
-        PlayerPrefs.DeleteKey(
-            HighScoreKey
+        return PlayerPrefs.GetFloat(
+            HighScoreKey,
+            0
         );
-
-        PlayerPrefs.Save();
     }
 }
