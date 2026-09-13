@@ -6,11 +6,16 @@ public class WorldMovementManager : MonoBehaviour
     [SerializeField] private float startSpeed = 10f;
     [SerializeField] private float speedAtMaxScore = 12f;
     [SerializeField] private float speedIncreaseAfterMaxScore = 0.02f;
-
-
+    
+    [Header("Real Speed")]
+    [SerializeField] private float realSpeedMultiplier = 20f;
+    
     [Header("Difficulty")]
     [SerializeField] private DifficultyManager difficultyManager;
 
+    
+    public float RealSpeed =>
+        WorldSpeed * realSpeedMultiplier;
 
     private int _maxScore;
 

@@ -24,19 +24,17 @@ public class UIManager : MonoBehaviour
 
 
     [Header("Score")]
-    [SerializeField] private TMP_Text scoreText;
-    [SerializeField] private TMP_Text finalScoreText;
-    [SerializeField] private TMP_Text highScoreText;
+    [SerializeField] private TMP_Text coinText;
+    [SerializeField] private TMP_Text finalCoinText;
+    [SerializeField] private TMP_Text totalCoinText;
+    [SerializeField] private TMP_Text highestScoreText;
 
 
     [Header("Flight Info")]
     [SerializeField] private TMP_Text speedText;
-    [SerializeField] private TMP_Text altitudeText;
+    [SerializeField] private TMP_Text distanceText;
 
-    [SerializeField] private float speedDisplayMultiplier = 20f;
-    [SerializeField] private float altitudeDisplayMultiplier = 10f;
-
-
+    
     [Header("Shield")]
     [SerializeField] private TMP_Text shieldText;
     [SerializeField] private Image shieldImage;
@@ -83,7 +81,7 @@ public class UIManager : MonoBehaviour
             gameOverPanel.SetActive(false);
 
 
-        UpdateScore(0);
+        UpdateCoin(0);
         UpdateFinalScore(0);
 
         UpdateShieldText(false);
@@ -94,7 +92,7 @@ public class UIManager : MonoBehaviour
     {
         GameEvents.GameStarted += HandleGameStarted;
         GameEvents.GameOver += HandleGameOver;
-        GameEvents.ScoreChanged += UpdateScore;
+        GameEvents.ScoreChanged += UpdateCoin;
 
         GameEvents.ShieldActivated += HandleShieldActivated;
         GameEvents.ShieldDeactivated += HandleShieldDeactivated;
@@ -109,7 +107,7 @@ public class UIManager : MonoBehaviour
     {
         GameEvents.GameStarted -= HandleGameStarted;
         GameEvents.GameOver -= HandleGameOver;
-        GameEvents.ScoreChanged -= UpdateScore;
+        GameEvents.ScoreChanged -= UpdateCoin;
 
         GameEvents.ShieldActivated -= HandleShieldActivated;
         GameEvents.ShieldDeactivated -= HandleShieldDeactivated;
@@ -136,10 +134,14 @@ public class UIManager : MonoBehaviour
     private void HandleLoadGame()
     {
                 
-        int highScore =
-            saveManager.GetHighScore();
+        int totalCoin =
+            saveManager.GetTotalCoin();
 
-        highScoreText.text = highScore.ToString("D4");
+        totalCoinText.text = totalCoin.ToString("D4");
+        
+        int highestScore =
+            (int)saveManager.GetHighestScore();
+        highestScoreText.text = highestScore.ToString("D4");
     }
     
     private void HandleGameStarted()
@@ -158,32 +160,33 @@ public class UIManager : MonoBehaviour
         ShowPanel(gameOverPanel);
         FadeIn(gameOverCanvasGroup);
 
-        UpdateFinalScore(gameManager.Score);
+        UpdateFinalScore(gameManager.Distance);
     }
     
     // ==================================================
     // Score
     // ==================================================
 
-    private void UpdateScore(int score)
+    private void UpdateCoin(int score)
     {
-        if (scoreText == null)
+        if (coinText == null)
             return;
 
 
-        scoreText.text =
+        coinText.text =
             score.ToString("D4");
     }
 
 
-    private void UpdateFinalScore(int score)
+    private void UpdateFinalScore(float score)
     {
-        if (finalScoreText == null)
+        if (finalCoinText == null)
             return;
 
+        int scoreInt = (int)score;
 
-        finalScoreText.text =
-            score.ToString("D4");
+        finalCoinText.text =
+            scoreInt.ToString("D4");
     }
 
 
@@ -194,7 +197,7 @@ public class UIManager : MonoBehaviour
     private void UpdateFlightInfo()
     {
         UpdateSpeed();
-        UpdateAltitude();
+        UpdateDistance();
     }
 
 
@@ -206,30 +209,22 @@ public class UIManager : MonoBehaviour
 
 
         float displayedSpeed =
-            worldMovement.WorldSpeed *
-            speedDisplayMultiplier;
+            worldMovement.RealSpeed;
 
 
         speedText.text =
-            $"{displayedSpeed:0}";
+            $"{displayedSpeed:000}";
     }
 
 
-    private void UpdateAltitude()
+    private void UpdateDistance()
     {
-        if (altitudeText == null ||
-            player == null)
+        if (distanceText == null ||
+            gameManager == null)
             return;
 
-
-        float displayedAltitude =
-            (player.position.y *
-             altitudeDisplayMultiplier) +
-            50f;
-
-
-        altitudeText.text =
-            $"{displayedAltitude:0}";
+        distanceText.text =
+            $"{gameManager.Distance:000}";
     }
 
 
