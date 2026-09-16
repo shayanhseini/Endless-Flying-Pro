@@ -1060,6 +1060,10 @@ PrefabInstance:
       propertyPath: panLevelCustomCurve.m_Curve.Array.data[0].value
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3010555509727937705, guid: 1550c0187cb96d844aaaac44c21b82ed, type: 3}
+      propertyPath: guidancePercent
+      value: 0.7
+      objectReference: {fileID: 0}
     - target: {fileID: 5197053402982984799, guid: 1550c0187cb96d844aaaac44c21b82ed, type: 3}
       propertyPath: m_Name
       value: Missile

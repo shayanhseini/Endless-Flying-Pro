@@ -9,17 +9,33 @@ public class WorldChunk : MonoBehaviour
     [SerializeField]
     private ChunkContent content;
 
+
     [Header("Environment Variants")]
     [SerializeField]
     private GameObject[] desertVariants;
+
     [SerializeField]
     private GameObject[] dirtVariants;
+
+
+    [Header("Final Ground")]
+    [SerializeField]
+    private GameObject finalGround;
+
+    [SerializeField]
+    private Transform finalTarget;
+
 
     [Header("Event")]
     public UnityEvent onResetContent;
 
 
-    public float Length => length;
+    public float Length =>
+        length;
+
+
+    public Transform FinalTarget =>
+        finalTarget;
 
 
     public void ResetContent(
@@ -28,7 +44,12 @@ public class WorldChunk : MonoBehaviour
     {
         onResetContent?.Invoke();
 
-        RandomizeEnvironment(groundType);
+        DisableFinalGround();
+
+        RandomizeEnvironment(
+            groundType
+        );
+
 
         content.ApplyDifficulty(
             difficultyManager.CoinCount,
@@ -39,35 +60,86 @@ public class WorldChunk : MonoBehaviour
     }
 
 
-    private void RandomizeEnvironment(GroundType groundType)
+    public void ActivateFinalGround()
+    {
+        // تمام Content خاموش
+        if (content != null)
+        {
+            content.DisableContent();
+        }
+
+
+        // Groundهای معمولی خاموش
+        DisableAllEnvironments();
+
+
+        // Final Ground روشن
+        if (finalGround != null)
+        {
+            finalGround.SetActive(true);
+        }
+    }
+
+
+    private void DisableFinalGround()
+    {
+        if (finalGround != null)
+        {
+            finalGround.SetActive(false);
+        }
+    }
+
+
+    private void RandomizeEnvironment(
+        GroundType groundType)
     {
         DisableAllEnvironments();
 
-        GameObject[] variants = GetVariants(groundType);
 
-        if (variants == null || variants.Length == 0)
+        GameObject[] variants =
+            GetVariants(
+                groundType
+            );
+
+
+        if (variants == null ||
+            variants.Length == 0)
             return;
 
+
         int randomIndex =
-            Random.Range(0, variants.Length);
+            Random.Range(
+                0,
+                variants.Length
+            );
+
 
         GameObject selectedEnvironment =
             variants[randomIndex];
 
+
         if (selectedEnvironment == null)
             return;
 
+
         selectedEnvironment.SetActive(true);
 
+
         GroundDefenceHolder holder =
-            selectedEnvironment.GetComponent<GroundDefenceHolder>();
+            selectedEnvironment.GetComponent<
+                GroundDefenceHolder
+            >();
+
 
         if (holder != null)
+        {
             holder.ResetMissile();
+        }
     }
 
 
-    private GameObject[] GetVariants(GroundType groundType)
+    private GameObject[] GetVariants(
+        GroundType groundType)
     {
         switch (groundType)
         {
@@ -85,31 +157,43 @@ public class WorldChunk : MonoBehaviour
 
     private void DisableAllEnvironments()
     {
-        DisableVariants(desertVariants);
-        DisableVariants(dirtVariants);
+        DisableVariants(
+            desertVariants
+        );
+
+        DisableVariants(
+            dirtVariants
+        );
     }
 
 
-    private void DisableVariants(GameObject[] variants)
+    private void DisableVariants(
+        GameObject[] variants)
     {
         if (variants == null)
             return;
 
-        foreach (GameObject environment in variants)
+
+        foreach (GameObject environment
+                 in variants)
         {
             if (environment != null)
+            {
                 environment.SetActive(false);
+            }
         }
     }
 
 
-    public void Move(Vector3 movement)
+    public void Move(
+        Vector3 movement)
     {
         transform.position += movement;
     }
 
 
-    public void MoveTo(Vector3 position)
+    public void MoveTo(
+        Vector3 position)
     {
         transform.position = position;
     }

@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     [Header("Panels")]
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameObject winPanel;
     [SerializeField] private GameObject gamePanel;
 
 
@@ -17,6 +18,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private CanvasGroup startCanvasGroup;
     [SerializeField] private CanvasGroup gameCanvasGroup;
     [SerializeField] private CanvasGroup gameOverCanvasGroup;
+    [SerializeField] private CanvasGroup winCanvasGroup;
 
 
     [Header("Fade")]
@@ -26,6 +28,7 @@ public class UIManager : MonoBehaviour
     [Header("Score")]
     [SerializeField] private TMP_Text coinText;
     [SerializeField] private TMP_Text finalCoinText;
+    [SerializeField] private TMP_Text finalCoinWinText;
     [SerializeField] private TMP_Text totalCoinText;
     [SerializeField] private TMP_Text highestScoreText;
 
@@ -79,8 +82,10 @@ public class UIManager : MonoBehaviour
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
-
-
+        
+        if (winPanel != null)
+            winPanel.SetActive(false);
+        
         UpdateCoin(0);
         UpdateFinalScore(0);
 
@@ -91,7 +96,10 @@ public class UIManager : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.GameStarted += HandleGameStarted;
+        
         GameEvents.GameOver += HandleGameOver;
+        GameEvents.Victory += HandleWin;
+        
         GameEvents.ScoreChanged += UpdateCoin;
 
         GameEvents.ShieldActivated += HandleShieldActivated;
@@ -106,7 +114,11 @@ public class UIManager : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.GameStarted -= HandleGameStarted;
+        
         GameEvents.GameOver -= HandleGameOver;
+        GameEvents.Victory -= HandleWin;
+        
+        
         GameEvents.ScoreChanged -= UpdateCoin;
 
         GameEvents.ShieldActivated -= HandleShieldActivated;
@@ -162,6 +174,18 @@ public class UIManager : MonoBehaviour
 
         UpdateFinalScore(gameManager.Distance);
     }
+
+    private void HandleWin()
+    {
+        HidePanel(startPanel);
+
+        FadeOut(gameCanvasGroup);
+        
+        ShowPanel(winPanel);
+        FadeIn(winCanvasGroup);
+
+        UpdateFinalScore(gameManager.Distance);
+    }
     
     // ==================================================
     // Score
@@ -180,13 +204,14 @@ public class UIManager : MonoBehaviour
 
     private void UpdateFinalScore(float score)
     {
-        if (finalCoinText == null)
+        if (finalCoinText == null ||  finalCoinText.text == null)
             return;
 
         int scoreInt = (int)score;
 
         finalCoinText.text =
             scoreInt.ToString("D4");
+        finalCoinWinText.text = scoreInt.ToString("D4");
     }
 
 

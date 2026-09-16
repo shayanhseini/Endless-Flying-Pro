@@ -5,7 +5,6 @@ public class PlaneController : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float touchSensitivity = 0.015f;
     [SerializeField] private float movementSmoothness = 10f;
 
 
@@ -29,6 +28,15 @@ public class PlaneController : MonoBehaviour
     [SerializeField] private float wingRotationSpeed = 5f;
 
 
+    [Header("Final Auto Pilot")]
+    [SerializeField] private float autoPilotSpeed = 20f;
+    [SerializeField] private float autoPilotRotationSpeed = 4f;
+    [SerializeField] private PlaneCameraController planeCameraController;
+    
+    private bool isAutoPilot;
+    private Transform finalTarget;
+
+
     public Vector2 Input { get; private set; }
 
 
@@ -41,17 +49,13 @@ public class PlaneController : MonoBehaviour
 
     private Vector3 targetPosition;
 
-    private Vector2 lastTouchPosition;
-    private bool isTouching;
-
-
+    
     private void Awake()
     {
-        // Plane initial rotation
-        initialRotation = transform.rotation;
+        initialRotation =
+            transform.rotation;
 
 
-        // Wings initial local rotations
         if (leftWing != null)
         {
             leftWingInitialRotation =
@@ -69,13 +73,17 @@ public class PlaneController : MonoBehaviour
         targetPosition =
             transform.position;
 
+
         canControl = false;
+
+        isAutoPilot = false;
     }
 
 
     private void OnEnable()
     {
         GameEvents.GameStarted += EnableControl;
+
         GameEvents.GameOver += DisableControl;
     }
 
@@ -83,12 +91,21 @@ public class PlaneController : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.GameStarted -= EnableControl;
+
         GameEvents.GameOver -= DisableControl;
     }
 
 
     private void Update()
     {
+        if (isAutoPilot)
+        {
+            AutoPilot();
+
+            return;
+        }
+
+
         if (!canControl)
             return;
 
@@ -109,12 +126,17 @@ public class PlaneController : MonoBehaviour
     {
         canControl = true;
 
+        isAutoPilot = false;
+
+        finalTarget = null;
+
+
         targetPosition =
             transform.position;
 
-        Input = Vector2.zero;
 
-        isTouching = false;
+        Input =
+            Vector2.zero;
     }
 
 
@@ -122,91 +144,151 @@ public class PlaneController : MonoBehaviour
     {
         canControl = false;
 
+        isAutoPilot = false;
+
+        finalTarget = null;
+
+        Input =
+            Vector2.zero;
+    }
+
+
+    public void StartFinalAutoPilot(Transform target)
+    {
+        if (target == null)
+            return;
+
+
+        canControl = false;
+
+        isAutoPilot = true;
+
+        finalTarget = target;
+
         Input = Vector2.zero;
 
-        isTouching = false;
+
+        if (planeCameraController != null)
+        {
+            planeCameraController.StartCinematicFollow(
+                transform
+            );
+        }
+    }
+    
+    private void AutoPilot()
+    {
+        if (finalTarget == null)
+            return;
+        
+        Vector3 direction =
+            finalTarget.position -
+            transform.position;
+
+
+        if (direction.sqrMagnitude <= 0.001f)
+            return;
+
+
+        direction.Normalize();
+
+
+        transform.position +=
+            direction *
+            autoPilotSpeed *
+            Time.deltaTime;
+
+
+        Quaternion targetRotation =
+            Quaternion.LookRotation(
+                direction
+            );
+
+
+        transform.rotation =
+            Quaternion.Lerp(
+                transform.rotation,
+                targetRotation,
+                autoPilotRotationSpeed *
+                Time.deltaTime
+            );
     }
 
 
     private void ReadInput()
     {
-        if (Touchscreen.current == null)
+        if (Keyboard.current == null)
         {
-            Input = Vector2.zero;
-            return;
-        }
-
-        var touch =
-            Touchscreen.current.primaryTouch;
-
-        if (touch.press.wasPressedThisFrame)
-        {
-            isTouching = true;
-
-            lastTouchPosition =
-                touch.position.ReadValue();
-
             Input = Vector2.zero;
 
             return;
         }
 
-        if (touch.press.isPressed && isTouching)
-        {
-            Vector2 currentTouchPosition =
-                touch.position.ReadValue();
 
-            Vector2 delta =
-                currentTouchPosition -
-                lastTouchPosition;
+        float horizontal = 0f;
 
-            lastTouchPosition =
-                currentTouchPosition;
+        float vertical = 0f;
 
-            Input =
-                Vector2.ClampMagnitude(
-                    delta * 0.05f,
-                    1f
-                );
 
-            Vector3 movement =
-                new Vector3(
-                    delta.x,
-                    delta.y,
-                    0f
-                ) *
-                touchSensitivity;
+        // A / D
+        if (Keyboard.current.aKey.isPressed)
+            horizontal -= 1f;
 
-            targetPosition += movement;
-        }
+        if (Keyboard.current.dKey.isPressed)
+            horizontal += 1f;
 
-        if (touch.press.wasReleasedThisFrame)
-        {
-            isTouching = false;
 
-            Input = Vector2.zero;
-        }
+        // S / W
+        if (Keyboard.current.sKey.isPressed)
+            vertical -= 1f;
+
+        if (Keyboard.current.wKey.isPressed)
+            vertical += 1f;
+
+
+        Input =
+            new Vector2(
+                horizontal,
+                vertical
+            );
+
+
+        Input =
+            Vector2.ClampMagnitude(
+                Input,
+                1f
+            );
     }
 
 
     private void Move()
     {
+        Vector3 movement =
+            new Vector3(
+                Input.x,
+                Input.y,
+                0f
+            ) *
+            moveSpeed *
+            Time.deltaTime;
+        
+        targetPosition +=
+            movement;
+        
         targetPosition.x =
             Mathf.Clamp(
                 targetPosition.x,
                 -xLimit,
                 xLimit
             );
-
-
+        
         targetPosition.y =
             Mathf.Clamp(
                 targetPosition.y,
                 -yLimit,
                 yLimit
             );
-
-
+        
         transform.position =
             Vector3.Lerp(
                 transform.position,
@@ -215,30 +297,26 @@ public class PlaneController : MonoBehaviour
                 Time.deltaTime
             );
     }
-
-
+    
     private void ClampPosition()
     {
         Vector3 position =
             transform.position;
-
-
+        
         position.x =
             Mathf.Clamp(
                 position.x,
                 -xLimit,
                 xLimit
             );
-
-
+        
         position.y =
             Mathf.Clamp(
                 position.y,
                 -yLimit,
                 yLimit
             );
-
-
+        
         transform.position =
             position;
     }
@@ -247,13 +325,13 @@ public class PlaneController : MonoBehaviour
     private void RotatePlane()
     {
         float targetRoll =
-            -Input.x * maxRoll;
-
-
+            -Input.x *
+            maxRoll;
+        
         float targetPitch =
-            -Input.y * maxPitch;
-
-
+            -Input.y *
+            maxPitch;
+        
         Quaternion targetRotation =
             initialRotation *
             Quaternion.Euler(
@@ -261,8 +339,7 @@ public class PlaneController : MonoBehaviour
                 0f,
                 targetRoll
             );
-
-
+        
         transform.rotation =
             Quaternion.Lerp(
                 transform.rotation,
@@ -275,28 +352,26 @@ public class PlaneController : MonoBehaviour
 
     private void RotateWings()
     {
-        if (leftWing == null && rightWing == null)
+        if (leftWing == null &&
+            rightWing == null)
             return;
-
-
+        
         float horizontalRotation =
-            -Input.x * wingRollAmount;
-
-
+            -Input.x *
+            wingRollAmount;
+        
         float verticalRotation =
-            -Input.y * wingPitchAmount;
-
-
+            -Input.y *
+            wingPitchAmount;
+        
         float leftRotation =
             verticalRotation +
             horizontalRotation;
-
-
+        
         float rightRotation =
             verticalRotation -
             horizontalRotation;
-
-
+        
         if (leftWing != null)
         {
             Quaternion targetRotation =

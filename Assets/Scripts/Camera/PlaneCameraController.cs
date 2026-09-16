@@ -25,10 +25,21 @@ public class PlaneCameraController : MonoBehaviour
     [SerializeField] private float fovTransitionDuration = 0.25f;
 
 
+    [Header("Cinematic Follow")]
+    [SerializeField] private float cinematicFollowDistance = 8f;
+    [SerializeField] private float cinematicHeight = 2f;
+    [SerializeField] private float cinematicPositionSmoothness = 3f;
+    [SerializeField] private float cinematicRotationSmoothness = 4f;
+    [SerializeField] private float cinematicLookAhead = 3f;
+
+
     private Quaternion initialRotation;
     private Vector3 initialPosition;
 
     private Coroutine fovCoroutine;
+
+    private Transform cinematicTarget;
+    private bool isCinematic;
 
 
     private void Awake()
@@ -52,12 +63,25 @@ public class PlaneCameraController : MonoBehaviour
             targetCamera.fieldOfView =
                 normalFOV;
         }
+
+
+        isCinematic = false;
+        cinematicTarget = null;
     }
 
 
     private void LateUpdate()
     {
+        if (isCinematic)
+        {
+            CinematicFollow();
+
+            return;
+        }
+
+
         RotateCamera();
+
         BobCamera();
     }
 
@@ -114,6 +138,92 @@ public class PlaneCameraController : MonoBehaviour
     }
 
 
+    // =========================================================
+    // Cinematic
+    // =========================================================
+
+    public void StartCinematicFollow(Transform target)
+    {
+        if (target == null)
+            return;
+
+
+        cinematicTarget =
+            target;
+
+        isCinematic =
+            true;
+    }
+
+
+    public void StopCinematicFollow()
+    {
+        isCinematic =
+            false;
+
+        cinematicTarget =
+            null;
+    }
+
+
+    private void CinematicFollow()
+    {
+        if (cinematicTarget == null)
+            return;
+
+
+        Vector3 desiredPosition =
+            cinematicTarget.position
+            - cinematicTarget.forward *
+              cinematicFollowDistance
+            + Vector3.up *
+              cinematicHeight;
+
+
+        transform.position =
+            Vector3.Lerp(
+                transform.position,
+                desiredPosition,
+                cinematicPositionSmoothness *
+                Time.deltaTime
+            );
+
+
+        Vector3 lookPosition =
+            cinematicTarget.position
+            + cinematicTarget.forward *
+              cinematicLookAhead;
+
+
+        Vector3 direction =
+            lookPosition -
+            transform.position;
+
+
+        if (direction.sqrMagnitude <= 0.001f)
+            return;
+
+
+        Quaternion targetRotation =
+            Quaternion.LookRotation(
+                direction
+            );
+
+
+        transform.rotation =
+            Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                cinematicRotationSmoothness *
+                Time.deltaTime
+            );
+    }
+
+
+    // =========================================================
+    // Gameplay Setup
+    // =========================================================
+
     public void SetInitialTransform(
         Vector3 position,
         Quaternion rotation)
@@ -132,6 +242,10 @@ public class PlaneCameraController : MonoBehaviour
                 : rotation;
     }
 
+
+    // =========================================================
+    // FOV
+    // =========================================================
 
     public void SetSpeedFOV(bool active)
     {

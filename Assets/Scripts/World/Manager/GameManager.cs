@@ -9,47 +9,78 @@ public class GameManager : MonoBehaviour
     [SerializeField] private FadeController fadeController;
     [SerializeField] private WorldMovementManager worldMovement;
 
+
+    [Header("Game Timer")]
+    [SerializeField] private float gameDuration = 120f;
+
+    public float RemainingTime { get; private set; }
+
+
     public int Score { get; private set; }
 
     public float Distance { get; private set; }
-    
+
     public GameState State { get; private set; }
 
     public GroundType CurrentGroundType { get; private set; }
+    
+    private bool gameTimeFinished;
 
 
     private void Awake()
     {
         State = GameState.Waiting;
+
         Score = 0;
-        Distance = 0;
+
+        Distance = 0f;
+
+        RemainingTime = gameDuration;
     }
+
+
+    private void OnEnable()
+    {
+        SelectRandomGround();
+        
+        gameTimeFinished = false;
+    }
+
 
     private void Update()
     {
         if (State != GameState.Playing)
             return;
 
+
         UpdateDistance();
-    }
-    
-    private void OnEnable()
-    {
-        SelectRandomGround();
+
+        UpdateTimer();
     }
 
 
     private void SelectRandomGround()
     {
         GroundType[] groundTypes =
-            (GroundType[])Enum.GetValues(typeof(GroundType));
+            (GroundType[])Enum.GetValues(
+                typeof(GroundType)
+            );
+
 
         int randomIndex =
-            UnityEngine.Random.Range(0, groundTypes.Length);
+            UnityEngine.Random.Range(
+                0,
+                groundTypes.Length
+            );
 
-        CurrentGroundType = groundTypes[randomIndex];
 
-        Debug.Log($"Selected Ground: {CurrentGroundType}");
+        CurrentGroundType =
+            groundTypes[randomIndex];
+
+
+        Debug.Log(
+            $"Selected Ground: {CurrentGroundType}"
+        );
     }
 
 
@@ -58,7 +89,14 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Waiting)
             return;
 
-        State = GameState.Playing;
+
+        State =
+            GameState.Playing;
+
+
+        RemainingTime =
+            gameDuration;
+
 
         GameEvents.RaiseGameStarted();
     }
@@ -69,19 +107,42 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing)
             return;
 
+
         Score += amount;
 
-        GameEvents.RaiseScoreChanged(Score);
+
+        GameEvents.RaiseScoreChanged(
+            Score
+        );
     }
-    
+
+
     private void UpdateDistance()
     {
         if (worldMovement == null)
             return;
 
+
         Distance +=
-            (worldMovement.RealSpeed *
-            Time.deltaTime);
+            worldMovement.RealSpeed *
+            Time.deltaTime;
+    }
+
+
+    private void UpdateTimer()
+    {
+        if (gameTimeFinished)
+            return;
+
+        RemainingTime -= Time.deltaTime;
+
+        if (RemainingTime <= 0f)
+        {
+            RemainingTime = 0f;
+            gameTimeFinished = true;
+
+            GameEvents.RaiseGameTimeFinished();
+        }
     }
 
 
@@ -90,15 +151,30 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing)
             return;
 
-        State = GameState.GameOver;
+
+        State =
+            GameState.GameOver;
+
 
         GameEvents.RaiseGameOver();
     }
 
 
+    public void Victory()
+    {
+        State =
+            GameState.Victory;
+
+
+        GameEvents.RaiseVictory();
+    }
+
+
     public void RestartGameWithEffect()
     {
-        StartCoroutine(RestartGameRoutine());
+        StartCoroutine(
+            RestartGameRoutine()
+        );
     }
 
 
@@ -117,6 +193,7 @@ public class GameManager : MonoBehaviour
         Scene currentScene =
             SceneManager.GetActiveScene();
 
+
         SceneManager.LoadScene(
             currentScene.buildIndex
         );
@@ -134,6 +211,7 @@ public enum GameState
 {
     Waiting,
     Playing,
+    Victory,
     GameOver
 }
 

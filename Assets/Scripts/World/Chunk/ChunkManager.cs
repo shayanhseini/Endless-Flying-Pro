@@ -10,32 +10,27 @@ public class ChunkManager : MonoBehaviour
     [SerializeField] private WorldMovementManager worldMovement;
     [SerializeField] private DifficultyManager difficultyManager;
     [SerializeField] private GameManager gameManager;
-
-
-    public int InitialChunkCount => chunks.Length;
-
-
+    
+    public int InitialChunkCount =>
+        chunks.Length;
+    
     [Header("Recycle")]
     [SerializeField] private float recycleOffset = 50f;
-
-
+    
     private bool startChunkActive;
-
-
+    private bool finalGroundPending;
+    private bool finalGroundActivated;
+    
     private void Awake()
     {
-        // Start Chunk فقط زمین خالی است
         if (startChunk != null)
         {
             startChunkActive = true;
         }
-
-
-        // Main Chunks
+        
         SortChunks();
         AlignChunks();
-
-
+        
         foreach (WorldChunk chunk in chunks)
         {
             chunk.ResetContent(
@@ -44,58 +39,65 @@ public class ChunkManager : MonoBehaviour
             );
         }
     }
-
-
+    
+    private void OnEnable()
+    {
+        GameEvents.GameTimeFinished +=
+            HandleGameTimeFinished;
+    }
+    
+    private void OnDisable()
+    {
+        GameEvents.GameTimeFinished -=
+            HandleGameTimeFinished;
+    }
+    
+    private void HandleGameTimeFinished()
+    {
+        finalGroundPending = true;
+    }
+    
     private void Update()
     {
         if (!worldMovement.IsMovementEnabled)
             return;
-
-
+        
         MoveChunks();
-
         MoveStartChunk();
-
         CheckRecycle();
     }
-
-
+    
     private void MoveChunks()
     {
         Vector3 movement =
             Vector3.back *
             worldMovement.WorldSpeed *
             Time.deltaTime;
-
-
+        
         foreach (WorldChunk chunk in chunks)
         {
             chunk.Move(movement);
         }
     }
-
-
+    
     private void MoveStartChunk()
     {
         if (!startChunkActive ||
             startChunk == null)
             return;
-
-
+        
         Vector3 movement =
             Vector3.back *
             worldMovement.WorldSpeed *
             Time.deltaTime;
-
-
-        startChunk.transform.position += movement;
-
-
+        
+        startChunk.transform.position +=
+            movement;
+        
         float startEndZ =
             startChunk.transform.position.z +
             GetStartChunkLength() * 0.5f;
-
-
+        
         if (startEndZ <
             player.position.z - recycleOffset)
         {
@@ -104,76 +106,78 @@ public class ChunkManager : MonoBehaviour
             startChunkActive = false;
         }
     }
-
-
+    
     private float GetStartChunkLength()
     {
         return 20f;
     }
-
-
+    
     private void CheckRecycle()
     {
+        if (finalGroundActivated)
+            return;
+        
         WorldChunk first =
             chunks[0];
-
-
+        
         float firstEndZ =
             first.transform.position.z +
             first.Length * 0.5f;
-
-
+        
         if (firstEndZ <
             player.position.z - recycleOffset)
         {
             RecycleChunk(first);
         }
     }
-
-
+    
     private void RecycleChunk(
         WorldChunk chunk)
     {
         WorldChunk last =
             chunks[^1];
-
-
+        
         Vector3 position =
             chunk.transform.position;
-
-
+        
         position.z =
             last.transform.position.z +
             last.Length;
-
-
+        
         chunk.MoveTo(position);
+        
+        if (finalGroundPending)
+        {
+            ActivateFinalChunk(chunk);
 
-
-        chunk.ResetContent(
-            difficultyManager,
-            gameManager.CurrentGroundType
-        );
-
-
+            finalGroundPending = false;
+            finalGroundActivated = true;
+        }
+        else
+        {
+            chunk.ResetContent(
+                difficultyManager,
+                gameManager.CurrentGroundType
+            );
+        }
         ShiftChunks(chunk);
     }
-
-
-    private void ShiftChunks(
-        WorldChunk recycledChunk)
+    
+    private void ActivateFinalChunk(WorldChunk chunk)
+    {
+        chunk.ActivateFinalGround();
+    }
+    
+    private void ShiftChunks(WorldChunk recycledChunk)
     {
         for (int i = 0;
              i < chunks.Length - 1;
              i++)
         {
-            chunks[i] =
-                chunks[i + 1];
+            chunks[i] = chunks[i + 1];
         }
-
-
-        chunks[^1] =
-            recycledChunk;
+        
+        chunks[^1] = recycledChunk;
     }
 
 
@@ -200,23 +204,21 @@ public class ChunkManager : MonoBehaviour
 
             WorldChunk current =
                 chunks[i];
-
-
+            
             float previousEndZ =
                 previous.transform.position.z +
                 previous.Length * 0.5f;
-
-
+            
             Vector3 position =
                 current.transform.position;
-
-
+            
             position.z =
                 previousEndZ +
                 current.Length * 0.5f;
-
-
-            current.MoveTo(position);
+            
+            current.MoveTo(
+                position
+            );
         }
     }
 }

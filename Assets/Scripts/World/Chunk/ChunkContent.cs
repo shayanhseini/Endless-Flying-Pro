@@ -56,11 +56,21 @@ public class ChunkContent : MonoBehaviour
     }
 
 
+    public void DisableContent()
+    {
+        DisableAll(coins);
+        DisableAll(obstacles);
+        DisableAll(shields);
+        DisableAll(speedPowerUps);
+    }
+
+
     private void ActivateRandomObjects(
         GameObject[] objects,
         int amount)
     {
-        if (objects == null || objects.Length == 0)
+        if (objects == null ||
+            objects.Length == 0)
             return;
 
 

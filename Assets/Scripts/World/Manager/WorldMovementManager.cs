@@ -6,14 +6,14 @@ public class WorldMovementManager : MonoBehaviour
     [SerializeField] private float startSpeed = 10f;
     [SerializeField] private float speedAtMaxScore = 12f;
     [SerializeField] private float speedIncreaseAfterMaxScore = 0.02f;
-    
+
     [Header("Real Speed")]
     [SerializeField] private float realSpeedMultiplier = 20f;
-    
+
     [Header("Difficulty")]
     [SerializeField] private DifficultyManager difficultyManager;
 
-    
+
     public float RealSpeed =>
         WorldSpeed * realSpeedMultiplier;
 
@@ -34,18 +34,14 @@ public class WorldMovementManager : MonoBehaviour
         _maxScore =
             difficultyManager.GetMaxScore();
 
-
         BaseWorldSpeed =
             startSpeed;
-
 
         WorldSpeed =
             startSpeed;
 
-
         SpeedMultiplier =
             1f;
-
 
         IsMovementEnabled =
             false;
@@ -55,7 +51,10 @@ public class WorldMovementManager : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.GameStarted += StartMovement;
+        
         GameEvents.GameOver += StopMovement;
+        GameEvents.Victory += StopMovement;
+        
         GameEvents.ScoreChanged += UpdateSpeed;
     }
 
@@ -63,7 +62,10 @@ public class WorldMovementManager : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.GameStarted -= StartMovement;
+        
         GameEvents.GameOver -= StopMovement;
+        GameEvents.Victory -= StopMovement;
+        
         GameEvents.ScoreChanged -= UpdateSpeed;
     }
 
@@ -140,7 +142,8 @@ public class WorldMovementManager : MonoBehaviour
         float targetSpeed =
             BaseWorldSpeed *
             SpeedMultiplier;
-        
+
+
         if (targetSpeed >= WorldSpeed)
         {
             WorldSpeed = targetSpeed;

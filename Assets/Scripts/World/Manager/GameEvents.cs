@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public static class GameEvents
 {
@@ -16,6 +17,14 @@ public static class GameEvents
     public static event Action SpeedBoostDeactivated;
 
     public static event Action LaunchMissile;
+    
+    public static event Action<Transform> FinalGroundActivated;
+
+    public static event Action PlaneReachedFinalTarget;
+
+    public static event Action Victory;
+    
+    public static event Action GameTimeFinished;
 
 
     public static void RaiseGameStarted()
@@ -66,6 +75,30 @@ public static class GameEvents
     public static void RaiseLaunchMissile()
     {
         LaunchMissile?.Invoke();
+    }
+    
+    public static void RaiseGameTimeFinished()
+    {
+        GameTimeFinished?.Invoke();
+    }
+
+
+    public static void RaiseFinalGroundActivated(
+        Transform target)
+    {
+        FinalGroundActivated?.Invoke(target);
+    }
+
+
+    public static void RaisePlaneReachedFinalTarget()
+    {
+        PlaneReachedFinalTarget?.Invoke();
+    }
+
+
+    public static void RaiseVictory()
+    {
+        Victory?.Invoke();
     }
     
 }

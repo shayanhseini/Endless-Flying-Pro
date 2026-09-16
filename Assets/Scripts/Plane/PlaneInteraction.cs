@@ -1,29 +1,42 @@
+using System;
 using UnityEngine;
 
 public class PlaneInteraction : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private ShieldController shield;
+    [Header("References")] [SerializeField]
+    private ShieldController shield;
+
     [SerializeField] private GameManager gameManager;
     [SerializeField] private GameAudioController gameAudioController;
 
-    [Header("Hit Effect")]
-    [SerializeField] private GameObject hitEffect;
+    [Header("Hit Effect")] [SerializeField]
+    private GameObject hitEffect;
+
     
-    public void HitObstacle()
+    public void HitObstacle(bool win = false)
     {
         GameEvents.RaisePlaneHit();
 
         PlayHitEffect();
-        gameAudioController.PlayExplosionSound(this.transform);
 
-        if (shield != null && shield.IsActive)
+        gameAudioController.PlayExplosionSound(
+            this.transform
+        );
+
+        if (win)
+        {
+            gameManager.Victory();
+            return;
+        }
+
+        if (shield != null &&
+            shield.IsActive)
         {
             shield.Consume();
             return;
         }
-        
-        DestroyPlane();
+
+        gameManager.GameOver();
     }
 
 
@@ -32,20 +45,22 @@ public class PlaneInteraction : MonoBehaviour
         if (hitEffect == null)
             return;
 
+
         hitEffect.SetActive(false);
+
 
         hitEffect.transform.position =
             transform.position;
 
+
         hitEffect.SetActive(true);
     }
 
-    
-
-    private void DestroyPlane()
+    private void DisableShield()
     {
-        Debug.Log("Plane Destroyed");
+        if (shield == null)
+            return;
 
-        gameManager.GameOver();
+        shield.ForceDeactivate();
     }
 }

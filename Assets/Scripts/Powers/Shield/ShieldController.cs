@@ -201,4 +201,17 @@ public class ShieldController : MonoBehaviour
 
         scaleCoroutine = null;
     }
+    
+    public void ForceDeactivate()
+    {
+        if (!IsActive)
+            return;
+
+        remainingTime = 0f;
+        visualDeactivated = true;
+
+        DeactivateShieldVisual();
+
+        GameEvents.RaiseShieldDeactivated();
+    }
 }
