@@ -15715,7 +15715,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e354d0a20cfe9a640ae99295da740225, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraDistanceCulling
-  renderDistance: 130
+  renderDistance: 200
 --- !u!1 &8347696111246641775
 GameObject:
   m_ObjectHideFlags: 0
@@ -16226,7 +16226,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a4b326e3d025ef4fbd94d73580e3be8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShieldController
-  shieldDuration: 5
+  shieldDuration: 50
   visualLeadTime: 0.25
   shieldVisual: {fileID: 919132148891567498}
   shieldScale: 1.5
