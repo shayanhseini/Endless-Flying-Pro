@@ -143,7 +143,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &117485217689378980
 Transform:
   m_ObjectHideFlags: 0
@@ -1627,7 +1627,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3492920716643365085, guid: 0cdac4737d2e9e046a97f4cf1ad228d9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7415995950028088116}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6923379175708227384, guid: 0cdac4737d2e9e046a97f4cf1ad228d9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 460403865445066728}
   m_SourcePrefab: {fileID: 100100000, guid: 0cdac4737d2e9e046a97f4cf1ad228d9, type: 3}
 --- !u!4 &3554384115527681013 stripped
 Transform:
@@ -1639,6 +1642,22 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 6923379175708227384, guid: 0cdac4737d2e9e046a97f4cf1ad228d9, type: 3}
   m_PrefabInstance: {fileID: 84140573345248040}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &460403865445066728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007079621428249616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6fb61204f69b7145b96ae2fa20dcb35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundDefenceHolder
+  radars:
+  - {fileID: 3462806161734018118}
+  missiles:
+  - {fileID: 26205525489895091}
 --- !u!1001 &195405037204096445
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2150,6 +2169,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+--- !u!114 &949923802933019627 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 411897378625764965, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 619690052286807438}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radar
+--- !u!114 &4430852331718320414 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883255621862939792, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 619690052286807438}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4c1d9910ba2b54ebf40d120fcb6ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Missile
 --- !u!4 &5986173311487119964 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6596291555600429010, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
@@ -2905,13 +2946,32 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4842217413005939462, guid: 2459172c775d40b4399fed80003340e8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3149342297098065714}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2584428715157248824, guid: 2459172c775d40b4399fed80003340e8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5241325674953136291}
   m_SourcePrefab: {fileID: 100100000, guid: 2459172c775d40b4399fed80003340e8, type: 3}
 --- !u!1 &4187981547490219925 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2584428715157248824, guid: 2459172c775d40b4399fed80003340e8, type: 3}
   m_PrefabInstance: {fileID: 1856344232152779949}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5241325674953136291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4187981547490219925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6fb61204f69b7145b96ae2fa20dcb35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundDefenceHolder
+  radars:
+  - {fileID: 3299956711694572774}
+  missiles:
+  - {fileID: 2132611890339282451}
 --- !u!4 &6552750834787147691 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4842217413005939462, guid: 2459172c775d40b4399fed80003340e8, type: 3}
@@ -3957,6 +4017,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+--- !u!114 &2132611890339282451 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883255621862939792, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 2917373092879639171}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4c1d9910ba2b54ebf40d120fcb6ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Missile
+--- !u!114 &3299956711694572774 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 411897378625764965, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 2917373092879639171}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radar
 --- !u!4 &8355913877332381009 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6596291555600429010, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
@@ -4676,6 +4758,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+--- !u!114 &26205525489895091 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883255621862939792, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 3871127144442075683}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4c1d9910ba2b54ebf40d120fcb6ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Missile
+--- !u!114 &3462806161734018118 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 411897378625764965, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 3871127144442075683}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radar
 --- !u!4 &7247275833921854486 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5848627088788604469, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
@@ -4997,13 +5101,32 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8133902685619101307, guid: 2a7a2982cdf18794f827cee5bc0758ad, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6815254115572233317}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8482931667259237335, guid: 2a7a2982cdf18794f827cee5bc0758ad, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4714097939283445932}
   m_SourcePrefab: {fileID: 100100000, guid: 2a7a2982cdf18794f827cee5bc0758ad, type: 3}
 --- !u!1 &5323598074709879697 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8482931667259237335, guid: 2a7a2982cdf18794f827cee5bc0758ad, type: 3}
   m_PrefabInstance: {fileID: 4348319269741594694}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4714097939283445932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5323598074709879697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6fb61204f69b7145b96ae2fa20dcb35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundDefenceHolder
+  radars:
+  - {fileID: 5325128357262279538}
+  missiles:
+  - {fileID: 8770173224554111367}
 --- !u!4 &5528511812875785789 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8133902685619101307, guid: 2a7a2982cdf18794f827cee5bc0758ad, type: 3}
@@ -5564,7 +5687,7 @@ MonoBehaviour:
   radars:
   - {fileID: 6757339059592633084}
   missiles:
-  - {fileID: 0}
+  - {fileID: 7896400042744805385}
 --- !u!4 &6184230077078375133 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7501588935933861659, guid: 0313d9c3b2a0b844fafd99d2b9f2caf0, type: 3}
@@ -6187,6 +6310,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5848627088788604469, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
   m_PrefabInstance: {fileID: 5499443239706262807}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5325128357262279538 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 411897378625764965, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 5499443239706262807}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radar
+--- !u!114 &8770173224554111367 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883255621862939792, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 5499443239706262807}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4c1d9910ba2b54ebf40d120fcb6ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Missile
 --- !u!1001 &5501437754274606504
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6904,7 +7049,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6687760088062876358, guid: c71d6a72b38e9734aa4d2296057bb51e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 845722629887113575}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4662437529773118128, guid: c71d6a72b38e9734aa4d2296057bb51e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2770578185646930546}
   m_SourcePrefab: {fileID: 100100000, guid: c71d6a72b38e9734aa4d2296057bb51e, type: 3}
 --- !u!4 &1125273671200560578 stripped
 Transform:
@@ -6916,6 +7064,22 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 4662437529773118128, guid: c71d6a72b38e9734aa4d2296057bb51e, type: 3}
   m_PrefabInstance: {fileID: 6003988989039054596}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2770578185646930546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433897405087227316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6fb61204f69b7145b96ae2fa20dcb35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundDefenceHolder
+  radars:
+  - {fileID: 949923802933019627}
+  missiles:
+  - {fileID: 4430852331718320414}
 --- !u!1001 &6011053099308301321
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7164,13 +7328,32 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5448258928577219561, guid: 7c2a0e6479916ee47b986a8aacfef491, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4265234454007034812}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5009546706888761520, guid: 7c2a0e6479916ee47b986a8aacfef491, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6636133984997695955}
   m_SourcePrefab: {fileID: 100100000, guid: 7c2a0e6479916ee47b986a8aacfef491, type: 3}
 --- !u!1 &1253755705344658502 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5009546706888761520, guid: 7c2a0e6479916ee47b986a8aacfef491, type: 3}
   m_PrefabInstance: {fileID: 6116803207665888502}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6636133984997695955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253755705344658502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6fb61204f69b7145b96ae2fa20dcb35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundDefenceHolder
+  radars:
+  - {fileID: 8957944443677867043}
+  missiles:
+  - {fileID: 5477011636005936854}
 --- !u!4 &2269632495682529055 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5448258928577219561, guid: 7c2a0e6479916ee47b986a8aacfef491, type: 3}
@@ -7701,6 +7884,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Radar
+--- !u!114 &7896400042744805385 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883255621862939792, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 6373084307648619673}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4c1d9910ba2b54ebf40d120fcb6ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Missile
 --- !u!1001 &6415059296081328436
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9343,6 +9537,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5848627088788604469, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
   m_PrefabInstance: {fileID: 8783806501270405702}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5477011636005936854 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3883255621862939792, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 8783806501270405702}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4c1d9910ba2b54ebf40d120fcb6ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Missile
+--- !u!114 &8957944443677867043 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 411897378625764965, guid: d15f0237faaa2184d85630e7a352e45c, type: 3}
+  m_PrefabInstance: {fileID: 8783806501270405702}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fc30fceb8bca142a522b11b8a19b17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Radar
 --- !u!1001 &8799804149405253725
 PrefabInstance:
   m_ObjectHideFlags: 0
