@@ -61,7 +61,7 @@ public class GameManager : MonoBehaviour
 
     private void SelectRandomGround()
     {
-        GroundType[] groundTypes =
+        /*GroundType[] groundTypes =
             (GroundType[])Enum.GetValues(
                 typeof(GroundType)
             );
@@ -76,6 +76,9 @@ public class GameManager : MonoBehaviour
 
         CurrentGroundType =
             groundTypes[randomIndex];
+            */
+
+        CurrentGroundType = GroundType.Dirt;
 
 
         Debug.Log(
