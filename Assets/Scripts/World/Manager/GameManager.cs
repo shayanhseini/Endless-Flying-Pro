@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     [Header("Game Timer")]
     [SerializeField] private float gameDuration = 120f;
 
+    [Header("Auto Restart")]
+    [SerializeField] private float autoRestartDelay = 3f;
+
     public float RemainingTime { get; private set; }
 
 
@@ -25,6 +28,7 @@ public class GameManager : MonoBehaviour
     public GroundType CurrentGroundType { get; private set; }
     
     private bool gameTimeFinished;
+    private Coroutine autoRestartCoroutine;
 
 
     private void Awake()
@@ -160,6 +164,19 @@ public class GameManager : MonoBehaviour
 
 
         GameEvents.RaiseGameOver();
+
+        if (autoRestartCoroutine == null)
+        {
+            autoRestartCoroutine =
+                StartCoroutine(AutoRestartAfterGameOver());
+        }
+    }
+
+
+    private IEnumerator AutoRestartAfterGameOver()
+    {
+        yield return new WaitForSecondsRealtime(autoRestartDelay);
+        RestartGame();
     }
 
 

@@ -19,7 +19,7 @@ public class Missile : MonoBehaviour
     private float terminalGuidanceStart = 0.9f;
 
     [SerializeField, Range(0.1f, 1f)]
-    private float terminalTurnMultiplier = 0.4f;
+    private float terminalTurnMultiplier = 0.22f;
 
     [SerializeField] private float velocitySmoothing = 12f;
 
@@ -194,9 +194,11 @@ public class Missile : MonoBehaviour
 
         Vector3 targetPosition = GetTargetPosition();
         Vector3 toTarget = targetPosition - transform.position;
+        float dodgePhaseStart =
+            Mathf.Min(terminalGuidanceStart, 0.82f);
 
         bool passedTarget =
-            progress >= terminalGuidanceStart &&
+            progress >= dodgePhaseStart &&
             Vector3.Dot(transform.forward, toTarget) <= 0f;
 
         if (passedTarget)
@@ -213,7 +215,7 @@ public class Missile : MonoBehaviour
         }
 
         Vector3 aimPosition =
-            progress >= terminalGuidanceStart
+            progress >= dodgePhaseStart
                 ? targetPosition
                 : GetPredictedPosition(targetPosition);
 
@@ -253,7 +255,7 @@ public class Missile : MonoBehaviour
                 )
             );
 
-        if (progress >= terminalGuidanceStart)
+        if (progress >= dodgePhaseStart)
             targetTurnSpeed *= terminalTurnMultiplier;
         
         currentTurnSpeed =
