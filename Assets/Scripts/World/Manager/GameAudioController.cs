@@ -80,11 +80,21 @@ public class GameAudioController : MonoBehaviour
     
     public void PlayExplosionSound(Transform target)
     {
-        if (expSound == null)
+        if (target == null)
             return;
-        
+
+        PlayExplosionSound(target.position);
+    }
+
+    public void PlayExplosionSound(Vector3 position)
+    {
+        if (expSound == null ||
+            explosionClips == null ||
+            explosionClips.Length == 0)
+            return;
+
         expSound.transform.position =
-            target.position;
+            position;
 
         int index = Random.Range(0, explosionClips.Length);
         expSound.PlayOneShot(explosionClips[index]);
