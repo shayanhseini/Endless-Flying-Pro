@@ -211,6 +211,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Carier
       objectReference: {fileID: 0}
+    - target: {fileID: 4632739762024455780, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6359296717079817097, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name
       value: Light
@@ -239,6 +243,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bomb_Drone
       objectReference: {fileID: 0}
+    - target: {fileID: 7537368007599871364, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7855084330937090419, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Enabled
       value: 0
@@ -246,6 +254,10 @@ PrefabInstance:
     - target: {fileID: 8616977872990215763, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_Name
       value: Drone
+      objectReference: {fileID: 0}
+    - target: {fileID: 8616977872990215763, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9044054556988491094, guid: 2abaad5c955b33242bcadfe46cacfb1b, type: 3}
       propertyPath: m_LocalScale.x

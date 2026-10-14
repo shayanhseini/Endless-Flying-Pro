@@ -1,4 +1,6 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Missile : MonoBehaviour
 {
@@ -13,7 +15,15 @@ public class Missile : MonoBehaviour
 
     [Header("Guidance")]
     [SerializeField, Range(0f, 1f)]
-    private float guidancePercent = 0.9f;
+    [FormerlySerializedAs("guidancePercent")]
+    private float terminalGuidanceStart = 0.9f;
+
+    [SerializeField, Range(0.1f, 1f)]
+    private float terminalTurnMultiplier = 0.4f;
+
+    [SerializeField] private float velocitySmoothing = 12f;
+
+    [SerializeField] private float missDisableDelay = 0.75f;
 
 
     [Header("Prediction")]
@@ -39,6 +49,7 @@ public class Missile : MonoBehaviour
     [SerializeField] private GameObject moveSoundEffect;
 
     private Transform target;
+    private Collider targetCollider;
 
     private Vector3 targetLastPosition;
     private Vector3 targetVelocity;
@@ -51,11 +62,13 @@ public class Missile : MonoBehaviour
 
     private bool isLocked;
     private bool isMoving;
+    private bool isWaitingToDisable;
 
 
     private void OnEnable()
     {
         isMoving = false;
+        isWaitingToDisable = false;
         currentTurnSpeed = 0f;
         
         moveSoundEffect.SetActive(false);
@@ -67,8 +80,11 @@ public class Missile : MonoBehaviour
         if (target == null)
             return;
 
+        StopAllCoroutines();
+        isWaitingToDisable = false;
 
         this.target = target;
+        targetCollider = target.GetComponentInChildren<Collider>();
 
 
         launchPosition =
@@ -78,12 +94,12 @@ public class Missile : MonoBehaviour
         initialDistance =
             Vector3.Distance(
                 launchPosition,
-                target.position
+                GetTargetPosition()
             );
 
 
         targetLastPosition =
-            target.position;
+            GetTargetPosition();
 
 
         targetVelocity =
@@ -101,9 +117,12 @@ public class Missile : MonoBehaviour
 
     public void StopAndReset()
     {
+        StopAllCoroutines();
         isMoving = false;
+        isWaitingToDisable = false;
 
         target = null;
+        targetCollider = null;
 
         targetVelocity =
             Vector3.zero;
@@ -171,22 +190,36 @@ public class Missile : MonoBehaviour
                   initialDistance
                 : 1f;
         
-        if (progress >= guidancePercent)
+        UpdateTargetVelocity();
+
+        Vector3 targetPosition = GetTargetPosition();
+        Vector3 toTarget = targetPosition - transform.position;
+
+        bool passedTarget =
+            progress >= terminalGuidanceStart &&
+            Vector3.Dot(transform.forward, toTarget) <= 0f;
+
+        if (passedTarget)
         {
             LockDirection();
+
+            if (!isWaitingToDisable)
+            {
+                isWaitingToDisable = true;
+                StartCoroutine(DisableAfterMissDelay());
+            }
+
             return;
         }
 
-
-        UpdateTargetVelocity();
-
-
-        Vector3 predictedPosition =
-            GetPredictedPosition();
+        Vector3 aimPosition =
+            progress >= terminalGuidanceStart
+                ? targetPosition
+                : GetPredictedPosition(targetPosition);
 
 
         Vector3 direction =
-            predictedPosition -
+            aimPosition -
             transform.position;
 
 
@@ -213,12 +246,15 @@ public class Missile : MonoBehaviour
         
         float targetTurnSpeed =
             Mathf.Lerp(
-                0f,
+                maxTurnSpeed * 0.35f,
                 maxTurnSpeed,
                 Mathf.Clamp01(
                     angle / 90f
                 )
             );
+
+        if (progress >= terminalGuidanceStart)
+            targetTurnSpeed *= terminalTurnMultiplier;
         
         currentTurnSpeed =
             Mathf.Lerp(
@@ -247,13 +283,25 @@ public class Missile : MonoBehaviour
 
 
         Vector3 currentPosition =
-            target.position;
+            GetTargetPosition();
 
-
-        targetVelocity =
+        Vector3 measuredVelocity =
             (currentPosition -
              targetLastPosition) /
             Time.deltaTime;
+
+        float smoothing =
+            1f - Mathf.Exp(
+                -velocitySmoothing *
+                Time.deltaTime
+            );
+
+        targetVelocity =
+            Vector3.Lerp(
+                targetVelocity,
+                measuredVelocity,
+                smoothing
+            );
 
 
         targetLastPosition =
@@ -261,17 +309,46 @@ public class Missile : MonoBehaviour
     }
 
 
-    private Vector3 GetPredictedPosition()
+    private Vector3 GetPredictedPosition(
+        Vector3 targetPosition)
     {
-        float distance =
-            Vector3.Distance(
-                transform.position,
-                target.position
-            );
+        Vector3 toTarget =
+            targetPosition - transform.position;
+
+        float speedSquared = speed * speed;
+        float velocitySquared = targetVelocity.sqrMagnitude;
+
+        float a = velocitySquared - speedSquared;
+        float b = 2f * Vector3.Dot(toTarget, targetVelocity);
+        float c = toTarget.sqrMagnitude;
+
+        float predictionTime = 0f;
+
+        if (Mathf.Abs(a) < 0.001f)
+        {
+            if (Mathf.Abs(b) > 0.001f)
+                predictionTime = -c / b;
+        }
+        else
+        {
+            float discriminant = b * b - 4f * a * c;
+
+            if (discriminant >= 0f)
+            {
+                float sqrtDiscriminant = Mathf.Sqrt(discriminant);
+                float firstTime = (-b - sqrtDiscriminant) / (2f * a);
+                float secondTime = (-b + sqrtDiscriminant) / (2f * a);
+
+                predictionTime = GetSmallestPositiveTime(
+                    firstTime,
+                    secondTime
+                );
+            }
+        }
 
 
-        float predictionTime =
-            distance / speed;
+        if (predictionTime <= 0f)
+            predictionTime = toTarget.magnitude / Mathf.Max(speed, 0.1f);
 
 
         predictionTime =
@@ -282,9 +359,34 @@ public class Missile : MonoBehaviour
             );
 
 
-        return target.position +
+        return targetPosition +
                targetVelocity *
                predictionTime;
+    }
+
+
+    private float GetSmallestPositiveTime(
+        float firstTime,
+        float secondTime)
+    {
+        bool firstIsValid = firstTime > 0f;
+        bool secondIsValid = secondTime > 0f;
+
+        if (firstIsValid && secondIsValid)
+            return Mathf.Min(firstTime, secondTime);
+
+        if (firstIsValid)
+            return firstTime;
+
+        return secondIsValid ? secondTime : 0f;
+    }
+
+
+    private Vector3 GetTargetPosition()
+    {
+        return targetCollider != null
+            ? targetCollider.bounds.center
+            : target.position;
     }
 
 
@@ -332,11 +434,29 @@ public class Missile : MonoBehaviour
         plane.HitObstacle();
 
 
-        isMoving = false;
-        target = null;
+        DeactivateMissile();
+    }
 
-        
-        moveSoundEffect.SetActive(false);
+
+    private void DeactivateMissile()
+    {
+        isMoving = false;
+        isLocked = false;
+        isWaitingToDisable = false;
+        target = null;
+        targetCollider = null;
+        targetVelocity = Vector3.zero;
+
+        if (moveSoundEffect != null)
+            moveSoundEffect.SetActive(false);
+
         gameObject.SetActive(false);
+    }
+
+
+    private IEnumerator DisableAfterMissDelay()
+    {
+        yield return new WaitForSeconds(missDisableDelay);
+        DeactivateMissile();
     }
 }
