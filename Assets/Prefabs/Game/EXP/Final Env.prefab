@@ -346,6 +346,10 @@ PrefabInstance:
       value: awacs (7)
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 2147483647
       objectReference: {fileID: 0}
@@ -482,6 +486,10 @@ PrefabInstance:
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_Name
       value: awacs (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -1388,6 +1396,10 @@ PrefabInstance:
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_Name
       value: awacs (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2563,7 +2575,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3132186823275361864, guid: 44bbfa33c756d5c479f153daa141c54b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 13.59
+      value: 33.8
       objectReference: {fileID: 0}
     - target: {fileID: 3132186823275361864, guid: 44bbfa33c756d5c479f153daa141c54b, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2571,7 +2583,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3132186823275361864, guid: 44bbfa33c756d5c479f153daa141c54b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -25.7
+      value: -34.1
       objectReference: {fileID: 0}
     - target: {fileID: 3132186823275361864, guid: 44bbfa33c756d5c479f153daa141c54b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2714,6 +2726,10 @@ PrefabInstance:
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_Name
       value: awacs (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -3180,6 +3196,10 @@ PrefabInstance:
       value: awacs (4)
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 2147483647
       objectReference: {fileID: 0}
@@ -3349,6 +3369,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: radar (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 514722926718381390, guid: 7a4266bb92546a949a8c7ca85fa5a545, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 896068350507759604, guid: 7a4266bb92546a949a8c7ca85fa5a545, type: 3}
       propertyPath: m_LocalPosition.x
       value: -32.88
@@ -3457,11 +3481,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -5477749408508380018, guid: 444a468bb9227414688e4599a3acde37, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.8459454
+      value: 3.5767019
       objectReference: {fileID: 0}
     - target: {fileID: -5477749408508380018, guid: 444a468bb9227414688e4599a3acde37, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.424773
+      value: 2.0721354
       objectReference: {fileID: 0}
     - target: {fileID: -5477749408508380018, guid: 444a468bb9227414688e4599a3acde37, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3481,11 +3505,11 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 79345358386ab55459606a58e39b3c1f, type: 2}
     - target: {fileID: -4278520948466513184, guid: 444a468bb9227414688e4599a3acde37, type: 3}
       propertyPath: m_LocalScale.x
-      value: 29.06336
+      value: 48.803196
       objectReference: {fileID: 0}
     - target: {fileID: -4278520948466513184, guid: 444a468bb9227414688e4599a3acde37, type: 3}
       propertyPath: m_LocalScale.z
-      value: 20.36751
+      value: 26.940105
       objectReference: {fileID: 0}
     - target: {fileID: -4278520948466513184, guid: 444a468bb9227414688e4599a3acde37, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3911,6 +3935,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: radar
       objectReference: {fileID: 0}
+    - target: {fileID: 514722926718381390, guid: 7a4266bb92546a949a8c7ca85fa5a545, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 896068350507759604, guid: 7a4266bb92546a949a8c7ca85fa5a545, type: 3}
       propertyPath: m_LocalPosition.x
       value: 20.6
@@ -4066,6 +4094,10 @@ PrefabInstance:
       value: awacs (8)
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 2147483647
       objectReference: {fileID: 0}
@@ -4202,6 +4234,10 @@ PrefabInstance:
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_Name
       value: awacs (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4574,6 +4610,10 @@ PrefabInstance:
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_Name
       value: awacs
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -5464,6 +5504,10 @@ PrefabInstance:
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_Name
       value: awacs (6)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6824037111563723521, guid: e64ef196068a3eb42a69ff4ce3d11783, type: 3}
       propertyPath: m_StaticEditorFlags
