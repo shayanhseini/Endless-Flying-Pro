@@ -59,9 +59,9 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private float initialScaleMultiplier = 0.05f;
     [Min(0f)]
     [SerializeField] private float fullScaleDistance = 350f;
-    [SerializeField] private Vector2 horizontalRange = new(-35f, 35f);
+    [SerializeField] private float leftSideX = -180f;
+    [SerializeField] private float rightSideX = 180f;
     [SerializeField] private Vector2 verticalRange = new(8f, 28f);
-    [SerializeField] private bool useReferenceSideOffset = true;
     [Min(0f)]
     [SerializeField] private float despawnDistanceBehindPlayer = 300f;
     [SerializeField] private Vector3 rotationPerSecond = new(0f, 5f, 0f);
@@ -114,7 +114,8 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private void MoveActivePlanets()
     {
-        Vector3 movement = Vector3.back * worldMovement.WorldSpeed * Time.deltaTime;
+        float approachSpeed = spawnDistance / Mathf.Max(1f, secondsBetweenPlanets);
+        Vector3 movement = Vector3.back * approachSpeed * Time.deltaTime;
 
         for (int i = activePlanets.Count - 1; i >= 0; i--)
         {
@@ -165,10 +166,10 @@ public class PlanetSequenceManager : MonoBehaviour
         instance.SetActive(true);
         DisableColliders(instance);
 
-        float x = hasReferenceSideOffset && useReferenceSideOffset
-            ? referenceSideOffset.x
-            : UnityEngine.Random.Range(horizontalRange.x, horizontalRange.y);
-        float y = hasReferenceSideOffset && useReferenceSideOffset
+        float x = nextPlanetIndex % 2 == 0
+            ? leftSideX
+            : rightSideX;
+        float y = hasReferenceSideOffset
             ? referenceSideOffset.y
             : UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(x, y, spawnDistance);
