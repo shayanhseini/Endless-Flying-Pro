@@ -12,6 +12,7 @@ public class PlanetSequenceManager : MonoBehaviour
     private sealed class ActivePlanet
     {
         public Transform Transform;
+        public Vector3 InitialScale;
         public Vector3 TargetScale;
     }
 
@@ -20,26 +21,12 @@ public class PlanetSequenceManager : MonoBehaviour
     {
         public string displayName;
         public GameObject prefab;
-        public Color fallbackColor = Color.white;
-        [Min(0.1f)] public float scale = 1f;
     }
 
     private static readonly string[] DefaultNames =
     {
         "Mercury", "Venus", "Earth", "Mars",
         "Jupiter", "Saturn", "Uranus", "Neptune"
-    };
-
-    private static readonly Color[] DefaultColors =
-    {
-        new(0.55f, 0.52f, 0.48f),
-        new(0.85f, 0.62f, 0.30f),
-        new(0.18f, 0.42f, 0.85f),
-        new(0.72f, 0.24f, 0.12f),
-        new(0.76f, 0.60f, 0.42f),
-        new(0.82f, 0.73f, 0.50f),
-        new(0.45f, 0.82f, 0.86f),
-        new(0.20f, 0.34f, 0.82f)
     };
 
     [Header("Planet Assets")]
@@ -59,6 +46,12 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private float fullScaleDistance = 350f;
     [SerializeField] private float leftSideX = -180f;
     [SerializeField] private float rightSideX = 180f;
+    [Min(1f)]
+    [SerializeField] private float minimumPlanetScale = 100f;
+    [Min(1f)]
+    [SerializeField] private float referencePlanetSize = 150f;
+    [Min(1f)]
+    [SerializeField] private float referenceSideDistance = 180f;
     [SerializeField] private Vector2 verticalRange = new(8f, 28f);
     [Min(0f)]
     [SerializeField] private float despawnDistanceBehindPlayer = 300f;
@@ -132,7 +125,7 @@ public class PlanetSequenceManager : MonoBehaviour
             );
             scaleProgress = Mathf.SmoothStep(0f, 1f, scaleProgress);
             planet.localScale = Vector3.Lerp(
-                activePlanet.TargetScale * initialScaleMultiplier,
+                activePlanet.InitialScale,
                 activePlanet.TargetScale,
                 scaleProgress
             );
@@ -160,19 +153,26 @@ public class PlanetSequenceManager : MonoBehaviour
         instance.SetActive(true);
         DisableColliders(instance);
 
+        Vector3 targetScale = EnsureMinimumScale(
+            instance.transform.localScale,
+            minimumPlanetScale);
+        float planetSize = LargestScaleComponent(targetScale);
+        float distanceMultiplier = Mathf.Max(1f, planetSize / referencePlanetSize);
+        float sideDistance = referenceSideDistance * distanceMultiplier;
         float x = nextPlanetIndex % 2 == 0
-            ? leftSideX
-            : rightSideX;
+            ? -Mathf.Max(Mathf.Abs(leftSideX), sideDistance)
+            : Mathf.Max(Mathf.Abs(rightSideX), sideDistance);
         float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(x, y, spawnDistance);
-        instance.transform.localScale *= Mathf.Max(0.1f, definition.scale);
-
-        Vector3 targetScale = instance.transform.localScale;
-        instance.transform.localScale = targetScale * initialScaleMultiplier;
+        Vector3 initialScale = EnsureMinimumScale(
+            targetScale * initialScaleMultiplier,
+            minimumPlanetScale);
+        instance.transform.localScale = initialScale;
 
         activePlanets.Add(new ActivePlanet
         {
             Transform = instance.transform,
+            InitialScale = initialScale,
             TargetScale = targetScale
         });
 
@@ -180,20 +180,21 @@ public class PlanetSequenceManager : MonoBehaviour
         nextPlanetIndex = (nextPlanetIndex + 1) % planets.Length;
     }
 
-    private GameObject CreateFallbackPlanet(PlanetDefinition definition)
+    private static Vector3 EnsureMinimumScale(Vector3 scale, float minimum)
     {
-        GameObject planet = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        planet.transform.SetParent(transform);
+        float largest = LargestScaleComponent(scale);
+        if (largest >= minimum || largest <= Mathf.Epsilon)
+            return scale;
 
-        Renderer renderer = planet.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            Material material = new(renderer.sharedMaterial);
-            material.color = definition.fallbackColor;
-            renderer.material = material;
-        }
+        return scale * (minimum / largest);
+    }
 
-        return planet;
+    private static float LargestScaleComponent(Vector3 scale)
+    {
+        return Mathf.Max(
+            Mathf.Abs(scale.x),
+            Mathf.Abs(scale.y),
+            Mathf.Abs(scale.z));
     }
 
     private void EnsureDefinitions()
@@ -206,9 +207,7 @@ public class PlanetSequenceManager : MonoBehaviour
         {
             planets[i] = new PlanetDefinition
             {
-                displayName = DefaultNames[i],
-                fallbackColor = DefaultColors[i],
-                scale = 1f
+                displayName = DefaultNames[i]
             };
         }
     }

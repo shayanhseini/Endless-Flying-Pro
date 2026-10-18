@@ -2684,9 +2684,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82d65c443fef2954aaf5e279a1164b9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
-  startObstacleCount: 3
-  startWithShield: 1
-  startWithSpeedPowerUp: 1
+  startObstacleCount: 0
+  startWithShield: 0
+  startWithSpeedPowerUp: 0
 --- !u!23 &1192423983670025885
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3920,7 +3920,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 10000
   field of view: 65
   orthographic: 0
   orthographic size: 5
@@ -4109,6 +4109,7 @@ GameObject:
   m_Component:
   - component: {fileID: 464032374248214041}
   - component: {fileID: 9142794398186811705}
+  - component: {fileID: 9142794398186811706}
   m_Layer: 0
   m_Name: Chunk Manager
   m_TagString: Untagged
@@ -4529,7 +4530,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4584c6abad136f74abc7c3e083875a67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldMovementManager
-  startSpeed: 15
+  startSpeed: 1500
   realSpeedMultiplier: 13
 --- !u!1 &6201207087071358500
 GameObject:
@@ -5728,7 +5729,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8249100717123085968}
   - component: {fileID: 4439528306922798773}
-  - component: {fileID: 8800919533257655905}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -5736,61 +5736,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &8800919533257655905
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8800919533257655904}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b71d011374d04c0ea62c879bcd681172, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlanetSequenceManager
-  planets:
-  - displayName: Mercury
-    prefab: {fileID: 2550325938430599871, guid: 459a327f671ef41489d9971453e69f6c, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Venus
-    prefab: {fileID: 2383548321536077374, guid: 30bb0792e82457a479446ff1d5d627d1, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Earth
-    prefab: {fileID: 7802278574216347217, guid: a116c99d23b249647afc503957b3c169, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Mars
-    prefab: {fileID: 3248526501997794298, guid: 71a433b4069700a47bc02a0cb0a18ebb, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Jupiter
-    prefab: {fileID: 7057320390155181320, guid: 1f4e46bc71c913048b7acc8e09157bb3, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Saturn
-    prefab: {fileID: 4855548808254742209, guid: 897087824fb26334281cfbabd690245a, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Uranus
-    prefab: {fileID: 2023715679400801649, guid: 71c6a97fcc3fd064ca778267a74da125, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  - displayName: Neptune
-    prefab: {fileID: 4378049339878643522, guid: 5304c11cf558aca4a84fcf5b50f6177a, type: 3}
-    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
-    scale: 1
-  secondsBetweenPlanets: 30
-  spawnFirstPlanetImmediately: 1
-  spawnDistance: 1500
-  initialScaleMultiplier: 0.05
-  fullScaleDistance: 350
-  leftSideX: -180
-  rightSideX: 180
-  verticalRange: {x: 8, y: 28}
-  despawnDistanceBehindPlayer: 300
-  rotationPerSecond: {x: 0, y: 5, z: 0}
 --- !u!54 &8911170589392543322
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5987,6 +5932,48 @@ MonoBehaviour:
   hideStartGround: 1
   planetSequence: {fileID: 0}
   recycleOffset: 50
+--- !u!114 &9142794398186811706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5528010595041518142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b71d011374d04c0ea62c879bcd681172, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlanetSequenceManager
+  planets:
+  - displayName: Mercury
+    prefab: {fileID: 2550325938430599871, guid: 459a327f671ef41489d9971453e69f6c, type: 3}
+  - displayName: Venus
+    prefab: {fileID: 2383548321536077374, guid: 30bb0792e82457a479446ff1d5d627d1, type: 3}
+  - displayName: Earth
+    prefab: {fileID: 7802278574216347217, guid: a116c99d23b249647afc503957b3c169, type: 3}
+  - displayName: Mars
+    prefab: {fileID: 3248526501997794298, guid: 71a433b4069700a47bc02a0cb0a18ebb, type: 3}
+  - displayName: Jupiter
+    prefab: {fileID: 7057320390155181320, guid: 1f4e46bc71c913048b7acc8e09157bb3, type: 3}
+  - displayName: Saturn
+    prefab: {fileID: 4855548808254742209, guid: 897087824fb26334281cfbabd690245a, type: 3}
+  - displayName: Uranus
+    prefab: {fileID: 2023715679400801649, guid: 71c6a97fcc3fd064ca778267a74da125, type: 3}
+  - displayName: Neptune
+    prefab: {fileID: 4378049339878643522, guid: 5304c11cf558aca4a84fcf5b50f6177a, type: 3}
+  secondsBetweenPlanets: 30
+  spawnFirstPlanetImmediately: 1
+  spawnDistance: 1500
+  initialScaleMultiplier: 0.05
+  fullScaleDistance: 350
+  leftSideX: -180
+  rightSideX: 180
+  minimumPlanetScale: 100
+  referencePlanetSize: 150
+  referenceSideDistance: 180
+  verticalRange: {x: 8, y: 28}
+  despawnDistanceBehindPlayer: 300
+  rotationPerSecond: {x: 0, y: 5, z: 0}
 --- !u!1 &9215368973460120031
 GameObject:
   m_ObjectHideFlags: 0
