@@ -5,7 +5,6 @@ public class PlaneController : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float touchSensitivity = 0.015f;
     [SerializeField] private float movementSmoothness = 10f;
 
 
@@ -40,10 +39,6 @@ public class PlaneController : MonoBehaviour
     private bool canControl;
 
     private Vector3 targetPosition;
-
-    private Vector2 lastTouchPosition;
-    private bool isTouching;
-
 
     private void Awake()
     {
@@ -114,7 +109,6 @@ public class PlaneController : MonoBehaviour
 
         Input = Vector2.zero;
 
-        isTouching = false;
     }
 
 
@@ -124,68 +118,42 @@ public class PlaneController : MonoBehaviour
 
         Input = Vector2.zero;
 
-        isTouching = false;
     }
 
 
     private void ReadInput()
     {
-        if (Touchscreen.current == null)
+        if (Keyboard.current == null)
         {
             Input = Vector2.zero;
             return;
         }
 
-        var touch =
-            Touchscreen.current.primaryTouch;
+        float horizontal = 0f;
+        float vertical = 0f;
 
-        if (touch.press.wasPressedThisFrame)
-        {
-            isTouching = true;
+        if (Keyboard.current.aKey.isPressed)
+            horizontal -= 1f;
 
-            lastTouchPosition =
-                touch.position.ReadValue();
+        if (Keyboard.current.dKey.isPressed)
+            horizontal += 1f;
 
-            Input = Vector2.zero;
+        if (Keyboard.current.sKey.isPressed)
+            vertical -= 1f;
 
-            return;
-        }
+        if (Keyboard.current.wKey.isPressed)
+            vertical += 1f;
 
-        if (touch.press.isPressed && isTouching)
-        {
-            Vector2 currentTouchPosition =
-                touch.position.ReadValue();
+        Input = Vector2.ClampMagnitude(
+            new Vector2(horizontal, vertical),
+            1f
+        );
 
-            Vector2 delta =
-                currentTouchPosition -
-                lastTouchPosition;
-
-            lastTouchPosition =
-                currentTouchPosition;
-
-            Input =
-                Vector2.ClampMagnitude(
-                    delta * 0.05f,
-                    1f
-                );
-
-            Vector3 movement =
-                new Vector3(
-                    delta.x,
-                    delta.y,
-                    0f
-                ) *
-                touchSensitivity;
-
-            targetPosition += movement;
-        }
-
-        if (touch.press.wasReleasedThisFrame)
-        {
-            isTouching = false;
-
-            Input = Vector2.zero;
-        }
+        targetPosition += new Vector3(
+            Input.x,
+            Input.y,
+            0f
+        ) * moveSpeed * Time.deltaTime;
     }
 
 

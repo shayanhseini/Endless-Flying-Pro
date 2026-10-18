@@ -11,6 +11,10 @@ public class ChunkManager : MonoBehaviour
     [SerializeField] private DifficultyManager difficultyManager;
     [SerializeField] private GameManager gameManager;
 
+    [Header("Space Route")]
+    [SerializeField] private bool hideStartGround = true;
+    [SerializeField] private PlanetSequenceManager planetSequence;
+
 
     public int InitialChunkCount => chunks.Length;
 
@@ -24,11 +28,19 @@ public class ChunkManager : MonoBehaviour
 
     private void Awake()
     {
-        // Start Chunk فقط زمین خالی است
         if (startChunk != null)
         {
-            startChunkActive = true;
+            startChunkActive = !hideStartGround;
+            startChunk.SetActive(startChunkActive);
         }
+
+        if (planetSequence == null)
+            planetSequence = GetComponent<PlanetSequenceManager>();
+
+        if (planetSequence == null)
+            planetSequence = gameObject.AddComponent<PlanetSequenceManager>();
+
+        planetSequence.Initialize(player, worldMovement);
 
 
         // Main Chunks

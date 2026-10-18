@@ -5,8 +5,6 @@ public static class GameEvents
     public static event Action GameStarted;
     public static event Action GameOver;
 
-    public static event Action<int> ScoreChanged;
-
     public static event Action PlaneHit;
 
     public static event Action ShieldActivated;
@@ -27,12 +25,6 @@ public static class GameEvents
     public static void RaiseGameOver()
     {
         GameOver?.Invoke();
-    }
-
-
-    public static void RaiseScoreChanged(int score)
-    {
-        ScoreChanged?.Invoke(score);
     }
 
 

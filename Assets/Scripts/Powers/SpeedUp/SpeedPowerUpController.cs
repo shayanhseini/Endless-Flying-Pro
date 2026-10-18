@@ -5,14 +5,12 @@ public class SpeedPowerUpController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private WorldMovementManager worldMovement;
-    [SerializeField] private GameManager gameManager;
     [SerializeField] private PlaneCameraController planeCameraController;
 
 
     [Header("Settings")]
     [SerializeField] private float duration = 5f;
     [SerializeField] private float speedMultiplier = 1.5f;
-    [SerializeField] private int bonusScore = 50;
 
 
     [Header("Speed Transition")]
@@ -167,13 +165,6 @@ public class SpeedPowerUpController : MonoBehaviour
             );
 
 
-        // پاداش پایان PowerUp
-        if (gameManager != null)
-        {
-            gameManager.AddScore(
-                bonusScore
-            );
-        }
     }
 
 

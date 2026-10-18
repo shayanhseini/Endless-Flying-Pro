@@ -7,12 +7,7 @@ public class GameManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private FadeController fadeController;
-    [SerializeField] private WorldMovementManager worldMovement;
 
-    public int Score { get; private set; }
-
-    public float Distance { get; private set; }
-    
     public GameState State { get; private set; }
 
     public GroundType CurrentGroundType { get; private set; }
@@ -21,16 +16,17 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         State = GameState.Waiting;
-        Score = 0;
-        Distance = 0;
     }
 
-    private void Update()
+    private void Start()
     {
-        if (State != GameState.Playing)
-            return;
+        CameraTransitionController cameraTransition =
+            FindFirstObjectByType<CameraTransitionController>();
 
-        UpdateDistance();
+        if (cameraTransition != null)
+            cameraTransition.StartGameTransition();
+        else
+            StartGame();
     }
     
     private void OnEnable()
@@ -49,7 +45,6 @@ public class GameManager : MonoBehaviour
 
         CurrentGroundType = groundTypes[randomIndex];
 
-        Debug.Log($"Selected Ground: {CurrentGroundType}");
     }
 
 
@@ -61,27 +56,6 @@ public class GameManager : MonoBehaviour
         State = GameState.Playing;
 
         GameEvents.RaiseGameStarted();
-    }
-
-
-    public void AddScore(int amount)
-    {
-        if (State != GameState.Playing)
-            return;
-
-        Score += amount;
-
-        GameEvents.RaiseScoreChanged(Score);
-    }
-    
-    private void UpdateDistance()
-    {
-        if (worldMovement == null)
-            return;
-
-        Distance +=
-            (worldMovement.RealSpeed *
-            Time.deltaTime);
     }
 
 

@@ -4,21 +4,12 @@ public class WorldMovementManager : MonoBehaviour
 {
     [Header("Speed")]
     [SerializeField] private float startSpeed = 10f;
-    [SerializeField] private float speedAtMaxScore = 12f;
-    [SerializeField] private float speedIncreaseAfterMaxScore = 0.02f;
-    
     [Header("Real Speed")]
     [SerializeField] private float realSpeedMultiplier = 20f;
     
-    [Header("Difficulty")]
-    [SerializeField] private DifficultyManager difficultyManager;
-
     
     public float RealSpeed =>
         WorldSpeed * realSpeedMultiplier;
-
-    private int _maxScore;
-
 
     public float BaseWorldSpeed { get; private set; }
 
@@ -31,10 +22,6 @@ public class WorldMovementManager : MonoBehaviour
 
     private void Awake()
     {
-        _maxScore =
-            difficultyManager.GetMaxScore();
-
-
         BaseWorldSpeed =
             startSpeed;
 
@@ -56,7 +43,6 @@ public class WorldMovementManager : MonoBehaviour
     {
         GameEvents.GameStarted += StartMovement;
         GameEvents.GameOver += StopMovement;
-        GameEvents.ScoreChanged += UpdateSpeed;
     }
 
 
@@ -64,7 +50,6 @@ public class WorldMovementManager : MonoBehaviour
     {
         GameEvents.GameStarted -= StartMovement;
         GameEvents.GameOver -= StopMovement;
-        GameEvents.ScoreChanged -= UpdateSpeed;
     }
 
 
@@ -77,47 +62,6 @@ public class WorldMovementManager : MonoBehaviour
     private void StopMovement()
     {
         IsMovementEnabled = false;
-    }
-
-
-    private void UpdateSpeed(int score)
-    {
-        float newBaseSpeed;
-
-
-        if (score <= _maxScore)
-        {
-            float progress =
-                Mathf.Clamp01(
-                    (float)score / _maxScore
-                );
-
-
-            newBaseSpeed =
-                Mathf.Lerp(
-                    startSpeed,
-                    speedAtMaxScore,
-                    progress
-                );
-        }
-        else
-        {
-            int scoreAfterMax =
-                score - _maxScore;
-
-
-            newBaseSpeed =
-                speedAtMaxScore +
-                scoreAfterMax *
-                speedIncreaseAfterMaxScore;
-        }
-
-
-        BaseWorldSpeed =
-            newBaseSpeed;
-
-
-        UpdateWorldSpeed();
     }
 
 

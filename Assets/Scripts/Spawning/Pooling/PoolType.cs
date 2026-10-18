@@ -1,5 +1,4 @@
 public enum PoolType
 {
-    Coin,
-    Obstacle
+    Obstacle = 1
 }

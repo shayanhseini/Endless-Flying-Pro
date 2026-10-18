@@ -3,24 +3,16 @@ using UnityEngine;
 public class ChunkContent : MonoBehaviour
 {
     [Header("Content")]
-    [SerializeField] private GameObject[] coins;
     [SerializeField] private GameObject[] obstacles;
     [SerializeField] private GameObject[] shields;
     [SerializeField] private GameObject[] speedPowerUps;
 
 
     public void ApplyDifficulty(
-        int coinCount,
         int obstacleCount,
         bool hasShield,
         bool hasSpeedPowerUp)
     {
-        ActivateRandomObjects(
-            coins,
-            coinCount
-        );
-
-
         ActivateRandomObjects(
             obstacles,
             obstacleCount
