@@ -43,8 +43,6 @@ public class PlanetSequenceManager : MonoBehaviour
     };
 
     [Header("Planet Assets")]
-    [Tooltip("The current sample planet. It is cloned when a planet-specific prefab is not assigned.")]
-    [SerializeField] private GameObject referencePlanet;
     [SerializeField] private PlanetDefinition[] planets = Array.Empty<PlanetDefinition>();
 
     [Header("Timing")]
@@ -72,8 +70,6 @@ public class PlanetSequenceManager : MonoBehaviour
     private float elapsed;
     private int nextPlanetIndex;
     private bool initialized;
-    private Vector2 referenceSideOffset;
-    private bool hasReferenceSideOffset;
 
     public void Initialize(Transform playerTransform, WorldMovementManager movementManager)
     {
@@ -83,8 +79,6 @@ public class PlanetSequenceManager : MonoBehaviour
         player = playerTransform;
         worldMovement = movementManager;
         EnsureDefinitions();
-        FindSceneReferenceIfNeeded();
-
         elapsed = spawnFirstPlanetImmediately ? secondsBetweenPlanets : 0f;
         initialized = true;
     }
@@ -157,10 +151,10 @@ public class PlanetSequenceManager : MonoBehaviour
             return;
 
         PlanetDefinition definition = planets[nextPlanetIndex];
-        GameObject source = definition.prefab != null ? definition.prefab : referencePlanet;
-        GameObject instance = source != null
-            ? Instantiate(source, transform)
-            : CreateFallbackPlanet(definition);
+        if (definition.prefab == null)
+            return;
+
+        GameObject instance = Instantiate(definition.prefab, transform);
 
         instance.name = $"Planet_{nextPlanetIndex + 1:00}_{definition.displayName}";
         instance.SetActive(true);
@@ -169,9 +163,7 @@ public class PlanetSequenceManager : MonoBehaviour
         float x = nextPlanetIndex % 2 == 0
             ? leftSideX
             : rightSideX;
-        float y = hasReferenceSideOffset
-            ? referenceSideOffset.y
-            : UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
+        float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(x, y, spawnDistance);
         instance.transform.localScale *= Mathf.Max(0.1f, definition.scale);
 
@@ -219,50 +211,6 @@ public class PlanetSequenceManager : MonoBehaviour
                 scale = 1f
             };
         }
-    }
-
-    private void FindSceneReferenceIfNeeded()
-    {
-        if (referencePlanet != null)
-            return;
-
-        Transform[] sceneTransforms = FindObjectsByType<Transform>(
-            FindObjectsInactive.Include,
-            FindObjectsSortMode.None
-        );
-
-        foreach (Transform candidate in sceneTransforms)
-        {
-            if (candidate == transform || candidate == player)
-                continue;
-
-            string candidateName = candidate.name.ToLowerInvariant();
-            if (!LooksLikePlanetReference(candidateName))
-                continue;
-
-            referencePlanet = candidate.gameObject;
-            Vector3 offset = referencePlanet.transform.position - player.position;
-            referenceSideOffset = new Vector2(offset.x, offset.y);
-            hasReferenceSideOffset = true;
-            referencePlanet.SetActive(false);
-            break;
-        }
-    }
-
-    private static bool LooksLikePlanetReference(string candidateName)
-    {
-        if (candidateName.Contains("planet") ||
-            candidateName.Contains("سیاره") ||
-            candidateName == "sample")
-            return true;
-
-        foreach (string planetName in DefaultNames)
-        {
-            if (candidateName.Contains(planetName.ToLowerInvariant()))
-                return true;
-        }
-
-        return false;
     }
 
     private static void DisableColliders(GameObject planet)

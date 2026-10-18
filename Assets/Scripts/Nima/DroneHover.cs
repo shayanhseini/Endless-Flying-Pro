@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(DroneTargetMover))]
 public sealed class DroneHover : MonoBehaviour
 {
     [Header("Hover")]
@@ -14,8 +13,7 @@ public sealed class DroneHover : MonoBehaviour
     [Header("Randomization")]
     [SerializeField] private float randomStartDelay = 1f;
 
-    private DroneTargetMover targetMover;
-
+   
     private Vector3 initialLocalPosition;
     private Quaternion initialLocalRotation;
 
@@ -24,21 +22,16 @@ public sealed class DroneHover : MonoBehaviour
 
     private void Awake()
     {
-        targetMover = GetComponent<DroneTargetMover>();
-
+    
         initialLocalPosition = transform.localPosition;
         initialLocalRotation = transform.localRotation;
 
-        // هر Drone از یک نقطه متفاوت از حرکت شروع می‌کند
         randomPhase = Random.Range(0f, Mathf.PI * 2f);
-
-        // کمی تأخیر تصادفی در شروع
         startTime = Time.time + Random.Range(0f, randomStartDelay);
     }
 
     private void LateUpdate()
     {
-        // اگر هنوز زمان شروعش نرسیده، ثابت بماند
         if (Time.time < startTime)
             return;
 

@@ -1,49 +1,110 @@
-using System.Collections;
 using UnityEngine;
+using System.Linq;
 
 
 public class Obstacle : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GameObject box;
-    [SerializeField] private Transform inner;
+    [SerializeField] private GameObject[] asteroidVariants;
 
+    [Header("Asteroid Rotation")]
+    [SerializeField] private float minRotationSpeed = 20f;
+    [SerializeField] private float maxRotationSpeed = 55f;
 
-    [Header("Inner Animation")]
-    [SerializeField] private float moveHeight = 1.5f;
-    [SerializeField] private float moveDuration = 1f;
-    
-    private Vector3 initialInnerPosition;
+    [Header("Random Size")]
+    [SerializeField] private float minScale = 3f;
+    [SerializeField] private float maxScale = 4f;
+
     private Collider pickupCollider;
+    private Transform activeVisual;
+    private Vector3 rotationAxis;
+    private float rotationSpeed;
+    private static int nextVariantIndex = -1;
     
     private void Awake()
     {
         pickupCollider = GetComponent<Collider>();
-
-
-        if (inner != null)
-        {
-            initialInnerPosition =
-                inner.localPosition;
-        }
+        CacheChildVariantsIfNeeded();
     }
     
     private void OnEnable()
     {
-        if (inner != null)
-        {
-            inner.localPosition =
-                initialInnerPosition;
+        SelectRandomVariant();
 
-            inner.gameObject.SetActive(true);
-        }
-        
-        if (box != null)
-            box.SetActive(true);
+        float randomScale = Random.Range(minScale, maxScale);
+        transform.localScale = Vector3.one * randomScale;
 
         
         if (pickupCollider != null)
             pickupCollider.enabled = true;
+
+        rotationAxis = Random.onUnitSphere;
+        rotationSpeed = Random.Range(minRotationSpeed, maxRotationSpeed);
+
+        if (activeVisual != null)
+            activeVisual.localRotation = Random.rotation;
+    }
+
+    private void Update()
+    {
+        if (activeVisual == null)
+            return;
+
+        activeVisual.Rotate(
+            rotationAxis,
+            rotationSpeed * Time.deltaTime,
+            Space.Self
+        );
+    }
+
+    private void SelectRandomVariant()
+    {
+        activeVisual = null;
+
+        CacheChildVariantsIfNeeded();
+
+        if (asteroidVariants == null || asteroidVariants.Length == 0)
+        {
+            if (box != null)
+            {
+                box.SetActive(true);
+                activeVisual = box.transform;
+            }
+
+            return;
+        }
+
+        foreach (GameObject variant in asteroidVariants)
+        {
+            if (variant != null)
+                variant.SetActive(false);
+        }
+
+        if (nextVariantIndex < 0)
+            nextVariantIndex = Random.Range(0, asteroidVariants.Length);
+
+        int selectedIndex = nextVariantIndex % asteroidVariants.Length;
+        nextVariantIndex = (nextVariantIndex + 1) % asteroidVariants.Length;
+        GameObject selected = asteroidVariants[selectedIndex];
+        if (selected == null)
+            return;
+
+        selected.SetActive(true);
+        box = selected;
+        activeVisual = selected.transform;
+    }
+
+    private void CacheChildVariantsIfNeeded()
+    {
+        if (asteroidVariants != null && asteroidVariants.Length > 0)
+            return;
+
+        asteroidVariants = System.Array.FindAll(
+            GetComponentsInChildren<Transform>(true),
+            child => child != transform && child.name.StartsWith("AsteroidVariant_"))
+            .Select(child => child.gameObject)
+            .ToArray();
     }
     
     private void OnTriggerEnter(Collider other)
@@ -65,65 +126,7 @@ public class Obstacle : MonoBehaviour
         if (box != null)
             box.SetActive(false);
         
-        if (inner != null)
-        {
-            StartCoroutine(
-                MoveInnerAndDisable()
-            );
-        }
-        else
-        {
-            gameObject.SetActive(false);
-        };
-    }
-    
-    private IEnumerator MoveInnerAndDisable()
-    {
-        Vector3 startPosition =
-            initialInnerPosition;
-
-
-        Vector3 targetPosition =
-            initialInnerPosition +
-            Vector3.up * moveHeight;
-
-
-        float elapsed = 0f;
-
-
-        while (elapsed < moveDuration)
-        {
-            elapsed += Time.deltaTime;
-
-
-            float t =
-                Mathf.Clamp01(
-                    elapsed / moveDuration
-                );
-
-
-            t = Mathf.SmoothStep(
-                0f,
-                1f,
-                t
-            );
-
-
-            inner.localPosition =
-                Vector3.Lerp(
-                    startPosition,
-                    targetPosition,
-                    t
-                );
-
-
-            yield return null;
-        }
-
-
-        inner.localPosition =
-            targetPosition;
-        
         gameObject.SetActive(false);
+
     }
 }
