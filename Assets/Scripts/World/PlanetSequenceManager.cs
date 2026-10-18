@@ -14,6 +14,8 @@ public class PlanetSequenceManager : MonoBehaviour
         public Transform Transform;
         public Vector3 InitialScale;
         public Vector3 TargetScale;
+        public Vector3 RotationAxis;
+        public float RotationSpeed;
     }
 
     [Serializable]
@@ -29,33 +31,54 @@ public class PlanetSequenceManager : MonoBehaviour
         "Jupiter", "Saturn", "Uranus", "Neptune"
     };
 
+    // Sidereal rotation speed relative to Earth. Negative values are retrograde.
+    private static readonly float[] RealRotationSpeedMultipliers =
+    {
+        0.017f, -0.0041f, 1f, 0.972f,
+        2.413f, 2.245f, -1.389f, 1.485f
+    };
+
+    // Axial tilt in degrees. Retrograde direction is handled by rotation speed.
+    private static readonly float[] AxialTilts =
+    {
+        0.034f, 2.64f, 23.44f, 25.19f,
+        3.13f, 26.73f, 82.23f, 28.32f
+    };
+
     [Header("Planet Assets")]
     [SerializeField] private PlanetDefinition[] planets = Array.Empty<PlanetDefinition>();
 
     [Header("Timing")]
     [Min(1f)]
     [SerializeField] private float secondsBetweenPlanets = 30f;
+    [Min(1f)]
+    [SerializeField] private float planetTravelDuration = 30f;
     [SerializeField] private bool spawnFirstPlanetImmediately = true;
 
     [Header("Placement")]
     [Min(1f)]
-    [SerializeField] private float spawnDistance = 1500f;
-    [Min(0.001f)]
+    [SerializeField] private float spawnDistance = 2000f;
+    [Range(0.01f, 1f)]
     [SerializeField] private float initialScaleMultiplier = 0.05f;
-    [Min(0f)]
-    [SerializeField] private float fullScaleDistance = 350f;
-    [SerializeField] private float leftSideX = -180f;
-    [SerializeField] private float rightSideX = 180f;
+    [Range(0.1f, 1f)]
+    [SerializeField] private float scaleGrowthJourneyFraction = 0.75f;
+    [SerializeField] private float leftSideX = -250f;
+    [SerializeField] private float rightSideX = 250f;
     [Min(1f)]
     [SerializeField] private float minimumPlanetScale = 100f;
     [Min(1f)]
+    [SerializeField] private float minimumMercuryToPlaneRatio = 20f;
+    [Min(1f)]
     [SerializeField] private float referencePlanetSize = 150f;
     [Min(1f)]
-    [SerializeField] private float referenceSideDistance = 180f;
+    [SerializeField] private float referenceSideDistance = 250f;
     [SerializeField] private Vector2 verticalRange = new(8f, 28f);
     [Min(0f)]
     [SerializeField] private float despawnDistanceBehindPlayer = 300f;
-    [SerializeField] private Vector3 rotationPerSecond = new(0f, 5f, 0f);
+    [Min(0.01f)]
+    [SerializeField] private float earthRotationDegreesPerSecond = 12f;
+    [Min(0f)]
+    [SerializeField] private float minimumVisibleRotationSpeed = 1.5f;
 
     private readonly List<ActivePlanet> activePlanets = new();
     private Transform player;
@@ -63,6 +86,7 @@ public class PlanetSequenceManager : MonoBehaviour
     private float elapsed;
     private int nextPlanetIndex;
     private bool initialized;
+    private float minimumVisualPlanetScale;
 
     public void Initialize(Transform playerTransform, WorldMovementManager movementManager)
     {
@@ -72,6 +96,9 @@ public class PlanetSequenceManager : MonoBehaviour
         player = playerTransform;
         worldMovement = movementManager;
         EnsureDefinitions();
+        minimumVisualPlanetScale = Mathf.Max(
+            minimumPlanetScale,
+            GetVisualSize(player) * minimumMercuryToPlaneRatio);
         elapsed = spawnFirstPlanetImmediately ? secondsBetweenPlanets : 0f;
         initialized = true;
     }
@@ -101,7 +128,7 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private void MoveActivePlanets()
     {
-        float approachSpeed = spawnDistance / Mathf.Max(1f, secondsBetweenPlanets);
+        float approachSpeed = spawnDistance / Mathf.Max(1f, planetTravelDuration);
         Vector3 movement = Vector3.back * approachSpeed * Time.deltaTime;
 
         for (int i = activePlanets.Count - 1; i >= 0; i--)
@@ -115,20 +142,20 @@ public class PlanetSequenceManager : MonoBehaviour
             }
 
             planet.position += movement;
-            planet.Rotate(rotationPerSecond * Time.deltaTime, Space.Self);
+            planet.Rotate(
+                activePlanet.RotationAxis,
+                activePlanet.RotationSpeed * Time.deltaTime,
+                Space.Self);
 
             float distanceAhead = planet.position.z - player.position.z;
-            float scaleProgress = 1f - Mathf.InverseLerp(
-                fullScaleDistance,
-                spawnDistance,
-                distanceAhead
-            );
-            scaleProgress = Mathf.SmoothStep(0f, 1f, scaleProgress);
+            float distanceTravelled = spawnDistance - distanceAhead;
+            float growthDistance = spawnDistance * scaleGrowthJourneyFraction;
+            float scaleProgress = Mathf.Clamp01(
+                distanceTravelled / Mathf.Max(1f, growthDistance));
             planet.localScale = Vector3.Lerp(
                 activePlanet.InitialScale,
                 activePlanet.TargetScale,
-                scaleProgress
-            );
+                scaleProgress);
 
             if (planet.position.z < player.position.z - despawnDistanceBehindPlayer)
             {
@@ -153,9 +180,13 @@ public class PlanetSequenceManager : MonoBehaviour
         instance.SetActive(true);
         DisableColliders(instance);
 
+        float prefabSize = LargestScaleComponent(instance.transform.localScale);
+        float visualScaleMultiplier = prefabSize > Mathf.Epsilon
+            ? minimumVisualPlanetScale / minimumPlanetScale
+            : 1f;
         Vector3 targetScale = EnsureMinimumScale(
-            instance.transform.localScale,
-            minimumPlanetScale);
+            instance.transform.localScale * visualScaleMultiplier,
+            minimumVisualPlanetScale);
         float planetSize = LargestScaleComponent(targetScale);
         float distanceMultiplier = Mathf.Max(1f, planetSize / referencePlanetSize);
         float sideDistance = referenceSideDistance * distanceMultiplier;
@@ -164,16 +195,18 @@ public class PlanetSequenceManager : MonoBehaviour
             : Mathf.Max(Mathf.Abs(rightSideX), sideDistance);
         float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(x, y, spawnDistance);
-        Vector3 initialScale = EnsureMinimumScale(
-            targetScale * initialScaleMultiplier,
-            minimumPlanetScale);
+        Vector3 initialScale = targetScale * initialScaleMultiplier;
         instance.transform.localScale = initialScale;
 
         activePlanets.Add(new ActivePlanet
         {
             Transform = instance.transform,
             InitialScale = initialScale,
-            TargetScale = targetScale
+            TargetScale = targetScale,
+            RotationAxis = Quaternion.AngleAxis(
+                AxialTilts[nextPlanetIndex],
+                Vector3.forward) * Vector3.up,
+            RotationSpeed = GetVisibleRotationSpeed(nextPlanetIndex)
         });
 
         Debug.Log($"Current planet: {definition.displayName}");
@@ -195,6 +228,32 @@ public class PlanetSequenceManager : MonoBehaviour
             Mathf.Abs(scale.x),
             Mathf.Abs(scale.y),
             Mathf.Abs(scale.z));
+    }
+
+    private static float GetVisualSize(Transform target)
+    {
+        Renderer[] renderers = target.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0)
+            return LargestScaleComponent(target.lossyScale);
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        return Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+    }
+
+    private float GetVisibleRotationSpeed(int planetIndex)
+    {
+        float realMultiplier = RealRotationSpeedMultipliers[planetIndex];
+        float compressedMultiplier = Mathf.Sign(realMultiplier) *
+            Mathf.Sqrt(Mathf.Abs(realMultiplier));
+        float speed = earthRotationDegreesPerSecond * compressedMultiplier;
+
+        if (Mathf.Abs(speed) >= minimumVisibleRotationSpeed)
+            return speed;
+
+        return Mathf.Sign(speed) * minimumVisibleRotationSpeed;
     }
 
     private void EnsureDefinitions()
