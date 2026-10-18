@@ -11,6 +11,9 @@ public class WorldChunk : MonoBehaviour
 
     [Header("Environment Variants")]
     [SerializeField]
+    private bool showGroundEnvironment = false;
+
+    [SerializeField]
     private GameObject[] desertVariants;
     [SerializeField]
     private GameObject[] dirtVariants;
@@ -28,10 +31,12 @@ public class WorldChunk : MonoBehaviour
     {
         onResetContent?.Invoke();
 
-        RandomizeEnvironment(groundType);
+        if (showGroundEnvironment)
+            RandomizeEnvironment(groundType);
+        else
+            DisableAllEnvironments();
 
         content.ApplyDifficulty(
-            difficultyManager.CoinCount,
             difficultyManager.ObstacleCount,
             difficultyManager.HasShield,
             difficultyManager.HasSpeedPowerUp

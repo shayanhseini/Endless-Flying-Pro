@@ -7,9 +7,6 @@ public class ContentGenerator : MonoBehaviour
 
 
     [Header("Generation")]
-    [SerializeField] private int minCoins = 3;
-    [SerializeField] private int maxCoins = 8;
-
     [SerializeField] private int minObstacles = 0;
     [SerializeField] private int maxObstacles = 2;
 
@@ -24,7 +21,6 @@ public class ContentGenerator : MonoBehaviour
 
     public void Generate(WorldChunk chunk)
     {
-        GenerateCoins(chunk);
         GenerateObstacles(chunk);
     }
 
@@ -42,28 +38,6 @@ public class ContentGenerator : MonoBehaviour
                 continue;
 
             poolManager.Release(pooledObject);
-        }
-    }
-
-
-    private void GenerateCoins(WorldChunk chunk)
-    {
-        int amount = Random.Range(
-            minCoins,
-            maxCoins + 1
-        );
-
-
-        for (int i = 0; i < amount; i++)
-        {
-            PooledObject coin =
-                poolManager.Get(PoolType.Coin);
-
-            if (coin == null)
-                continue;
-
-
-            SetupObject(coin, chunk);
         }
     }
 

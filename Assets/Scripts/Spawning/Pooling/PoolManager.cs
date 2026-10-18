@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PoolManager : MonoBehaviour
@@ -19,7 +20,7 @@ public class PoolManager : MonoBehaviour
     [SerializeField] private PoolConfig[] poolConfigs;
 
 
-    private ObjectPool[] pools;
+    private Dictionary<PoolType, ObjectPool> pools;
 
 
     public int InitialChunkCount =>
@@ -38,19 +39,22 @@ public class PoolManager : MonoBehaviour
             chunkManager.InitialChunkCount;
 
 
-        pools = new ObjectPool[poolConfigs.Length];
+        pools = new Dictionary<PoolType, ObjectPool>();
 
 
         for (int i = 0; i < poolConfigs.Length; i++)
         {
             PoolConfig config = poolConfigs[i];
 
+            if (config.type != PoolType.Obstacle)
+                continue;
+
 
             int poolSize =
                 chunkCount * config.amountPerChunk;
 
 
-            pools[i] = new ObjectPool(
+            pools[config.type] = new ObjectPool(
                 config.prefab,
                 poolSize,
                 transform
@@ -61,9 +65,7 @@ public class PoolManager : MonoBehaviour
 
     public PooledObject Get(PoolType type)
     {
-        int index = GetPoolIndex(type);
-
-        if (index == -1)
+        if (!pools.TryGetValue(type, out ObjectPool pool))
         {
             Debug.LogError(
                 $"Pool with type {type} was not found."
@@ -73,7 +75,7 @@ public class PoolManager : MonoBehaviour
         }
 
 
-        return pools[index].Get();
+        return pool.Get();
     }
 
 
@@ -83,11 +85,7 @@ public class PoolManager : MonoBehaviour
             return;
 
 
-        int index =
-            GetPoolIndex(pooledObject.PoolType);
-
-
-        if (index == -1)
+        if (!pools.TryGetValue(pooledObject.PoolType, out ObjectPool pool))
         {
             Debug.LogError(
                 $"Pool with type {pooledObject.PoolType} was not found."
@@ -97,19 +95,6 @@ public class PoolManager : MonoBehaviour
         }
 
 
-        pools[index].Release(pooledObject);
-    }
-
-
-    private int GetPoolIndex(PoolType type)
-    {
-        for (int i = 0; i < poolConfigs.Length; i++)
-        {
-            if (poolConfigs[i].type == type)
-                return i;
-        }
-
-
-        return -1;
+        pool.Release(pooledObject);
     }
 }

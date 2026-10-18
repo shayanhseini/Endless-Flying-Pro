@@ -44,7 +44,6 @@ public class PlaneInteraction : MonoBehaviour
 
     private void DestroyPlane()
     {
-        Debug.Log("Plane Destroyed");
 
         gameManager.GameOver();
     }

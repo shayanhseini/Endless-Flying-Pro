@@ -31,7 +31,6 @@ public class AirDefenseController : MonoBehaviour
             if (playerObject != null)
             {
                 player = playerObject.transform;
-                Debug.Log("Plane Found");
             }
         }
 

@@ -2,10 +2,6 @@ using UnityEngine;
 
 public class GameAudioController : MonoBehaviour
 {
-    [Header("Coin")]
-    [SerializeField] private AudioSource coinSource;
-    [SerializeField] private AudioClip coinClip;
-    
     [Header("Shield")]
     [SerializeField] private AudioSource shieldSource;
     [SerializeField] private AudioClip shieldPickupClip;
@@ -30,7 +26,6 @@ public class GameAudioController : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.ScoreChanged += OnScoreChanged;
         GameEvents.ShieldActivated += PlayShieldSound;
         GameEvents.ShieldDeactivated += PlayShieldDeActiveSound;
         GameEvents.SpeedBoostActivated += PlaySpeedBoostActivateSound;
@@ -40,7 +35,6 @@ public class GameAudioController : MonoBehaviour
 
     private void OnDisable()
     {
-        GameEvents.ScoreChanged -= OnScoreChanged;
         GameEvents.ShieldActivated -= PlayShieldSound;
         GameEvents.ShieldDeactivated -= PlayShieldDeActiveSound;
         GameEvents.SpeedBoostActivated -= PlaySpeedBoostActivateSound;
@@ -66,11 +60,6 @@ public class GameAudioController : MonoBehaviour
     private void PlaySpeedBoostDeActiveSound()
     {
         speedBoostSource.PlayOneShot(speedBoostDeActiveClip);
-    }
-    
-    private void OnScoreChanged(int score)
-    {
-        coinSource.PlayOneShot(coinClip);
     }
     
     public void PlayButtonSound()
