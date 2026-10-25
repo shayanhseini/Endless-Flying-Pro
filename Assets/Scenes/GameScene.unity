@@ -6492,14 +6492,8 @@ MonoBehaviour:
   planetTravelDuration: 30
   spawnFirstPlanetImmediately: 1
   spawnDistance: 2000
-  initialScaleMultiplier: 0.05
-  scaleGrowthJourneyFraction: 0.75
   leftSideX: -250
   rightSideX: 250
-  minimumPlanetScale: 100
-  minimumMercuryToPlaneRatio: 20
-  referencePlanetSize: 150
-  referenceSideDistance: 250
   verticalRange: {x: 8, y: 28}
   despawnDistanceBehindPlayer: 300
   earthRotationDegreesPerSecond: 12
