@@ -27,7 +27,8 @@ public class WorldChunk : MonoBehaviour
 
     public void ResetContent(
         DifficultyManager difficultyManager,
-        GroundType groundType)
+        GroundType groundType,
+        bool obstaclesEnabled = true)
     {
         onResetContent?.Invoke();
 
@@ -37,9 +38,9 @@ public class WorldChunk : MonoBehaviour
             DisableAllEnvironments();
 
         content.ApplyDifficulty(
-            difficultyManager.ObstacleCount,
-            difficultyManager.HasShield,
-            difficultyManager.HasSpeedPowerUp
+            obstaclesEnabled ? difficultyManager.ObstacleCount : 0,
+            obstaclesEnabled && difficultyManager.HasShield,
+            obstaclesEnabled && difficultyManager.HasSpeedPowerUp
         );
     }
 

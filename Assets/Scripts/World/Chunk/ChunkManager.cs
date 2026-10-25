@@ -24,6 +24,7 @@ public class ChunkManager : MonoBehaviour
 
 
     private bool startChunkActive;
+    private bool lastObstaclePhase;
 
 
     private void Awake()
@@ -40,7 +41,8 @@ public class ChunkManager : MonoBehaviour
         if (planetSequence == null)
             planetSequence = gameObject.AddComponent<PlanetSequenceManager>();
 
-        planetSequence.Initialize(player, worldMovement);
+        planetSequence.Initialize(player, worldMovement, gameManager);
+        lastObstaclePhase = planetSequence.IsObstaclePhase;
 
 
         // Main Chunks
@@ -50,16 +52,19 @@ public class ChunkManager : MonoBehaviour
 
         foreach (WorldChunk chunk in chunks)
         {
-            chunk.ResetContent(
-                difficultyManager,
-                gameManager.CurrentGroundType
-            );
+            ResetChunkContent(chunk);
         }
     }
 
 
     private void Update()
     {
+        if (lastObstaclePhase != planetSequence.IsObstaclePhase)
+        {
+            lastObstaclePhase = planetSequence.IsObstaclePhase;
+            ResetAllChunkContent();
+        }
+
         if (!worldMovement.IsMovementEnabled)
             return;
 
@@ -162,10 +167,7 @@ public class ChunkManager : MonoBehaviour
         chunk.MoveTo(position);
 
 
-        chunk.ResetContent(
-            difficultyManager,
-            gameManager.CurrentGroundType
-        );
+        ResetChunkContent(chunk);
 
 
         ShiftChunks(chunk);
@@ -230,5 +232,19 @@ public class ChunkManager : MonoBehaviour
 
             current.MoveTo(position);
         }
+    }
+
+    private void ResetAllChunkContent()
+    {
+        foreach (WorldChunk chunk in chunks)
+            ResetChunkContent(chunk);
+    }
+
+    private void ResetChunkContent(WorldChunk chunk)
+    {
+        chunk.ResetContent(
+            difficultyManager,
+            gameManager.CurrentGroundType,
+            planetSequence.IsObstaclePhase);
     }
 }

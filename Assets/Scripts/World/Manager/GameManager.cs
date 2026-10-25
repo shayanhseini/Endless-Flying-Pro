@@ -69,6 +69,15 @@ public class GameManager : MonoBehaviour
         GameEvents.RaiseGameOver();
     }
 
+    public void WinGame()
+    {
+        if (State != GameState.Playing)
+            return;
+
+        State = GameState.Won;
+        GameEvents.RaiseGameWon();
+    }
+
 
     public void RestartGameWithEffect()
     {
@@ -108,6 +117,7 @@ public enum GameState
 {
     Waiting,
     Playing,
+    Won,
     GameOver
 }
 

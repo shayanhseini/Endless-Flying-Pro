@@ -43,6 +43,7 @@ public class WorldMovementManager : MonoBehaviour
     {
         GameEvents.GameStarted += StartMovement;
         GameEvents.GameOver += StopMovement;
+        GameEvents.GameWon += StopMovement;
     }
 
 
@@ -50,6 +51,7 @@ public class WorldMovementManager : MonoBehaviour
     {
         GameEvents.GameStarted -= StartMovement;
         GameEvents.GameOver -= StopMovement;
+        GameEvents.GameWon -= StopMovement;
     }
 
 

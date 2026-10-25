@@ -9,9 +9,19 @@ using UnityEngine;
 /// </summary>
 public class PlanetSequenceManager : MonoBehaviour
 {
+    private enum SequencePhase
+    {
+        Waiting,
+        Introduction,
+        Dodge,
+        Complete
+    }
+
     private sealed class ActivePlanet
     {
         public Transform Transform;
+        public Vector3 InitialScale;
+        public Vector3 TargetScale;
         public Vector3 RotationAxis;
         public float RotationSpeed;
     }
@@ -27,6 +37,18 @@ public class PlanetSequenceManager : MonoBehaviour
     {
         "Mercury", "Venus", "Earth", "Mars",
         "Jupiter", "Saturn", "Uranus", "Neptune"
+    };
+
+    private static readonly string[] DefaultDescriptions =
+    {
+        "Mercury is the smallest and closest planet to the Sun.",
+        "Venus is the hottest planet and is covered by thick clouds.",
+        "Earth is our home and the only known planet with life.",
+        "Mars is the red planet and has the largest volcano in the Solar System.",
+        "Jupiter is the largest planet and has a giant storm called the Great Red Spot.",
+        "Saturn is famous for its wide system of icy rings.",
+        "Uranus rotates on its side and is an ice giant.",
+        "Neptune is the farthest planet and has extremely powerful winds."
     };
 
     // Sidereal rotation speed relative to Earth. Negative values are retrograde.
@@ -46,16 +68,30 @@ public class PlanetSequenceManager : MonoBehaviour
     [Header("Planet Assets")]
     [SerializeField] private PlanetDefinition[] planets = Array.Empty<PlanetDefinition>();
 
-    [Header("Timing")]
+    [Header("Two-Phase Sequence")]
+    [Min(0.1f)]
+    [Tooltip("Used when a planet does not have a narration clip yet.")]
+    [SerializeField] private float fallbackIntroductionDuration = 8f;
     [Min(1f)]
-    [SerializeField] private float secondsBetweenPlanets = 30f;
+    [SerializeField] private float dodgePhaseDuration = 15f;
+    [SerializeField] private AudioClip[] narrationClips = new AudioClip[8];
+    [SerializeField] private AudioSource narrationSource;
+
+    [Header("Travel")]
     [Min(1f)]
     [SerializeField] private float planetTravelDuration = 30f;
-    [SerializeField] private bool spawnFirstPlanetImmediately = true;
 
     [Header("Placement")]
     [Min(1f)]
     [SerializeField] private float spawnDistance = 2000f;
+
+    [Header("Distant Appearance")]
+    [Range(0f, 1f)]
+    [Tooltip("Scale used when a planet first appears, relative to its prefab scale.")]
+    [SerializeField] private float initialScaleMultiplier = 0.2f;
+    [Range(0.05f, 1f)]
+    [Tooltip("Portion of the journey used to smoothly reach the prefab scale.")]
+    [SerializeField] private float scaleGrowthJourneyFraction = 0.25f;
 
     [Header("Horizontal Placement")]
     [Tooltip("Horizontal offset where a left-side planet first appears in the distance.")]
@@ -74,25 +110,45 @@ public class PlanetSequenceManager : MonoBehaviour
     private readonly List<ActivePlanet> activePlanets = new();
     private Transform player;
     private WorldMovementManager worldMovement;
-    private float elapsed;
+    private GameManager gameManager;
+    private SequencePhase phase = SequencePhase.Waiting;
+    private float phaseTimeRemaining;
     private int nextPlanetIndex;
     private bool initialized;
+    private bool currentPlanetOnLeft;
 
-    public void Initialize(Transform playerTransform, WorldMovementManager movementManager)
+    public bool IsObstaclePhase => phase == SequencePhase.Dodge;
+
+    public void Initialize(
+        Transform playerTransform,
+        WorldMovementManager movementManager,
+        GameManager owningGameManager)
     {
         if (initialized)
             return;
 
         player = playerTransform;
         worldMovement = movementManager;
+        gameManager = owningGameManager;
         EnsureDefinitions();
-        elapsed = spawnFirstPlanetImmediately ? secondsBetweenPlanets : 0f;
+        EnsureNarrationSource();
         initialized = true;
     }
 
     private void Awake()
     {
         EnsureDefinitions();
+        EnsureNarrationSource();
+    }
+
+    private void OnEnable()
+    {
+        GameEvents.GameStarted += BeginSequence;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.GameStarted -= BeginSequence;
     }
 
     private void Update()
@@ -105,12 +161,77 @@ public class PlanetSequenceManager : MonoBehaviour
 
         MoveActivePlanets();
 
-        elapsed += Time.deltaTime;
-        if (elapsed < secondsBetweenPlanets)
+        if (phase != SequencePhase.Introduction && phase != SequencePhase.Dodge)
             return;
 
-        elapsed -= secondsBetweenPlanets;
+        phaseTimeRemaining = Mathf.Max(0f, phaseTimeRemaining - Time.deltaTime);
+        GameEvents.RaisePlanetPhaseTimeChanged(phaseTimeRemaining);
+
+        if (phaseTimeRemaining > 0f)
+            return;
+
+        if (phase == SequencePhase.Introduction)
+            BeginDodgePhase();
+        else
+            CompleteCurrentPlanet();
+    }
+
+    private void BeginSequence()
+    {
+        if (!initialized || phase != SequencePhase.Waiting)
+            return;
+
+        nextPlanetIndex = 0;
         SpawnNextPlanet();
+        BeginIntroductionPhase();
+    }
+
+    private void BeginIntroductionPhase()
+    {
+        phase = SequencePhase.Introduction;
+        AudioClip clip = GetNarrationClip(nextPlanetIndex);
+        phaseTimeRemaining = clip != null
+            ? Mathf.Max(0.1f, clip.length)
+            : fallbackIntroductionDuration;
+
+        if (clip != null)
+        {
+            narrationSource.clip = clip;
+            narrationSource.Play();
+        }
+
+        GameEvents.RaisePlanetIntroductionStarted(
+            planets[nextPlanetIndex].displayName,
+            DefaultDescriptions[nextPlanetIndex],
+            phaseTimeRemaining,
+            currentPlanetOnLeft);
+    }
+
+    private void BeginDodgePhase()
+    {
+        if (narrationSource != null)
+            narrationSource.Stop();
+
+        phase = SequencePhase.Dodge;
+        phaseTimeRemaining = dodgePhaseDuration;
+        GameEvents.RaisePlanetDodgeStarted(
+            planets[nextPlanetIndex].displayName,
+            dodgePhaseDuration,
+            currentPlanetOnLeft);
+    }
+
+    private void CompleteCurrentPlanet()
+    {
+        nextPlanetIndex++;
+        if (nextPlanetIndex >= planets.Length)
+        {
+            phase = SequencePhase.Complete;
+            gameManager.WinGame();
+            return;
+        }
+
+        SpawnNextPlanet();
+        BeginIntroductionPhase();
     }
 
     private void MoveActivePlanets()
@@ -133,6 +254,17 @@ public class PlanetSequenceManager : MonoBehaviour
                 activePlanet.RotationAxis,
                 activePlanet.RotationSpeed * Time.deltaTime,
                 Space.Self);
+
+            float distanceAhead = planet.position.z - player.position.z;
+            float distanceTravelled = spawnDistance - distanceAhead;
+            float growthDistance = spawnDistance * scaleGrowthJourneyFraction;
+            float growthProgress = Mathf.Clamp01(
+                distanceTravelled / Mathf.Max(1f, growthDistance));
+            float easedProgress = Mathf.SmoothStep(0f, 1f, growthProgress);
+            planet.localScale = Vector3.LerpUnclamped(
+                activePlanet.InitialScale,
+                activePlanet.TargetScale,
+                easedProgress);
 
             if (planet.position.z < player.position.z - despawnDistanceBehindPlayer)
             {
@@ -157,16 +289,21 @@ public class PlanetSequenceManager : MonoBehaviour
         instance.SetActive(true);
         DisableColliders(instance);
 
-        bool spawnOnLeft = nextPlanetIndex % 2 == 0;
-        float spawnX = spawnOnLeft
+        currentPlanetOnLeft = nextPlanetIndex % 2 == 0;
+        float spawnX = currentPlanetOnLeft
             ? -Mathf.Abs(leftSideX)
             : Mathf.Abs(rightSideX);
         float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(spawnX, y, spawnDistance);
+        Vector3 targetScale = instance.transform.localScale;
+        Vector3 initialScale = targetScale * initialScaleMultiplier;
+        instance.transform.localScale = initialScale;
 
         activePlanets.Add(new ActivePlanet
         {
             Transform = instance.transform,
+            InitialScale = initialScale,
+            TargetScale = targetScale,
             RotationAxis = Quaternion.AngleAxis(
                 AxialTilts[nextPlanetIndex],
                 Vector3.forward) * Vector3.up,
@@ -174,7 +311,28 @@ public class PlanetSequenceManager : MonoBehaviour
         });
 
         Debug.Log($"Current planet: {definition.displayName}");
-        nextPlanetIndex = (nextPlanetIndex + 1) % planets.Length;
+    }
+
+    private AudioClip GetNarrationClip(int index)
+    {
+        if (narrationClips == null || index < 0 || index >= narrationClips.Length)
+            return null;
+
+        return narrationClips[index];
+    }
+
+    private void EnsureNarrationSource()
+    {
+        if (narrationSource != null)
+            return;
+
+        narrationSource = GetComponent<AudioSource>();
+        if (narrationSource == null)
+            narrationSource = gameObject.AddComponent<AudioSource>();
+
+        narrationSource.playOnAwake = false;
+        narrationSource.loop = false;
+        narrationSource.spatialBlend = 0f;
     }
 
     private float GetVisibleRotationSpeed(int planetIndex)
