@@ -6,8 +6,7 @@ public static class GameEvents
     public static event Action GameOver;
     public static event Action GameWon;
     public static event Action<string, string, float, bool> PlanetIntroductionStarted;
-    public static event Action<string, float, bool> PlanetDodgeStarted;
-    public static event Action<float> PlanetPhaseTimeChanged;
+    public static event Action PlanetIntroductionEnded;
 
     public static event Action PlaneHit;
 
@@ -49,17 +48,9 @@ public static class GameEvents
             planetOnLeft);
     }
 
-    public static void RaisePlanetDodgeStarted(
-        string planetName,
-        float duration,
-        bool planetOnLeft)
+    public static void RaisePlanetIntroductionEnded()
     {
-        PlanetDodgeStarted?.Invoke(planetName, duration, planetOnLeft);
-    }
-
-    public static void RaisePlanetPhaseTimeChanged(float remainingTime)
-    {
-        PlanetPhaseTimeChanged?.Invoke(remainingTime);
+        PlanetIntroductionEnded?.Invoke();
     }
 
 

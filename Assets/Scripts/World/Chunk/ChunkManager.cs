@@ -42,7 +42,7 @@ public class ChunkManager : MonoBehaviour
             planetSequence = gameObject.AddComponent<PlanetSequenceManager>();
 
         planetSequence.Initialize(player, worldMovement, gameManager);
-        lastObstaclePhase = planetSequence.IsObstaclePhase;
+        lastObstaclePhase = planetSequence.ObstaclesEnabled;
 
 
         // Main Chunks
@@ -59,9 +59,9 @@ public class ChunkManager : MonoBehaviour
 
     private void Update()
     {
-        if (lastObstaclePhase != planetSequence.IsObstaclePhase)
+        if (lastObstaclePhase != planetSequence.ObstaclesEnabled)
         {
-            lastObstaclePhase = planetSequence.IsObstaclePhase;
+            lastObstaclePhase = planetSequence.ObstaclesEnabled;
             ResetAllChunkContent();
         }
 
@@ -245,6 +245,6 @@ public class ChunkManager : MonoBehaviour
         chunk.ResetContent(
             difficultyManager,
             gameManager.CurrentGroundType,
-            planetSequence.IsObstaclePhase);
+            planetSequence.ObstaclesEnabled);
     }
 }

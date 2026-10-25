@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Spawns the Solar System planets in order while the existing world movement
-/// continues to drive the illusion of forward flight. After Neptune the route
-/// loops back to Mercury, keeping the current version endless.
+/// Spawns the Solar System planets in order while obstacles keep moving.
+/// Each introduction is followed by a silent gameplay gap; completing Neptune
+/// finishes the run.
 /// </summary>
 public class PlanetSequenceManager : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class PlanetSequenceManager : MonoBehaviour
     {
         Waiting,
         Introduction,
-        Dodge,
+        Gap,
         Complete
     }
 
@@ -30,6 +30,7 @@ public class PlanetSequenceManager : MonoBehaviour
     private class PlanetDefinition
     {
         public string displayName;
+        [TextArea(3, 8)] public string description;
         public GameObject prefab;
     }
 
@@ -68,12 +69,13 @@ public class PlanetSequenceManager : MonoBehaviour
     [Header("Planet Assets")]
     [SerializeField] private PlanetDefinition[] planets = Array.Empty<PlanetDefinition>();
 
-    [Header("Two-Phase Sequence")]
+    [Header("Narration Sequence")]
     [Min(0.1f)]
     [Tooltip("Used when a planet does not have a narration clip yet.")]
-    [SerializeField] private float fallbackIntroductionDuration = 8f;
+    [SerializeField] private float fallbackIntroductionDuration = 5f;
     [Min(1f)]
-    [SerializeField] private float dodgePhaseDuration = 15f;
+    [Tooltip("Silent gameplay time between the end of one introduction and the next planet.")]
+    [SerializeField] private float timeBetweenPlanets = 10f;
     [SerializeField] private AudioClip[] narrationClips = new AudioClip[8];
     [SerializeField] private AudioSource narrationSource;
 
@@ -117,7 +119,7 @@ public class PlanetSequenceManager : MonoBehaviour
     private bool initialized;
     private bool currentPlanetOnLeft;
 
-    public bool IsObstaclePhase => phase == SequencePhase.Dodge;
+    public bool ObstaclesEnabled => true;
 
     public void Initialize(
         Transform playerTransform,
@@ -161,17 +163,15 @@ public class PlanetSequenceManager : MonoBehaviour
 
         MoveActivePlanets();
 
-        if (phase != SequencePhase.Introduction && phase != SequencePhase.Dodge)
+        if (phase != SequencePhase.Introduction && phase != SequencePhase.Gap)
             return;
 
         phaseTimeRemaining = Mathf.Max(0f, phaseTimeRemaining - Time.deltaTime);
-        GameEvents.RaisePlanetPhaseTimeChanged(phaseTimeRemaining);
-
         if (phaseTimeRemaining > 0f)
             return;
 
         if (phase == SequencePhase.Introduction)
-            BeginDodgePhase();
+            BeginGap();
         else
             CompleteCurrentPlanet();
     }
@@ -202,22 +202,19 @@ public class PlanetSequenceManager : MonoBehaviour
 
         GameEvents.RaisePlanetIntroductionStarted(
             planets[nextPlanetIndex].displayName,
-            DefaultDescriptions[nextPlanetIndex],
+            planets[nextPlanetIndex].description,
             phaseTimeRemaining,
             currentPlanetOnLeft);
     }
 
-    private void BeginDodgePhase()
+    private void BeginGap()
     {
         if (narrationSource != null)
             narrationSource.Stop();
 
-        phase = SequencePhase.Dodge;
-        phaseTimeRemaining = dodgePhaseDuration;
-        GameEvents.RaisePlanetDodgeStarted(
-            planets[nextPlanetIndex].displayName,
-            dodgePhaseDuration,
-            currentPlanetOnLeft);
+        phase = SequencePhase.Gap;
+        phaseTimeRemaining = timeBetweenPlanets;
+        GameEvents.RaisePlanetIntroductionEnded();
     }
 
     private void CompleteCurrentPlanet()
@@ -358,7 +355,8 @@ public class PlanetSequenceManager : MonoBehaviour
         {
             planets[i] = new PlanetDefinition
             {
-                displayName = DefaultNames[i]
+                displayName = DefaultNames[i],
+                description = DefaultDescriptions[i]
             };
         }
     }

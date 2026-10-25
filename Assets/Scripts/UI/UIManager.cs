@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using RTLTMPro;
 
 public class UIManager : MonoBehaviour
 {
@@ -24,10 +25,14 @@ public class UIManager : MonoBehaviour
     [Header("Planet Sequence UI")]
     [SerializeField] private GameObject leftPlanetPanel;
     [SerializeField] private GameObject rightPlanetPanel;
+    [SerializeField] private RTLTextMeshPro leftPlanetNameText;
+    [SerializeField] private RTLTextMeshPro leftPlanetDescriptionText;
+    [SerializeField] private RTLTextMeshPro rightPlanetNameText;
+    [SerializeField] private RTLTextMeshPro rightPlanetDescriptionText;
     [SerializeField] private GameObject planetPhasePanel;
-    [SerializeField] private TMP_Text planetTitleText;
-    [SerializeField] private TMP_Text planetDescriptionText;
-    [SerializeField] private TMP_Text planetTimerText;
+    [SerializeField] private RTLTextMeshPro planetTitleText;
+    [SerializeField] private RTLTextMeshPro planetDescriptionText;
+    [SerializeField] private RTLTextMeshPro planetTimerText;
     [SerializeField] private GameObject winPanel;
 
     private CanvasGroup leftPlanetCanvasGroup;
@@ -61,8 +66,7 @@ public class UIManager : MonoBehaviour
         GameEvents.GameOver += HandleGameOver;
         GameEvents.LaunchMissile += StartWarning;
         GameEvents.PlanetIntroductionStarted += ShowPlanetIntroduction;
-        GameEvents.PlanetDodgeStarted += ShowDodgePhase;
-        GameEvents.PlanetPhaseTimeChanged += UpdatePlanetTimer;
+        GameEvents.PlanetIntroductionEnded += HidePlanetIntroduction;
         GameEvents.GameWon += HandleGameWon;
     }
 
@@ -72,8 +76,7 @@ public class UIManager : MonoBehaviour
         GameEvents.GameOver -= HandleGameOver;
         GameEvents.LaunchMissile -= StartWarning;
         GameEvents.PlanetIntroductionStarted -= ShowPlanetIntroduction;
-        GameEvents.PlanetDodgeStarted -= ShowDodgePhase;
-        GameEvents.PlanetPhaseTimeChanged -= UpdatePlanetTimer;
+        GameEvents.PlanetIntroductionEnded -= HidePlanetIntroduction;
         GameEvents.GameWon -= HandleGameWon;
     }
 
@@ -100,35 +103,24 @@ public class UIManager : MonoBehaviour
     {
         SelectPlanetPanel(planetOnLeft);
 
-        if (planetTitleText != null)
-            planetTitleText.text = planetName;
+        RTLTextMeshPro nameText = planetOnLeft
+            ? rightPlanetNameText
+            : leftPlanetNameText;
+        RTLTextMeshPro descriptionText = planetOnLeft
+            ? rightPlanetDescriptionText
+            : leftPlanetDescriptionText;
 
-        if (planetDescriptionText != null)
-            planetDescriptionText.text = description;
+        if (nameText != null)
+            nameText.text = planetName;
 
-        UpdatePlanetTimer(duration);
+        if (descriptionText != null)
+            descriptionText.text = description;
     }
 
-    private void ShowDodgePhase(
-        string planetName,
-        float duration,
-        bool planetOnLeft)
+    private void HidePlanetIntroduction()
     {
-        SelectPlanetPanel(planetOnLeft);
-
-        if (planetTitleText != null)
-            planetTitleText.text = $"ASTEROID FIELD — {planetName}";
-
-        if (planetDescriptionText != null)
-            planetDescriptionText.text = "Dodge the asteroids until the timer reaches zero.";
-
-        UpdatePlanetTimer(duration);
-    }
-
-    private void UpdatePlanetTimer(float remainingTime)
-    {
-        if (planetTimerText != null)
-            planetTimerText.text = Mathf.CeilToInt(remainingTime).ToString("00");
+        FadePlanetPanel(leftPlanetCanvasGroup, false);
+        FadePlanetPanel(rightPlanetCanvasGroup, false);
     }
 
     private void HandleGameWon()
@@ -226,7 +218,6 @@ public class UIManager : MonoBehaviour
         if (leftPlanetPanel != null && rightPlanetPanel != null)
         {
             planetPhasePanel = rightPlanetPanel;
-            CreatePlanetTextContent(rightPlanetPanel.transform);
         }
         else if (planetPhasePanel == null)
             CreatePlanetPhasePanel(canvas.transform);
@@ -312,22 +303,6 @@ public class UIManager : MonoBehaviour
             FadeOut(canvasGroup);
     }
 
-    private void CreatePlanetTextContent(Transform panel)
-    {
-        if (planetTitleText != null &&
-            planetDescriptionText != null &&
-            planetTimerText != null)
-            return;
-
-        planetTitleText = CreateText("Planet Title", panel, 42f, FontStyles.Bold,
-            new Vector2(0f, -90f), new Vector2(440f, 70f));
-        planetDescriptionText = CreateText("Planet Description", panel, 25f, FontStyles.Normal,
-            new Vector2(0f, -190f), new Vector2(430f, 210f));
-        planetTimerText = CreateText("Phase Timer", panel, 52f, FontStyles.Bold,
-            new Vector2(0f, -430f), new Vector2(180f, 75f));
-        planetDescriptionText.alignment = TextAlignmentOptions.Center;
-    }
-
     private void CreatePlanetPhasePanel(Transform canvasTransform)
     {
         planetPhasePanel = CreatePanel(
@@ -341,13 +316,13 @@ public class UIManager : MonoBehaviour
             new Color(0.025f, 0.055f, 0.1f, 0.88f));
 
         Transform panel = planetPhasePanel.transform;
-        planetTitleText = CreateText("Planet Title", panel, 40f, FontStyles.Bold,
-            new Vector2(0f, -22f), new Vector2(700f, 55f));
-        planetDescriptionText = CreateText("Planet Description", panel, 25f, FontStyles.Normal,
-            new Vector2(0f, -92f), new Vector2(710f, 90f));
-        planetTimerText = CreateText("Phase Timer", panel, 42f, FontStyles.Bold,
-            new Vector2(350f, -22f), new Vector2(105f, 55f));
-        planetDescriptionText.alignment = TextAlignmentOptions.Center;
+        // planetTitleText = CreateText("Planet Title", panel, 40f, FontStyles.Bold,
+        //     new Vector2(0f, -22f), new Vector2(700f, 55f));
+        // planetDescriptionText = CreateText("Planet Description", panel, 25f, FontStyles.Normal,
+        //     new Vector2(0f, -92f), new Vector2(710f, 90f));
+        // planetTimerText = CreateText("Phase Timer", panel, 42f, FontStyles.Bold,
+        //     new Vector2(350f, -22f), new Vector2(105f, 55f));
+        // planetDescriptionText.alignment = TextAlignmentOptions.Center;
     }
 
     private void CreateWinPanel(Transform canvasTransform)
