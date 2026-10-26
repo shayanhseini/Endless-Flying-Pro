@@ -619,7 +619,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &333628629
 Transform:
   m_ObjectHideFlags: 0
@@ -1018,8 +1018,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameMusicController
   waitingSource: {fileID: 654212993}
   gameSource: {fileID: 333628630}
-  waitingVolume: 1
-  gameVolume: 1
+  waitingVolume: 0.2
+  gameVolume: 0.3
   fadeDuration: 1
 --- !u!1 &603968931
 GameObject:
