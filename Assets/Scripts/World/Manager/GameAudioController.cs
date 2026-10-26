@@ -31,6 +31,9 @@ public class GameAudioController : MonoBehaviour
         GameEvents.SpeedBoostActivated += PlaySpeedBoostActivateSound;
         GameEvents.SpeedBoostDeactivated += PlaySpeedBoostDeActiveSound;
         GameEvents.LaunchMissile += PlayDangerSound;
+        GameEvents.CrashLandingStarted += PlayDangerSound;
+        GameEvents.GameOver += StopDangerSound;
+        GameEvents.AtmosphereReached += StopDangerSound;
     }
 
     private void OnDisable()
@@ -40,6 +43,9 @@ public class GameAudioController : MonoBehaviour
         GameEvents.SpeedBoostActivated -= PlaySpeedBoostActivateSound;
         GameEvents.SpeedBoostDeactivated -= PlaySpeedBoostDeActiveSound;
         GameEvents.LaunchMissile -= PlayDangerSound;
+        GameEvents.CrashLandingStarted -= PlayDangerSound;
+        GameEvents.GameOver -= StopDangerSound;
+        GameEvents.AtmosphereReached -= StopDangerSound;
     }
 
     private void PlayShieldSound()
@@ -81,6 +87,39 @@ public class GameAudioController : MonoBehaviour
 
     public void PlayDangerSound()
     {
+        EnsureDangerSource();
+        if (dangerSource == null)
+            return;
+
+        dangerSource.gameObject.SetActive(true);
         dangerSource.Play();
+    }
+
+    private void StopDangerSound()
+    {
+        if (dangerSource != null)
+        {
+            dangerSource.Stop();
+            dangerSource.gameObject.SetActive(false);
+        }
+    }
+
+    private void EnsureDangerSource()
+    {
+        if (dangerSource != null)
+            return;
+
+        AudioSource[] sources = transform.parent != null
+            ? transform.parent.GetComponentsInChildren<AudioSource>(true)
+            : FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (AudioSource source in sources)
+        {
+            if (source.gameObject.name == "Danger")
+            {
+                dangerSource = source;
+                return;
+            }
+        }
     }
 }

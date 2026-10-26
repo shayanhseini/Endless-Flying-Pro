@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class PlaneDeathController : MonoBehaviour
 {
+    [Tooltip("Leave disabled so the plane remains visible after landing.")]
+    [SerializeField] private bool hidePlaneOnGameOver;
+
     private void OnEnable()
     {
         GameEvents.GameOver += DisablePlane;
@@ -16,6 +19,7 @@ public class PlaneDeathController : MonoBehaviour
 
     private void DisablePlane()
     {
-        gameObject.SetActive(false);
+        if (hidePlaneOnGameOver)
+            gameObject.SetActive(false);
     }
 }

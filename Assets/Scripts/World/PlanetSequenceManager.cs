@@ -12,6 +12,7 @@ public class PlanetSequenceManager : MonoBehaviour
     private enum SequencePhase
     {
         Waiting,
+        InitialDelay,
         Introduction,
         Gap,
         Complete
@@ -70,6 +71,12 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private PlanetDefinition[] planets = Array.Empty<PlanetDefinition>();
 
     [Header("Narration Sequence")]
+    [Min(0f)]
+    [Tooltip("Minimum delay after gameplay starts before the first planet introduction begins.")]
+    [SerializeField] private float initialNarrationDelayMin = 3f;
+    [Min(0f)]
+    [Tooltip("Maximum delay after gameplay starts before the first planet introduction begins.")]
+    [SerializeField] private float initialNarrationDelayMax = 5f;
     [Min(0.1f)]
     [Tooltip("Used when a planet does not have a narration clip yet.")]
     [SerializeField] private float fallbackIntroductionDuration = 5f;
@@ -118,6 +125,9 @@ public class PlanetSequenceManager : MonoBehaviour
     private int nextPlanetIndex;
     private bool initialized;
     private bool currentPlanetOnLeft;
+    private Coroutine narrationFadeCoroutine;
+
+    private static int sessionCheckpointPlanetIndex;
 
     public bool ObstaclesEnabled => true;
 
@@ -163,14 +173,18 @@ public class PlanetSequenceManager : MonoBehaviour
 
         MoveActivePlanets();
 
-        if (phase != SequencePhase.Introduction && phase != SequencePhase.Gap)
+        if (phase != SequencePhase.InitialDelay &&
+            phase != SequencePhase.Introduction &&
+            phase != SequencePhase.Gap)
             return;
 
         phaseTimeRemaining = Mathf.Max(0f, phaseTimeRemaining - Time.deltaTime);
         if (phaseTimeRemaining > 0f)
             return;
 
-        if (phase == SequencePhase.Introduction)
+        if (phase == SequencePhase.InitialDelay)
+            StartFirstIntroduction();
+        else if (phase == SequencePhase.Introduction)
             BeginGap();
         else
             CompleteCurrentPlanet();
@@ -181,7 +195,19 @@ public class PlanetSequenceManager : MonoBehaviour
         if (!initialized || phase != SequencePhase.Waiting)
             return;
 
-        nextPlanetIndex = 0;
+        nextPlanetIndex = Mathf.Clamp(
+            sessionCheckpointPlanetIndex,
+            0,
+            Mathf.Max(0, planets.Length - 1));
+        phase = SequencePhase.InitialDelay;
+
+        float minimumDelay = Mathf.Max(0f, initialNarrationDelayMin);
+        float maximumDelay = Mathf.Max(minimumDelay, initialNarrationDelayMax);
+        phaseTimeRemaining = minimumDelay;
+    }
+
+    private void StartFirstIntroduction()
+    {
         SpawnNextPlanet();
         BeginIntroductionPhase();
     }
@@ -207,6 +233,57 @@ public class PlanetSequenceManager : MonoBehaviour
             currentPlanetOnLeft);
     }
 
+    public Transform PrepareCrashLanding()
+    {
+        sessionCheckpointPlanetIndex = Mathf.Clamp(
+            nextPlanetIndex,
+            0,
+            Mathf.Max(0, planets.Length - 1));
+
+        phase = SequencePhase.Complete;
+        GameEvents.RaisePlanetIntroductionEnded();
+        FadeOutNarration();
+
+        if (activePlanets.Count == 0)
+            SpawnNextPlanet();
+
+        for (int i = activePlanets.Count - 1; i >= 0; i--)
+        {
+            if (activePlanets[i].Transform != null)
+                return activePlanets[i].Transform;
+        }
+
+        return null;
+    }
+
+    private void FadeOutNarration()
+    {
+        if (narrationSource == null || !narrationSource.isPlaying)
+            return;
+
+        if (narrationFadeCoroutine != null)
+            StopCoroutine(narrationFadeCoroutine);
+
+        narrationFadeCoroutine = StartCoroutine(FadeNarrationRoutine());
+    }
+
+    private System.Collections.IEnumerator FadeNarrationRoutine()
+    {
+        float startVolume = narrationSource.volume;
+        float elapsed = 0f;
+
+        while (elapsed < 0.75f)
+        {
+            elapsed += Time.deltaTime;
+            narrationSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / 0.75f);
+            yield return null;
+        }
+
+        narrationSource.Stop();
+        narrationSource.volume = startVolume;
+        narrationFadeCoroutine = null;
+    }
+
     private void BeginGap()
     {
         if (narrationSource != null)
@@ -223,12 +300,33 @@ public class PlanetSequenceManager : MonoBehaviour
         if (nextPlanetIndex >= planets.Length)
         {
             phase = SequencePhase.Complete;
-            gameManager.WinGame();
+            GameEvents.RaisePlanetIntroductionEnded();
+            FadeOutNarration();
+
+            PlaneInteraction planeInteraction = player != null
+                ? player.GetComponent<PlaneInteraction>()
+                : null;
+
+            if (planeInteraction != null)
+                planeInteraction.BeginVictoryOrbit(GetLatestActivePlanet());
+            else
+                gameManager.WinGame();
             return;
         }
 
         SpawnNextPlanet();
         BeginIntroductionPhase();
+    }
+
+    private Transform GetLatestActivePlanet()
+    {
+        for (int i = activePlanets.Count - 1; i >= 0; i--)
+        {
+            if (activePlanets[i].Transform != null)
+                return activePlanets[i].Transform;
+        }
+
+        return null;
     }
 
     private void MoveActivePlanets()

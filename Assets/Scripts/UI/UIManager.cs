@@ -22,6 +22,11 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float duration = 2f;
     [SerializeField] private float flashSpeed = 0.15f;
 
+    [Header("Crash Damage")]
+    [SerializeField] private UnityEngine.UI.Image damageImage;
+    [Min(0.1f)]
+    [SerializeField] private float damagePulseDuration = 0.8f;
+
     [Header("Planet Sequence UI")]
     [SerializeField] private GameObject leftPlanetPanel;
     [SerializeField] private GameObject rightPlanetPanel;
@@ -37,6 +42,7 @@ public class UIManager : MonoBehaviour
 
     private CanvasGroup leftPlanetCanvasGroup;
     private CanvasGroup rightPlanetCanvasGroup;
+    private Coroutine damagePulseCoroutine;
 
     private readonly Dictionary<CanvasGroup, Coroutine> fadeCoroutines = new();
 
@@ -44,6 +50,7 @@ public class UIManager : MonoBehaviour
     {
         EnsurePlanetSequenceUI();
         InitializePlanetPanelFades();
+        FindAndInitializeDamageImage();
 
         if (gamePanel != null)
             gamePanel.SetActive(false);
@@ -68,6 +75,9 @@ public class UIManager : MonoBehaviour
         GameEvents.PlanetIntroductionStarted += ShowPlanetIntroduction;
         GameEvents.PlanetIntroductionEnded += HidePlanetIntroduction;
         GameEvents.GameWon += HandleGameWon;
+        GameEvents.CrashLandingStarted += HandleCrashLandingStarted;
+        GameEvents.VictoryOrbitStarted += HidePlanetIntroduction;
+        GameEvents.AtmosphereReached += HideDamageWarning;
     }
 
     private void OnDisable()
@@ -78,6 +88,9 @@ public class UIManager : MonoBehaviour
         GameEvents.PlanetIntroductionStarted -= ShowPlanetIntroduction;
         GameEvents.PlanetIntroductionEnded -= HidePlanetIntroduction;
         GameEvents.GameWon -= HandleGameWon;
+        GameEvents.CrashLandingStarted -= HandleCrashLandingStarted;
+        GameEvents.VictoryOrbitStarted -= HidePlanetIntroduction;
+        GameEvents.AtmosphereReached -= HideDamageWarning;
     }
 
     private void HandleGameStarted()
@@ -93,6 +106,96 @@ public class UIManager : MonoBehaviour
             gameOverPanel.SetActive(true);
 
         FadeIn(gameOverCanvasGroup);
+    }
+
+    private void HandleCrashLandingStarted()
+    {
+        HidePlanetIntroduction();
+
+        if (damageImage == null)
+            return;
+
+        if (damagePulseCoroutine != null)
+            StopCoroutine(damagePulseCoroutine);
+
+        damageImage.gameObject.SetActive(true);
+        damagePulseCoroutine = StartCoroutine(PulseDamageRoutine());
+    }
+
+    private void FindAndInitializeDamageImage()
+    {
+        if (damageImage == null)
+        {
+            UnityEngine.UI.Image[] images = FindObjectsByType<UnityEngine.UI.Image>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (UnityEngine.UI.Image image in images)
+            {
+                if (image.gameObject.name == "Damage")
+                {
+                    damageImage = image;
+                    break;
+                }
+            }
+        }
+
+        if (damageImage == null)
+            return;
+
+        Color color = damageImage.color;
+        color.a = 0f;
+        damageImage.color = color;
+        damageImage.raycastTarget = false;
+        damageImage.gameObject.SetActive(true);
+    }
+
+    private IEnumerator PulseDamageRoutine()
+    {
+        Color color = damageImage.color;
+        float elapsed = 0f;
+
+        while (true)
+        {
+            elapsed += Time.deltaTime;
+            float cycle = Mathf.Repeat(elapsed / damagePulseDuration, 1f);
+            color.a = Mathf.PingPong(cycle * 2f, 1f);
+            damageImage.color = color;
+            yield return null;
+        }
+    }
+
+    private void HideDamageWarning()
+    {
+        if (damageImage == null)
+            return;
+
+        if (damagePulseCoroutine != null)
+            StopCoroutine(damagePulseCoroutine);
+
+        damagePulseCoroutine = StartCoroutine(FadeDamageWarningOut());
+    }
+
+    private IEnumerator FadeDamageWarningOut()
+    {
+        Color color = damageImage.color;
+        float startAlpha = color.a;
+        float elapsed = 0f;
+
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / fadeDuration));
+            color.a = Mathf.Lerp(startAlpha, 0f, progress);
+            damageImage.color = color;
+            yield return null;
+        }
+
+        color.a = 0f;
+        damageImage.color = color;
+        damagePulseCoroutine = null;
     }
 
     private void ShowPlanetIntroduction(

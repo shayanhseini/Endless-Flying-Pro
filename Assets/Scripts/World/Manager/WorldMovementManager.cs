@@ -44,6 +44,8 @@ public class WorldMovementManager : MonoBehaviour
         GameEvents.GameStarted += StartMovement;
         GameEvents.GameOver += StopMovement;
         GameEvents.GameWon += StopMovement;
+        GameEvents.CrashLandingStarted += StopMovement;
+        GameEvents.VictoryOrbitStarted += StopMovement;
     }
 
 
@@ -52,6 +54,8 @@ public class WorldMovementManager : MonoBehaviour
         GameEvents.GameStarted -= StartMovement;
         GameEvents.GameOver -= StopMovement;
         GameEvents.GameWon -= StopMovement;
+        GameEvents.CrashLandingStarted -= StopMovement;
+        GameEvents.VictoryOrbitStarted -= StopMovement;
     }
 
 

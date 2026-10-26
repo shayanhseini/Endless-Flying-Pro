@@ -72,6 +72,8 @@ public class PlaneController : MonoBehaviour
     {
         GameEvents.GameStarted += EnableControl;
         GameEvents.GameOver += DisableControl;
+        GameEvents.CrashLandingStarted += DisableControl;
+        GameEvents.VictoryOrbitStarted += DisableControl;
     }
 
 
@@ -79,6 +81,8 @@ public class PlaneController : MonoBehaviour
     {
         GameEvents.GameStarted -= EnableControl;
         GameEvents.GameOver -= DisableControl;
+        GameEvents.CrashLandingStarted -= DisableControl;
+        GameEvents.VictoryOrbitStarted -= DisableControl;
     }
 
 

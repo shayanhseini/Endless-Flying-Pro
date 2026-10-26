@@ -5,6 +5,9 @@ public static class GameEvents
     public static event Action GameStarted;
     public static event Action GameOver;
     public static event Action GameWon;
+    public static event Action CrashLandingStarted;
+    public static event Action VictoryOrbitStarted;
+    public static event Action AtmosphereReached;
     public static event Action<string, string, float, bool> PlanetIntroductionStarted;
     public static event Action PlanetIntroductionEnded;
 
@@ -33,6 +36,21 @@ public static class GameEvents
     public static void RaiseGameWon()
     {
         GameWon?.Invoke();
+    }
+
+    public static void RaiseCrashLandingStarted()
+    {
+        CrashLandingStarted?.Invoke();
+    }
+
+    public static void RaiseVictoryOrbitStarted()
+    {
+        VictoryOrbitStarted?.Invoke();
+    }
+
+    public static void RaiseAtmosphereReached()
+    {
+        AtmosphereReached?.Invoke();
     }
 
     public static void RaisePlanetIntroductionStarted(
