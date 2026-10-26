@@ -37,7 +37,7 @@ public class PlaneCameraController : MonoBehaviour
     [SerializeField] private float crashRotationSmoothness = 30f;
     [Min(0.05f)]
     [Tooltip("Time used to move the camera smoothly into its behind-the-plane follow position.")]
-    [SerializeField] private float crashRepositionDuration = 0.85f;
+    [SerializeField] private float crashRepositionDuration = 1.5f;
 
 
     private Quaternion initialRotation;
@@ -52,6 +52,8 @@ public class PlaneCameraController : MonoBehaviour
     private float followTransitionElapsed;
     private Vector3 followTransitionStartPosition;
     private Quaternion followTransitionStartRotation;
+    private Vector3 capturedImpactWorldOffset;
+    private Quaternion capturedImpactRotation;
 
 
     private void Awake()
@@ -130,6 +132,8 @@ public class PlaneCameraController : MonoBehaviour
 
         Transform plane = planeController.transform;
         Vector3 planeToCamera = transform.position - plane.position;
+        capturedImpactWorldOffset = planeToCamera;
+        capturedImpactRotation = transform.rotation;
         capturedFollowHeight = Vector3.Dot(planeToCamera, Vector3.up);
         Vector3 horizontalOffset = Vector3.ProjectOnPlane(planeToCamera, Vector3.up);
         capturedBehindDistance = Mathf.Max(0.1f, horizontalOffset.magnitude);
@@ -138,8 +142,6 @@ public class PlaneCameraController : MonoBehaviour
     private IEnumerator ShakeThenFollow()
     {
         impactShaking = true;
-        Vector3 startPosition = transform.position;
-        Quaternion startRotation = transform.rotation;
         float elapsed = 0f;
 
         while (elapsed < impactShakeDuration)
@@ -149,12 +151,14 @@ public class PlaneCameraController : MonoBehaviour
             Vector3 positionOffset = Random.insideUnitSphere * impactShakePosition * strength;
             Vector3 rotationOffset = Random.insideUnitSphere * impactShakeRotation * strength;
 
-            transform.position = startPosition + positionOffset;
-            transform.rotation = startRotation * Quaternion.Euler(rotationOffset);
+            Transform plane = planeController.transform;
+            Vector3 followPosition = plane.position + capturedImpactWorldOffset;
+
+            transform.position = followPosition + positionOffset;
+            transform.rotation = capturedImpactRotation * Quaternion.Euler(rotationOffset);
             yield return null;
         }
 
-        transform.SetPositionAndRotation(startPosition, startRotation);
         impactShaking = false;
         BeginFollowTransition();
         impactShakeCoroutine = null;

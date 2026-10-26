@@ -4581,10 +4581,9 @@ MonoBehaviour:
   impactShakeDuration: 0.45
   impactShakePosition: 0.3
   impactShakeRotation: 2.5
-  crashFollowOffset: {x: 0, y: 2.25, z: -7}
   crashLookOffset: {x: 0, y: 0.4, z: 2.5}
-  crashPositionSmoothness: 3.5
   crashRotationSmoothness: 5
+  crashRepositionDuration: 0.85
 --- !u!4 &4109381416440966044
 Transform:
   m_ObjectHideFlags: 0
@@ -4790,10 +4789,14 @@ MonoBehaviour:
   gameAudioController: {fileID: 2116496927}
   hitEffect: {fileID: 2067943244}
   impactPauseDuration: 0.45
-  crashLandingDuration: 10
-  landingSurfaceOffset: 0.75
-  landingRotationStart: 0.75
-  landedHoldDuration: 2.5
+  atmosphereApproachSpeed: 200
+  distanceSpeedReferenceTime: 10
+  atmosphereRadiusMultiplier: 1.15
+  atmosphereDriftDuration: 1
+  atmosphereDriftSpeed: 3
+  atmosphereEntrySpeedMultiplier: 2
+  atmosphereSlowdownDuration: 2
+  atmosphereInwardAim: 0.3
 --- !u!223 &4825072594150814623
 Canvas:
   m_ObjectHideFlags: 0
