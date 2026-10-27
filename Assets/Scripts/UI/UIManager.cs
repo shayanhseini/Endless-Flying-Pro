@@ -62,8 +62,25 @@ public class UIManager : MonoBehaviour
     [SerializeField] private UnityEngine.UI.Image[] planetProgressDots = new UnityEngine.UI.Image[8];
     [SerializeField] private UnityEngine.UI.Image progressTrackImage;
     [SerializeField] private UnityEngine.UI.Image completedProgressImage;
+    [SerializeField] private UnityEngine.UI.Image planetRingImage;
     [Min(0.05f)]
     [SerializeField] private float planetImageTransitionDuration = 0.8f;
+    [Header("Planet Reached Effect")]
+    [Min(0.01f)]
+    [SerializeField] private float planetDotGrowDuration = 0.2f;
+    [Min(0.01f)]
+    [SerializeField] private float planetDotReturnDuration = 0.4f;
+    [Min(1f)]
+    [SerializeField] private float planetDotPulseMultiplier = 1.7f;
+    [Min(0.05f)]
+    [SerializeField] private float planetRingFadeDuration = 0.7f;
+    [Min(0f)]
+    [SerializeField] private float planetRingVisibleDuration = 5f;
+    [Min(0.05f)]
+    [SerializeField] private float progressGlowDuration = 0.6f;
+    [Min(1f)]
+    [SerializeField] private float progressGlowThicknessMultiplier = 2.3f;
+    [SerializeField] private Color progressGlowColor = new(0.15f, 0.9f, 1f, 1f);
     [SerializeField] private GameObject planetPhasePanel;
     [SerializeField] private RTLTextMeshPro planetTitleText;
     [SerializeField] private RTLTextMeshPro planetDescriptionText;
@@ -76,10 +93,16 @@ public class UIManager : MonoBehaviour
     private Coroutine damagePulseCoroutine;
     private Coroutine situationImageCoroutine;
     private Coroutine countdownAnimationCoroutine;
+    private Coroutine planetDotPulseCoroutine;
+    private Coroutine planetRingFadeCoroutine;
+    private Coroutine progressGlowCoroutine;
     private Vector2 currentPlanetImageAnchoredPosition;
     private Vector2 currentPlanetImageSizeDelta;
     private float currentPlanetImageBaseAlpha = 1f;
     private int currentSituationPlanetIndex = -1;
+    private Color progressLineBaseColor;
+    private float progressLineBaseHeight = 3f;
+    private float progressLineVisualHeight = 3f;
 
     private readonly Dictionary<CanvasGroup, Coroutine> fadeCoroutines = new();
 
@@ -96,6 +119,7 @@ public class UIManager : MonoBehaviour
         }
         EnsurePlanetSequenceUI();
         InitializePlanetPanelFades();
+        InitializePlanetReachedEffects();
         InitializePlanetProgressLine();
         FindAndInitializeDamageImage();
 
@@ -375,7 +399,159 @@ public class UIManager : MonoBehaviour
             : leftPlanetImage;
         SetPlanetImage(planetImage, planetIndex);
         UpdateSituationPanel(planetIndex);
+        PlayPlanetReachedEffects(planetIndex);
         FadeIn(situationCanvasGroup);
+    }
+
+    private void InitializePlanetReachedEffects()
+    {
+        if (completedProgressImage != null)
+        {
+            progressLineBaseColor = completedProgressImage.color;
+            progressLineBaseHeight = Mathf.Max(
+                1f,
+                completedProgressImage.rectTransform.sizeDelta.y);
+            progressLineVisualHeight = progressLineBaseHeight;
+        }
+
+        if (planetRingImage != null)
+        {
+            Color color = planetRingImage.color;
+            color.a = 0f;
+            planetRingImage.color = color;
+            planetRingImage.raycastTarget = false;
+        }
+    }
+
+    private void PlayPlanetReachedEffects(int planetIndex)
+    {
+        if (planetProgressDots != null &&
+            planetIndex >= 0 && planetIndex < planetProgressDots.Length &&
+            planetProgressDots[planetIndex] != null)
+        {
+            if (planetDotPulseCoroutine != null)
+                StopCoroutine(planetDotPulseCoroutine);
+            planetDotPulseCoroutine = StartCoroutine(
+                PulsePlanetDot(planetProgressDots[planetIndex]));
+        }
+
+        if (planetRingImage != null)
+        {
+            if (planetRingFadeCoroutine != null)
+                StopCoroutine(planetRingFadeCoroutine);
+            planetRingFadeCoroutine = StartCoroutine(FadePlanetRing());
+        }
+
+        if (completedProgressImage != null)
+        {
+            if (progressGlowCoroutine != null)
+                StopCoroutine(progressGlowCoroutine);
+            progressGlowCoroutine = StartCoroutine(PulseProgressGlow());
+        }
+    }
+
+    private IEnumerator PulsePlanetDot(UnityEngine.UI.Image dot)
+    {
+        RectTransform rect = dot.rectTransform;
+        float normalSize = currentPlanetDotSize;
+        float pulseSize = normalSize * planetDotPulseMultiplier;
+        float elapsed = 0f;
+
+        while (elapsed < planetDotGrowDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / planetDotGrowDuration));
+            SetSquareSize(rect, Mathf.Lerp(normalSize, pulseSize, progress));
+            yield return null;
+        }
+
+        elapsed = 0f;
+        while (elapsed < planetDotReturnDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / planetDotReturnDuration));
+            SetSquareSize(rect, Mathf.Lerp(pulseSize, normalSize, progress));
+            yield return null;
+        }
+
+        SetSquareSize(rect, normalSize);
+        planetDotPulseCoroutine = null;
+    }
+
+    private static void SetSquareSize(RectTransform rect, float size)
+    {
+        rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
+        rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+    }
+
+    private IEnumerator FadePlanetRing()
+    {
+        Color color = planetRingImage.color;
+        float fadeInDuration = planetRingFadeDuration * 0.25f;
+        float fadeOutDuration = planetRingFadeDuration - fadeInDuration;
+        float elapsed = 0f;
+
+        while (elapsed < fadeInDuration)
+        {
+            elapsed += Time.deltaTime;
+            color.a = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / fadeInDuration));
+            planetRingImage.color = color;
+            yield return null;
+        }
+
+        color.a = 1f;
+        planetRingImage.color = color;
+        if (planetRingVisibleDuration > 0f)
+            yield return new WaitForSeconds(planetRingVisibleDuration);
+
+        elapsed = 0f;
+        while (elapsed < fadeOutDuration)
+        {
+            elapsed += Time.deltaTime;
+            color.a = 1f - Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / fadeOutDuration));
+            planetRingImage.color = color;
+            yield return null;
+        }
+
+        color.a = 0f;
+        planetRingImage.color = color;
+        planetRingFadeCoroutine = null;
+    }
+
+    private IEnumerator PulseProgressGlow()
+    {
+        float elapsed = 0f;
+        while (elapsed < progressGlowDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsed / progressGlowDuration);
+            float pulse = Mathf.Sin(progress * Mathf.PI);
+            completedProgressImage.color = Color.Lerp(
+                progressLineBaseColor,
+                progressGlowColor,
+                pulse);
+            progressLineVisualHeight = progressLineBaseHeight * Mathf.Lerp(
+                1f,
+                progressGlowThicknessMultiplier,
+                pulse);
+            yield return null;
+        }
+
+        completedProgressImage.color = progressLineBaseColor;
+        progressLineVisualHeight = progressLineBaseHeight;
+        progressGlowCoroutine = null;
     }
 
     private void SetPlanetImage(UnityEngine.UI.Image image, int planetIndex)
@@ -584,13 +760,15 @@ public class UIManager : MonoBehaviour
         UpdateSituationPanel(0);
     }
 
-    private static void SetProgressLineRect(RectTransform rect, float startX, float endX)
+    private void SetProgressLineRect(RectTransform rect, float startX, float endX)
     {
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = new Vector2((startX + endX) * 0.5f, 0f);
-        rect.sizeDelta = new Vector2(Mathf.Max(0f, endX - startX), 3f);
+        rect.sizeDelta = new Vector2(
+            Mathf.Max(0f, endX - startX),
+            progressLineVisualHeight);
     }
 
     private void UpdateCompletedProgressLine(int planetIndex)
