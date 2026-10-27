@@ -90,9 +90,6 @@ public class PlanetSequenceManager : MonoBehaviour
     [Header("Victory Sequence")]
     [Tooltip("Played after Neptune is completed. Assign the success narration here.")]
     [SerializeField] private AudioClip victoryNarrationClip;
-    [Min(0f)]
-    [SerializeField] private float restartDelayAfterVictoryNarration = 1f;
-
     [Header("Placement")]
     [Min(1f)]
     [SerializeField] private float spawnDistance = 2000f;
@@ -258,27 +255,15 @@ public class PlanetSequenceManager : MonoBehaviour
             nextPlanetIndex);
     }
 
-    public Transform PrepareCrashLanding()
+    public void PrepareCrashRecovery()
     {
         sessionCheckpointPlanetIndex = Mathf.Clamp(
             nextPlanetIndex,
             0,
             Mathf.Max(0, planets.Length - 1));
 
-        phase = SequencePhase.Complete;
         GameEvents.RaisePlanetIntroductionEnded();
         FadeOutNarration();
-
-        if (activePlanets.Count == 0)
-            SpawnNextPlanet();
-
-        for (int i = activePlanets.Count - 1; i >= 0; i--)
-        {
-            if (activePlanets[i].Transform != null)
-                return activePlanets[i].Transform;
-        }
-
-        return null;
     }
 
     private void FadeOutNarration()
@@ -359,10 +344,34 @@ public class PlanetSequenceManager : MonoBehaviour
             }
         }
 
-        if (restartDelayAfterVictoryNarration > 0f)
-            yield return new WaitForSeconds(restartDelayAfterVictoryNarration);
+        gameManager.StartRoundCountdown(true);
+    }
 
-        gameManager.RestartGame();
+    public void RestartFromFirstPlanet()
+    {
+        if (narrationFadeCoroutine != null)
+        {
+            StopCoroutine(narrationFadeCoroutine);
+            narrationFadeCoroutine = null;
+        }
+
+        if (narrationSource != null)
+        {
+            narrationSource.Stop();
+            narrationSource.volume = 1f;
+        }
+
+        for (int i = activePlanets.Count - 1; i >= 0; i--)
+        {
+            if (activePlanets[i].Transform != null)
+                Destroy(activePlanets[i].Transform.gameObject);
+        }
+
+        activePlanets.Clear();
+        sessionCheckpointPlanetIndex = 0;
+        nextPlanetIndex = 0;
+        SpawnNextPlanet();
+        BeginIntroductionPhase();
     }
 
     private void MoveActivePlanets()

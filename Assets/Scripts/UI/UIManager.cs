@@ -29,6 +29,14 @@ public class UIManager : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float damageMaximumAlpha = 0.2f;
 
+    [Header("Round Countdown")]
+    [SerializeField] private GameObject countdownPanel;
+    [SerializeField] private TMP_Text countdownText;
+    [Min(1f)]
+    [SerializeField] private float countdownStartFontSize = 50f;
+    [Min(1f)]
+    [SerializeField] private float countdownEndFontSize = 500f;
+
     [Header("Planet Sequence UI")]
     [SerializeField] private GameObject leftPlanetPanel;
     [SerializeField] private GameObject rightPlanetPanel;
@@ -67,6 +75,7 @@ public class UIManager : MonoBehaviour
     private CanvasGroup situationCanvasGroup;
     private Coroutine damagePulseCoroutine;
     private Coroutine situationImageCoroutine;
+    private Coroutine countdownAnimationCoroutine;
     private Vector2 currentPlanetImageAnchoredPosition;
     private Vector2 currentPlanetImageSizeDelta;
     private float currentPlanetImageBaseAlpha = 1f;
@@ -78,6 +87,7 @@ public class UIManager : MonoBehaviour
     {
         ResolvePlanetPanelReferences();
         ResolveSituationPanelReferences();
+        ResolveCountdownReferences();
         if (currentPlanetImage != null)
         {
             currentPlanetImageAnchoredPosition = currentPlanetImage.rectTransform.anchoredPosition;
@@ -88,6 +98,9 @@ public class UIManager : MonoBehaviour
         InitializePlanetPanelFades();
         InitializePlanetProgressLine();
         FindAndInitializeDamageImage();
+
+        if (countdownPanel != null)
+            countdownPanel.SetActive(false);
 
         if (gamePanel != null)
             gamePanel.SetActive(false);
@@ -116,6 +129,9 @@ public class UIManager : MonoBehaviour
         GameEvents.CrashLandingStarted += HandleCrashLandingStarted;
         GameEvents.VictoryOrbitStarted += HidePlanetIntroduction;
         GameEvents.AtmosphereReached += HideDamageWarning;
+        GameEvents.RoundCountdownStarted += HandleRoundCountdownStarted;
+        GameEvents.RoundCountdownTick += ShowCountdownNumber;
+        GameEvents.RoundCountdownCompleted += HandleRoundCountdownCompleted;
     }
 
     private void OnDisable()
@@ -130,6 +146,9 @@ public class UIManager : MonoBehaviour
         GameEvents.CrashLandingStarted -= HandleCrashLandingStarted;
         GameEvents.VictoryOrbitStarted -= HidePlanetIntroduction;
         GameEvents.AtmosphereReached -= HideDamageWarning;
+        GameEvents.RoundCountdownStarted -= HandleRoundCountdownStarted;
+        GameEvents.RoundCountdownTick -= ShowCountdownNumber;
+        GameEvents.RoundCountdownCompleted -= HandleRoundCountdownCompleted;
     }
 
     private void HandleGameStarted()
@@ -160,6 +179,97 @@ public class UIManager : MonoBehaviour
 
         damageImage.gameObject.SetActive(true);
         damagePulseCoroutine = StartCoroutine(PulseDamageRoutine());
+    }
+
+    private void HandleRoundCountdownStarted()
+    {
+        HidePlanetIntroduction();
+        FadeOut(situationCanvasGroup);
+        HideDamageWarning();
+
+        if (countdownPanel != null)
+            countdownPanel.SetActive(true);
+    }
+
+    private void ShowCountdownNumber(int value, float stepDuration)
+    {
+        if (countdownPanel == null || countdownText == null)
+            return;
+
+        countdownPanel.SetActive(true);
+        if (countdownAnimationCoroutine != null)
+            StopCoroutine(countdownAnimationCoroutine);
+
+        countdownAnimationCoroutine = StartCoroutine(
+            AnimateCountdownNumber(value, stepDuration));
+    }
+
+    private IEnumerator AnimateCountdownNumber(int value, float stepDuration)
+    {
+        countdownText.text = value.ToString();
+        Color color = countdownText.color;
+        color.a = 1f;
+        countdownText.color = color;
+        countdownText.fontSize = countdownStartFontSize;
+
+        float elapsed = 0f;
+        while (elapsed < stepDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsed / Mathf.Max(0.01f, stepDuration));
+            float easedProgress = 1f - Mathf.Pow(1f - progress, 3f);
+            countdownText.fontSize = Mathf.Lerp(
+                countdownStartFontSize,
+                countdownEndFontSize,
+                easedProgress);
+            color.a = 1f - Mathf.SmoothStep(0f, 1f, progress);
+            countdownText.color = color;
+            yield return null;
+        }
+
+        countdownText.fontSize = countdownEndFontSize;
+        color.a = 0f;
+        countdownText.color = color;
+        countdownAnimationCoroutine = null;
+    }
+
+    private void HandleRoundCountdownCompleted()
+    {
+        if (countdownAnimationCoroutine != null)
+        {
+            StopCoroutine(countdownAnimationCoroutine);
+            countdownAnimationCoroutine = null;
+        }
+
+        if (countdownPanel != null)
+            countdownPanel.SetActive(false);
+
+        HideDamageWarning();
+        FadeIn(situationCanvasGroup);
+    }
+
+    private void ResolveCountdownReferences()
+    {
+        if (countdownPanel == null)
+        {
+            RectTransform[] rectTransforms = FindObjectsByType<RectTransform>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (RectTransform rectTransform in rectTransforms)
+            {
+                if (rectTransform.gameObject.name == "Countdown Panel")
+                {
+                    countdownPanel = rectTransform.gameObject;
+                    break;
+                }
+            }
+        }
+
+        if (countdownPanel != null && countdownText == null)
+            countdownText = countdownPanel.GetComponentInChildren<TMP_Text>(true);
+
+        if (countdownText != null)
+            countdownText.raycastTarget = false;
     }
 
     private void FindAndInitializeDamageImage()

@@ -46,6 +46,8 @@ public class WorldMovementManager : MonoBehaviour
         GameEvents.GameWon += StopMovement;
         GameEvents.CrashLandingStarted += StopMovement;
         GameEvents.VictoryOrbitStarted += StopMovement;
+        GameEvents.RoundCountdownStarted += StopMovement;
+        GameEvents.RoundCountdownCompleted += StartMovement;
     }
 
 
@@ -56,6 +58,8 @@ public class WorldMovementManager : MonoBehaviour
         GameEvents.GameWon -= StopMovement;
         GameEvents.CrashLandingStarted -= StopMovement;
         GameEvents.VictoryOrbitStarted -= StopMovement;
+        GameEvents.RoundCountdownStarted -= StopMovement;
+        GameEvents.RoundCountdownCompleted -= StartMovement;
     }
 
 

@@ -9,10 +9,17 @@ public class GameManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private FadeController fadeController;
 
+    [Header("Round Countdown")]
+    [Min(0.1f)]
+    [SerializeField] private float roundCountdownDuration = 5f;
+    [Min(1)]
+    [SerializeField] private int countdownStartValue = 5;
+
     public GameState State { get; private set; }
 
     public GroundType CurrentGroundType { get; private set; }
     private bool waitingForFirstInput;
+    private Coroutine roundCountdownCoroutine;
 
 
     private void Awake()
@@ -138,6 +145,41 @@ public class GameManager : MonoBehaviour
             fadeController.FadeOut();
     }
 
+    public void StartRoundCountdown(bool restartFromFirstPlanet)
+    {
+        if (roundCountdownCoroutine != null)
+            return;
+
+        roundCountdownCoroutine = StartCoroutine(
+            RoundCountdownRoutine(restartFromFirstPlanet));
+    }
+
+    private IEnumerator RoundCountdownRoutine(bool restartFromFirstPlanet)
+    {
+        State = GameState.Countdown;
+        GameEvents.RaiseRoundCountdownStarted();
+
+        int stepCount = countdownStartValue + 1;
+        float stepDuration = roundCountdownDuration / Mathf.Max(1, stepCount);
+        for (int value = countdownStartValue; value >= 0; value--)
+        {
+            GameEvents.RaiseRoundCountdownTick(value, stepDuration);
+            yield return new WaitForSeconds(stepDuration);
+        }
+
+        State = GameState.Playing;
+
+        if (restartFromFirstPlanet)
+        {
+            PlanetSequenceManager sequence = FindFirstObjectByType<PlanetSequenceManager>();
+            if (sequence != null)
+                sequence.RestartFromFirstPlanet();
+        }
+
+        GameEvents.RaiseRoundCountdownCompleted();
+        roundCountdownCoroutine = null;
+    }
+
 
     private IEnumerator RestartGameRoutine()
     {
@@ -174,6 +216,7 @@ public enum GameState
     CrashLanding,
     VictoryOrbit,
     VictorySequence,
+    Countdown,
     Won,
     GameOver
 }

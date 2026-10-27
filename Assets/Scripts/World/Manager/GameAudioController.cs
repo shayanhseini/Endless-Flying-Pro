@@ -31,9 +31,11 @@ public class GameAudioController : MonoBehaviour
         GameEvents.SpeedBoostActivated += PlaySpeedBoostActivateSound;
         GameEvents.SpeedBoostDeactivated += PlaySpeedBoostDeActiveSound;
         GameEvents.LaunchMissile += PlayDangerSound;
-        GameEvents.CrashLandingStarted += PlayDangerSound;
+        GameEvents.CrashLandingStarted += StopDangerSound;
         GameEvents.GameOver += StopDangerSound;
         GameEvents.AtmosphereReached += StopDangerSound;
+        GameEvents.RoundCountdownCompleted += StopDangerSound;
+        GameEvents.PlanetIntroductionStarted += PlayPlanetReachedSound;
     }
 
     private void OnDisable()
@@ -43,9 +45,11 @@ public class GameAudioController : MonoBehaviour
         GameEvents.SpeedBoostActivated -= PlaySpeedBoostActivateSound;
         GameEvents.SpeedBoostDeactivated -= PlaySpeedBoostDeActiveSound;
         GameEvents.LaunchMissile -= PlayDangerSound;
-        GameEvents.CrashLandingStarted -= PlayDangerSound;
+        GameEvents.CrashLandingStarted -= StopDangerSound;
         GameEvents.GameOver -= StopDangerSound;
         GameEvents.AtmosphereReached -= StopDangerSound;
+        GameEvents.RoundCountdownCompleted -= StopDangerSound;
+        GameEvents.PlanetIntroductionStarted -= PlayPlanetReachedSound;
     }
 
     private void PlayShieldSound()
@@ -70,7 +74,18 @@ public class GameAudioController : MonoBehaviour
     
     public void PlayButtonSound()
     {
-        uiSource.PlayOneShot(uiButtonClip);
+        if (uiSource != null && uiButtonClip != null)
+            uiSource.PlayOneShot(uiButtonClip);
+    }
+
+    private void PlayPlanetReachedSound(
+        string planetName,
+        string description,
+        float duration,
+        bool planetOnLeft,
+        int planetIndex)
+    {
+        PlayButtonSound();
     }
     
     public void PlayExplosionSound(Transform target)

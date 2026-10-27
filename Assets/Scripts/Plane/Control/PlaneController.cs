@@ -74,6 +74,8 @@ public class PlaneController : MonoBehaviour
         GameEvents.GameOver += DisableControl;
         GameEvents.CrashLandingStarted += DisableControl;
         GameEvents.VictoryOrbitStarted += DisableControl;
+        GameEvents.RoundCountdownStarted += DisableControl;
+        GameEvents.RoundCountdownCompleted += EnableControl;
     }
 
 
@@ -83,6 +85,8 @@ public class PlaneController : MonoBehaviour
         GameEvents.GameOver -= DisableControl;
         GameEvents.CrashLandingStarted -= DisableControl;
         GameEvents.VictoryOrbitStarted -= DisableControl;
+        GameEvents.RoundCountdownStarted -= DisableControl;
+        GameEvents.RoundCountdownCompleted -= EnableControl;
     }
 
 

@@ -11,6 +11,9 @@ public static class GameEvents
     public static event Action<string, string, float, bool, int> PlanetIntroductionStarted;
     public static event Action PlanetIntroductionEnded;
     public static event Action<int, float> PlanetProgressChanged;
+    public static event Action RoundCountdownStarted;
+    public static event Action<int, float> RoundCountdownTick;
+    public static event Action RoundCountdownCompleted;
 
     public static event Action PlaneHit;
 
@@ -77,6 +80,21 @@ public static class GameEvents
     public static void RaisePlanetProgressChanged(int planetIndex, float progress)
     {
         PlanetProgressChanged?.Invoke(planetIndex, progress);
+    }
+
+    public static void RaiseRoundCountdownStarted()
+    {
+        RoundCountdownStarted?.Invoke();
+    }
+
+    public static void RaiseRoundCountdownTick(int value, float stepDuration)
+    {
+        RoundCountdownTick?.Invoke(value, stepDuration);
+    }
+
+    public static void RaiseRoundCountdownCompleted()
+    {
+        RoundCountdownCompleted?.Invoke();
     }
 
 
