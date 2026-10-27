@@ -6118,7 +6118,7 @@ MonoBehaviour:
   rightPlanetDescriptionText: {fileID: 1495031352}
   leftPlanetImage: {fileID: 1595912174}
   rightPlanetImage: {fileID: 1235259682}
-  planetSprites:
+  planetPanelSprites:
   - {fileID: 21300000, guid: dcb50fe365048dc4290563f779b3c616, type: 3}
   - {fileID: 21300000, guid: bdd887af18d48dc4597615a0d99ae447, type: 3}
   - {fileID: 21300000, guid: 68395717f24aa1242a83e91436f38683, type: 3}
@@ -6131,7 +6131,15 @@ MonoBehaviour:
   currentPlanetImage: {fileID: 1822601708}
   planetProgressText: {fileID: 113066319}
   planetsLine: {fileID: 2127519140}
-  ringlessSaturnSprite: {fileID: 21300000, guid: 82b53cd1d2e41e449a714d5d1e5fc867, type: 3}
+  situationPlanetSprites:
+  - {fileID: -440525456, guid: c7c302cad95b0ce429b5d5b4d9e3bf5c, type: 3}
+  - {fileID: -333638572, guid: fd31980fcbeeda649b546bdad57429a6, type: 3}
+  - {fileID: 1581278342, guid: 0a1421b87d3e38241a29aa5da241332b, type: 3}
+  - {fileID: 1014750537, guid: d102c3e2f00dc104485319e01ae11a93, type: 3}
+  - {fileID: 1431278830, guid: 25663e40febf0954ca4c73b764b81702, type: 3}
+  - {fileID: -1240635687, guid: 9e74d747d6dd3ba46949c2f012729226, type: 3}
+  - {fileID: -731122752, guid: 3c86c4c97f239f54a81c81e423dbd9f2, type: 3}
+  - {fileID: 1269024491, guid: 7bdee01b0d1ff8f46b00dda45eebee73, type: 3}
   reachedPlanetColor: {r: 1, g: 1, b: 1, a: 1}
   unreachedPlanetColor: {r: 0.5396226, g: 0.5396226, b: 0.5396226, a: 1}
   reachedPlanetDotSize: 14

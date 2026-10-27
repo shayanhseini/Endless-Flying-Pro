@@ -46,14 +46,15 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RTLTextMeshPro rightPlanetDescriptionText;
     [SerializeField] private UnityEngine.UI.Image leftPlanetImage;
     [SerializeField] private UnityEngine.UI.Image rightPlanetImage;
-    [SerializeField] private Sprite[] planetSprites = new Sprite[8];
+    [UnityEngine.Serialization.FormerlySerializedAs("planetSprites")]
+    [SerializeField] private Sprite[] planetPanelSprites = new Sprite[8];
 
     [Header("Situation Panel")]
     [SerializeField] private GameObject situationPanel;
     [SerializeField] private UnityEngine.UI.Image currentPlanetImage;
     [SerializeField] private TMP_Text planetProgressText;
     [SerializeField] private RectTransform planetsLine;
-    [SerializeField] private Sprite ringlessSaturnSprite;
+    [SerializeField] private Sprite[] situationPlanetSprites = new Sprite[8];
     [SerializeField] private Color reachedPlanetColor = new(0.2f, 0.65f, 1f, 1f);
     [SerializeField] private Color unreachedPlanetColor = new(0.38f, 0.42f, 0.48f, 1f);
     [SerializeField] private float reachedPlanetDotSize = 14f;
@@ -556,11 +557,11 @@ public class UIManager : MonoBehaviour
 
     private void SetPlanetImage(UnityEngine.UI.Image image, int planetIndex)
     {
-        if (image == null || planetSprites == null ||
-            planetIndex < 0 || planetIndex >= planetSprites.Length)
+        if (image == null || planetPanelSprites == null ||
+            planetIndex < 0 || planetIndex >= planetPanelSprites.Length)
             return;
 
-        Sprite sprite = planetSprites[planetIndex];
+        Sprite sprite = planetPanelSprites[planetIndex];
         if (sprite == null || sprite.rect.height <= 0f)
             return;
 
@@ -603,9 +604,7 @@ public class UIManager : MonoBehaviour
         if (planetProgressText != null)
             planetProgressText.text = $"{planetIndex + 1}/8";
 
-        Sprite situationSprite = planetIndex == 5 && ringlessSaturnSprite != null
-            ? ringlessSaturnSprite
-            : planetSprites[planetIndex];
+        Sprite situationSprite = GetSituationPlanetSprite(planetIndex);
         UpdateSituationPlanetImage(situationSprite, planetIndex);
 
         if (planetProgressDots == null || planetProgressDots.Length != 8)
@@ -628,6 +627,20 @@ public class UIManager : MonoBehaviour
 
         UpdateCompletedProgressLine(planetIndex);
         currentSituationPlanetIndex = planetIndex;
+    }
+
+    private Sprite GetSituationPlanetSprite(int planetIndex)
+    {
+        if (situationPlanetSprites != null &&
+            planetIndex >= 0 && planetIndex < situationPlanetSprites.Length &&
+            situationPlanetSprites[planetIndex] != null)
+            return situationPlanetSprites[planetIndex];
+
+        if (planetPanelSprites != null &&
+            planetIndex >= 0 && planetIndex < planetPanelSprites.Length)
+            return planetPanelSprites[planetIndex];
+
+        return null;
     }
 
     private void UpdateSituationPlanetImage(Sprite sprite, int planetIndex)
