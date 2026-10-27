@@ -26,6 +26,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private UnityEngine.UI.Image damageImage;
     [Min(0.1f)]
     [SerializeField] private float damagePulseDuration = 0.8f;
+    [Range(0f, 1f)]
+    [SerializeField] private float damageMaximumAlpha = 0.2f;
 
     [Header("Planet Sequence UI")]
     [SerializeField] private GameObject leftPlanetPanel;
@@ -196,7 +198,7 @@ public class UIManager : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float cycle = Mathf.Repeat(elapsed / damagePulseDuration, 1f);
-            color.a = Mathf.PingPong(cycle * 2f, 1f);
+            color.a = Mathf.PingPong(cycle * 2f, 1f) * damageMaximumAlpha;
             damageImage.color = color;
             yield return null;
         }

@@ -1,16 +1,18 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class FadeController : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Image fadeImage;
+    [SerializeField] private UnityEngine.UI.Image fadeImage;
 
 
     [Header("Settings")]
-    [SerializeField] private float fadeDuration = 1f;
+    [Min(0.05f)]
+    [SerializeField] private float fadeDuration = 0.5f;
+    [Range(0f, 1f)]
+    [SerializeField] private float sceneStartAlpha = 225f / 255f;
 
 
     private Coroutine fadeCoroutine;
@@ -26,7 +28,7 @@ public class FadeController : MonoBehaviour
     {
         fadeImage.raycastTarget = true;
 
-        StartFade(1f, 0f);
+        StartFade(sceneStartAlpha, 0f);
     }
 
 

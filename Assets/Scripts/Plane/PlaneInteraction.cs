@@ -20,14 +20,17 @@ public class PlaneInteraction : MonoBehaviour
     [SerializeField] private float atmosphereApproachSpeed = 100f;
     [Min(1f)]
     [Tooltip("Far approaches raise their middle speed so this approximate travel time is not exceeded too much.")]
-    [SerializeField] private float distanceSpeedReferenceTime = 10f;
+    [SerializeField] private float distanceSpeedReferenceTime = 5f;
     [Min(1.01f)]
     [Tooltip("Orbit radius relative to the visible radius of the planet.")]
     [SerializeField] private float atmosphereRadiusMultiplier = 1.15f;
     [Min(0.1f)]
     [Tooltip("How long the plane drifts through the planet's atmosphere.")]
     [UnityEngine.Serialization.FormerlySerializedAs("orbitDuration")]
-    [SerializeField] private float atmosphereDriftDuration = 1f;
+    [SerializeField] private float atmosphereDriftDuration = 0f;
+    [Min(0f)]
+    [Tooltip("How shortly before reaching the atmosphere the screen starts fading to black.")]
+    [SerializeField] private float restartFadeLeadTime = 0.5f;
     [Min(0.01f)]
     [Tooltip("Slow linear drifting speed after entering the atmosphere.")]
     [SerializeField] private float atmosphereDriftSpeed = 3f;
@@ -38,10 +41,6 @@ public class PlaneInteraction : MonoBehaviour
     [Tooltip("Time used to smoothly reduce entry speed to the regular atmosphere drift speed.")]
     [UnityEngine.Serialization.FormerlySerializedAs("orbitSlowdownDuration")]
     [SerializeField] private float atmosphereSlowdownDuration = 3f;
-    [Range(0f, 0.8f)]
-    [Tooltip("How much the plane nose aims inward toward the planet when entering the atmosphere.")]
-    [SerializeField] private float atmosphereInwardAim = 0.3f;
-
     private bool atmosphereSequenceActive;
     private Quaternion gameplayRotation;
 
@@ -175,23 +174,29 @@ public class PlaneInteraction : MonoBehaviour
             approachDistance * 0.05f,
             approachDistance * 0.25f);
         Vector3 secondControlPoint = atmosphereEntry - entryTangent * entryControlDistance;
-        Quaternion approachStartRotation = transform.rotation;
-        Vector3 inwardDirection = -entryDirection;
-        Vector3 atmosphereForward = Vector3.Slerp(
-            entryTangent,
-            inwardDirection,
-            atmosphereInwardAim).normalized;
-        Quaternion atmosphereRotation = Quaternion.LookRotation(atmosphereForward, Vector3.up);
+        Quaternion atmosphereRotation = Quaternion.LookRotation(entryTangent, Vector3.up);
         float pathLength = EstimateCubicBezierLength(
             startPosition,
             firstControlPoint,
             secondControlPoint,
             atmosphereEntry);
-        float distanceAdjustedMaximumSpeed = Mathf.Max(
+        float distanceBlend = Mathf.SmoothStep(
+            0f,
+            1f,
+            Mathf.InverseLerp(150f, 800f, pathLength));
+        float closeApproachSpeed = Mathf.Max(initialFlightSpeed * 1.5f, 40f);
+        float closeAwareBaseSpeed = Mathf.Lerp(
+            closeApproachSpeed,
             atmosphereApproachSpeed,
-            approachDistance / Mathf.Max(1f, distanceSpeedReferenceTime));
+            distanceBlend);
+        float farDistanceSpeed =
+            pathLength / Mathf.Max(1f, distanceSpeedReferenceTime) * 1.8f;
+        float distanceAdjustedMaximumSpeed = Mathf.Max(
+            closeAwareBaseSpeed,
+            farDistanceSpeed);
         float distanceAlongPath = 0f;
         bool dangerCleared = false;
+        bool restartFadeStarted = false;
 
         while (distanceAlongPath < pathLength && planet != null)
         {
@@ -207,6 +212,15 @@ public class PlaneInteraction : MonoBehaviour
                 initialFlightSpeed,
                 distanceAdjustedMaximumSpeed,
                 desiredEntryLinearSpeed);
+            float remainingDistance = Mathf.Max(0f, pathLength - distanceAlongPath);
+            float estimatedTimeRemaining = remainingDistance / Mathf.Max(0.01f, currentSpeed);
+            if (!victory && !restartFadeStarted &&
+                estimatedTimeRemaining <= restartFadeLeadTime)
+            {
+                restartFadeStarted = true;
+                gameManager.BeginRestartFade();
+            }
+
             distanceAlongPath += currentSpeed * Time.deltaTime;
             progress = Mathf.Clamp01(distanceAlongPath / Mathf.Max(0.01f, pathLength));
             transform.position = CubicBezier(
@@ -216,11 +230,18 @@ public class PlaneInteraction : MonoBehaviour
                 atmosphereEntry,
                 progress);
 
-            float rotationProgress = Mathf.SmoothStep(0f, 1f, progress);
+            Vector3 pathDirection = CubicBezierTangent(
+                startPosition,
+                firstControlPoint,
+                secondControlPoint,
+                atmosphereEntry,
+                progress);
+            Quaternion movementRotation = Quaternion.LookRotation(pathDirection, Vector3.up);
+            float rotationBlend = 1f - Mathf.Exp(-8f * Time.deltaTime);
             transform.rotation = Quaternion.Slerp(
-                approachStartRotation,
-                atmosphereRotation,
-                rotationProgress);
+                transform.rotation,
+                movementRotation,
+                rotationBlend);
 
             yield return null;
         }
@@ -233,6 +254,9 @@ public class PlaneInteraction : MonoBehaviour
 
         if (!dangerCleared)
             GameEvents.RaiseAtmosphereReached();
+
+        if (!victory && !restartFadeStarted)
+            gameManager.BeginRestartFade();
 
         Quaternion fixedAtmosphereRotation = atmosphereRotation;
         transform.SetPositionAndRotation(atmosphereEntry, fixedAtmosphereRotation);
@@ -321,6 +345,24 @@ public class PlaneInteraction : MonoBehaviour
                3f * inverse * inverse * t * controlA +
                3f * inverse * t * t * controlB +
                t * t * t * end;
+    }
+
+    private static Vector3 CubicBezierTangent(
+        Vector3 start,
+        Vector3 controlA,
+        Vector3 controlB,
+        Vector3 end,
+        float t)
+    {
+        float inverse = 1f - t;
+        Vector3 tangent =
+            3f * inverse * inverse * (controlA - start) +
+            6f * inverse * t * (controlB - controlA) +
+            3f * t * t * (end - controlB);
+
+        return tangent.sqrMagnitude > 0.0001f
+            ? tangent.normalized
+            : Vector3.forward;
     }
 
     private static Bounds CalculatePlanetBounds(Transform planet)

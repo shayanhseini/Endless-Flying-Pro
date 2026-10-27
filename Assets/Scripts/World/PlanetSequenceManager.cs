@@ -25,6 +25,7 @@ public class PlanetSequenceManager : MonoBehaviour
         public Vector3 TargetScale;
         public Vector3 RotationAxis;
         public float RotationSpeed;
+        public float MovementSpeed;
     }
 
     [Serializable]
@@ -92,10 +93,6 @@ public class PlanetSequenceManager : MonoBehaviour
     [Min(0f)]
     [SerializeField] private float restartDelayAfterVictoryNarration = 1f;
 
-    [Header("Travel")]
-    [Min(1f)]
-    [SerializeField] private float planetTravelDuration = 30f;
-
     [Header("Placement")]
     [Min(1f)]
     [SerializeField] private float spawnDistance = 2000f;
@@ -114,8 +111,12 @@ public class PlanetSequenceManager : MonoBehaviour
     [Tooltip("Horizontal offset where a right-side planet first appears in the distance.")]
     [SerializeField] private float rightSideX = 200f;
     [Min(1f)]
-    [Tooltip("Extra side distance used by Jupiter and Saturn so they stay clear of the flight lane.")]
-    [SerializeField] private float jupiterSaturnSideMultiplier = 1.5f;
+    [Tooltip("Absolute horizontal distance used by Jupiter.")]
+    [SerializeField] private float jupiterSideX = 720f;
+    [Min(1f)]
+    [Tooltip("Extra side distance used by Saturn so it stays clear of the flight lane.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("jupiterSaturnSideMultiplier")]
+    [SerializeField] private float saturnSideMultiplier = 1.5f;
     [Header("Vertical Placement")]
     [SerializeField] private Vector2 verticalRange = new(8f, 28f);
     [Min(0f)]
@@ -366,9 +367,6 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private void MoveActivePlanets()
     {
-        float approachSpeed = spawnDistance / Mathf.Max(1f, planetTravelDuration);
-        Vector3 movement = Vector3.back * approachSpeed * Time.deltaTime;
-
         for (int i = activePlanets.Count - 1; i >= 0; i--)
         {
             ActivePlanet activePlanet = activePlanets[i];
@@ -379,7 +377,7 @@ public class PlanetSequenceManager : MonoBehaviour
                 continue;
             }
 
-            planet.position += movement;
+            planet.position += Vector3.back * activePlanet.MovementSpeed * Time.deltaTime;
             planet.Rotate(
                 activePlanet.RotationAxis,
                 activePlanet.RotationSpeed * Time.deltaTime,
@@ -423,13 +421,26 @@ public class PlanetSequenceManager : MonoBehaviour
         float spawnX = currentPlanetOnLeft
             ? -Mathf.Abs(leftSideX)
             : Mathf.Abs(rightSideX);
-        if (nextPlanetIndex == 4 || nextPlanetIndex == 5)
-            spawnX *= jupiterSaturnSideMultiplier;
+        if (nextPlanetIndex == 4)
+            spawnX = currentPlanetOnLeft
+                ? -Mathf.Abs(jupiterSideX)
+                : Mathf.Abs(jupiterSideX);
+        else if (nextPlanetIndex == 5)
+            spawnX *= saturnSideMultiplier;
         float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(spawnX, y, spawnDistance);
         Vector3 targetScale = instance.transform.localScale;
         Vector3 initialScale = targetScale * initialScaleMultiplier;
         instance.transform.localScale = initialScale;
+        AudioClip narrationClip = GetNarrationClip(nextPlanetIndex);
+        float introductionDuration = narrationClip != null
+            ? Mathf.Max(0.1f, narrationClip.length)
+            : fallbackIntroductionDuration;
+        float completePassDuration = Mathf.Max(
+            0.1f,
+            introductionDuration + timeBetweenPlanets - 0.25f);
+        float movementSpeed =
+            (spawnDistance + despawnDistanceBehindPlayer) / completePassDuration;
 
         activePlanets.Add(new ActivePlanet
         {
@@ -439,7 +450,8 @@ public class PlanetSequenceManager : MonoBehaviour
             RotationAxis = Quaternion.AngleAxis(
                 AxialTilts[nextPlanetIndex],
                 Vector3.forward) * Vector3.up,
-            RotationSpeed = GetVisibleRotationSpeed(nextPlanetIndex)
+            RotationSpeed = GetVisibleRotationSpeed(nextPlanetIndex),
+            MovementSpeed = movementSpeed
         });
 
         Debug.Log($"Current planet: {definition.displayName}");

@@ -134,9 +134,10 @@ public class PlaneCameraController : MonoBehaviour
         Vector3 planeToCamera = transform.position - plane.position;
         capturedImpactWorldOffset = planeToCamera;
         capturedImpactRotation = transform.rotation;
-        capturedFollowHeight = Vector3.Dot(planeToCamera, Vector3.up);
-        Vector3 horizontalOffset = Vector3.ProjectOnPlane(planeToCamera, Vector3.up);
-        capturedBehindDistance = Mathf.Max(0.1f, horizontalOffset.magnitude);
+        capturedFollowHeight = Vector3.Dot(planeToCamera, plane.up);
+        capturedBehindDistance = Mathf.Max(
+            0.1f,
+            Vector3.Dot(plane.position - transform.position, plane.forward));
     }
 
     private IEnumerator ShakeThenFollow()
@@ -180,10 +181,10 @@ public class PlaneCameraController : MonoBehaviour
         Transform plane = planeController.transform;
         Vector3 targetPosition = plane.position -
             plane.forward * capturedBehindDistance +
-            Vector3.up * capturedFollowHeight;
+            plane.up * capturedFollowHeight;
         Vector3 lookPosition = plane.position +
             plane.forward * crashLookOffset.z +
-            Vector3.up * crashLookOffset.y;
+            plane.up * crashLookOffset.y;
         float rotationBlend = 1f - Mathf.Exp(-crashRotationSmoothness * Time.deltaTime);
 
         Vector3 lookDirection = lookPosition - transform.position;
@@ -191,7 +192,7 @@ public class PlaneCameraController : MonoBehaviour
         {
             Quaternion targetRotation = Quaternion.LookRotation(
                 lookDirection.normalized,
-                Vector3.up);
+                plane.up);
 
             if (followTransitionElapsed < crashRepositionDuration)
             {

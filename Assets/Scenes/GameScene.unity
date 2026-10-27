@@ -2106,6 +2106,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Chunk 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2208635252540355166, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7023375774432739097, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2178,6 +2182,10 @@ PrefabInstance:
     - target: {fileID: 2208635252540355166, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
       propertyPath: m_Name
       value: Chunk 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2208635252540355166, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7023375774432739097, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2505,8 +2513,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uFEA7\uFE8E\uFEDF\uFBFD"
   m_isRightToLeft: 1
-  m_fontAsset: {fileID: 11400000, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
-  m_sharedMaterial: {fileID: -6949820610600499109, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
+  m_sharedMaterial: {fileID: -1493249262183239704, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2530,12 +2538,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 35
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 35
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
@@ -2788,7 +2796,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.39215687}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.078431375}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3008,7 +3016,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -120.89998, y: 4.3}
+  m_AnchoredPosition: {x: -120.89998, y: 0}
   m_SizeDelta: {x: 198.3385, y: -77.193}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1275839764
@@ -3033,8 +3041,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uFEA7\uFE8E\uFEDF\uFBFD"
   m_isRightToLeft: 1
-  m_fontAsset: {fileID: 11400000, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
-  m_sharedMaterial: {fileID: -6949820610600499109, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
+  m_sharedMaterial: {fileID: -1493249262183239704, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3058,13 +3066,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 45
+  m_fontSizeBase: 45
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -3370,8 +3378,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uFEA7\uFE8E\uFEDF\uFBFD"
   m_isRightToLeft: 1
-  m_fontAsset: {fileID: 11400000, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
-  m_sharedMaterial: {fileID: -6949820610600499109, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
+  m_sharedMaterial: {fileID: -1493249262183239704, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3395,12 +3403,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 35
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMax: 35
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
@@ -4522,7 +4530,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -120.89998, y: 4.3}
+  m_AnchoredPosition: {x: -120.89998, y: 0.000015258789}
   m_SizeDelta: {x: 198.3385, y: -77.193}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &2134078289
@@ -4547,8 +4555,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uFEA7\uFE8E\uFEDF\uFBFD"
   m_isRightToLeft: 1
-  m_fontAsset: {fileID: 11400000, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
-  m_sharedMaterial: {fileID: -6949820610600499109, guid: 3fbde2e562e333d488bc46986fc6f4f1, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
+  m_sharedMaterial: {fileID: -1493249262183239704, guid: 940b52843f444bd408b220f0d952bcdb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4572,13 +4580,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 45
+  m_fontSizeBase: 45
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -4914,7 +4922,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82d65c443fef2954aaf5e279a1164b9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
-  startObstacleCount: 10
+  startObstacleCount: 15
   startWithShield: 0
   startWithSpeedPowerUp: 0
 --- !u!1 &1323806684600583350
@@ -5047,7 +5055,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8efeb95566e3265468e55f0dd161762a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlaneController
-  moveSpeed: 10
+  moveSpeed: 15
   movementSmoothness: 10
   xLimit: 5
   yLimit: 4
@@ -5068,7 +5076,7 @@ Transform:
   m_GameObject: {fileID: 8313013160506271265}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0990716, y: -0.46841294, z: 0.05295487, w: 0.87633896}
-  m_LocalPosition: {x: 3.15, y: -1.82, z: -175.23}
+  m_LocalPosition: {x: 4.33, y: -0.93, z: -175.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5274,7 +5282,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!225 &4630575218323219145
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5351,13 +5359,13 @@ MonoBehaviour:
   hitEffect: {fileID: 2067943244}
   impactPauseDuration: 0.45
   atmosphereApproachSpeed: 200
-  distanceSpeedReferenceTime: 10
+  distanceSpeedReferenceTime: 5
   atmosphereRadiusMultiplier: 1.15
-  atmosphereDriftDuration: 1
+  atmosphereDriftDuration: 0
+  restartFadeLeadTime: 0.5
   atmosphereDriftSpeed: 3
   atmosphereEntrySpeedMultiplier: 2
   atmosphereSlowdownDuration: 2
-  atmosphereInwardAim: 0.3
 --- !u!223 &4825072594150814623
 Canvas:
   m_ObjectHideFlags: 0
@@ -5629,6 +5637,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Chunk 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2208635252540355166, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7023375774432739097, guid: 7a49b650abc6278498881b286d6e3c69, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -5838,8 +5850,9 @@ MonoBehaviour:
   targetImage: {fileID: 0}
   duration: 2
   flashSpeed: 0.15
-  damageImage: {fileID: 0}
+  damageImage: {fileID: 1129591767}
   damagePulseDuration: 0.8
+  damageMaximumAlpha: 0.2
   leftPlanetPanel: {fileID: 790175150}
   rightPlanetPanel: {fileID: 309792563}
   leftPlanetNameText: {fileID: 0}
@@ -5897,7 +5910,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FadeController
   fadeImage: {fileID: 907744661}
-  fadeDuration: 1
+  fadeDuration: 0.5
+  sceneStartAlpha: 0.88235295
 --- !u!114 &6973212275047522744
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6168,7 +6182,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -3, z: -174.4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.4999999, y: 1.4999999, z: 1.4999999}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 258259884}
@@ -6250,24 +6264,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlanetSequenceManager
   planets:
   - displayName: "\u0639\u0637\u0627\u0631\u062F"
-    description: "\u0639\u0637\u0627\u0631\u062F \u06A9\u0648\u0686\u06A9\u200C\u062A\u0631\u06CC\u0646
-      \u0648 \u0646\u0632\u062F\u06CC\u06A9\u200C\u062A\u0631\u06CC\u0646 \u0633\u06CC\u0627\u0631\u0647
-      \u0628\u0647 \u062E\u0648\u0631\u0634\u06CC\u062F \u0627\u0633\u062A \u0648
-      \u0633\u0637\u062D\u06CC \u0633\u0646\u06AF\u06CC \u0628\u0627 \u0627\u062E\u062A\u0644\u0627\u0641
-      \u062F\u0645\u0627\u06CC \u0628\u0633\u06CC\u0627\u0631 \u0632\u06CC\u0627\u062F
-      \u062F\u0627\u0631\u062F."
+    description: "\u0639\u064E\u0637\u0627\u0631\u064F\u062F\u060C \u0646\u0632\u062F\u06CC\u06A9\u200C\u062A\u0631\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647 \u0628\u0647 \u062E\u0648\u0631\u0634\u06CC\u062F\u0647
+      \u0648 \u06A9\u0648\u0686\u06A9\u200C\u062A\u0631\u06CC\u0646 \u0633\u06CC\u0627\u0631\u0647
+      \u0645\u0646\u0638\u0648\u0645\u0647 \u0634\u0645\u0633\u06CC\u0647! \u0633\u0637\u062D\u0634
+      \u067E\u0631 \u0627\u0632 \u062F\u0647\u0627\u0646\u0647\u200C\u0647\u0627\u06CC
+      \u0628\u0631\u062E\u0648\u0631\u062F\u0647 \u0648 \u0634\u0628\u0627\u0647\u062A
+      \u0632\u06CC\u0627\u062F\u06CC \u0628\u0647 \u0645\u0627\u0647 \u062F\u0627\u0631\u0647.
+      \u06CC\u06A9 \u0633\u0627\u0644 \u0639\u064E\u0637\u0627\u0631\u064F\u062F
+      \u0641\u0642\u0637 \u06F8\u06F8 \u0631\u0648\u0632 \u0632\u0645\u06CC\u0646\u06CC
+      \u0637\u0648\u0644 \u0645\u06CC\u200C\u06A9\u0634\u0647!"
     prefab: {fileID: 2550325938430599871, guid: 459a327f671ef41489d9971453e69f6c, type: 3}
   - displayName: "\u0632\u0647\u0631\u0647"
-    description: "\u0632\u0647\u0631\u0647 \u062F\u0627\u063A\u200C\u062A\u0631\u06CC\u0646
-      \u0633\u06CC\u0627\u0631\u0647 \u0645\u0646\u0638\u0648\u0645\u0647 \u0634\u0645\u0633\u06CC
-      \u0627\u0633\u062A \u0648 \u062C\u0648 \u063A\u0644\u06CC\u0638\u06CC \u0627\u0632
-      \u062F\u06CC\u200C\u0627\u06A9\u0633\u06CC\u062F \u06A9\u0631\u0628\u0646 \u062F\u0627\u0631\u062F."
+    description: "\u0632\u064F\u0647\u0631\u0647\u060C \u062F\u0648\u0645\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647 \u0627\u0632 \u062E\u0648\u0631\u0634\u06CC\u062F\u0647
+      \u0648 \u062F\u0627\u063A\u200C\u062A\u0631\u06CC\u0646 \u0633\u06CC\u0627\u0631\u0647
+      \u0645\u0646\u0638\u0648\u0645\u0647 \u0634\u0645\u0633\u06CC\u0647! \u062C\u0648\u0651\u06CC
+      \u063A\u0644\u06CC\u0638 \u0648 \u067E\u0631 \u0627\u0632 \u06AF\u0627\u0632\u0647\u0627\u06CC
+      \u0633\u0645\u06CC \u062F\u0627\u0631\u0647! \u0627\u0646\u062F\u0627\u0632\u0647\u200C\u0634
+      \u062A\u0642\u0631\u06CC\u0628\u0627\u064B \u0645\u062B\u0644 \u0632\u0645\u06CC\u0646\u0647\u060C
+      \u0627\u0645\u0627 \u062F\u0645\u0627\u0634 \u0627\u0648\u0646\u200C\u0642\u062F\u0631
+      \u0628\u0627\u0644\u0627\u0633\u062A \u06A9\u0647 \u062D\u062A\u06CC \u0633\u0631\u0628
+      \u0647\u0645 \u0630\u0648\u0628 \u0645\u06CC\u200C\u0634\u0647!"
     prefab: {fileID: 2383548321536077374, guid: 30bb0792e82457a479446ff1d5d627d1, type: 3}
   - displayName: "\u0632\u0645\u06CC\u0646"
-    description: "\u0632\u0645\u06CC\u0646 \u062E\u0627\u0646\u0647 \u0645\u0627
-      \u0648 \u062A\u0646\u0647\u0627 \u0633\u06CC\u0627\u0631\u0647 \u0634\u0646\u0627\u062E\u062A\u0647\u200C\u0634\u062F\u0647\u200C\u0627\u06CC
-      \u0627\u0633\u062A \u06A9\u0647 \u062F\u0631 \u0622\u0646 \u062D\u06CC\u0627\u062A
-      \u0648\u062C\u0648\u062F \u062F\u0627\u0631\u062F."
+    description: "\u0632\u0645\u06CC\u0646\u060C \u0633\u0648\u0645\u06CC\u0646 \u0633\u06CC\u0627\u0631\u0647
+      \u0627\u0632 \u062E\u0648\u0631\u0634\u06CC\u062F\u0647 \u0648 \u062A\u0646\u0647\u0627
+      \u0633\u06CC\u0627\u0631\u0647\u200C\u0627\u06CC\u0647 \u06A9\u0647 \u0645\u06CC\u200C\u062F\u0648\u0646\u06CC\u0645
+      \u0632\u0646\u062F\u06AF\u06CC \u0631\u0648\u06CC \u0627\u0648\u0646 \u0648\u062C\u0648\u062F
+      \u062F\u0627\u0631\u0647! \u0628\u06CC\u0634\u062A\u0631 \u0633\u0637\u062D
+      \u0632\u0645\u06CC\u0646 \u0631\u0648 \u0622\u0628 \u067E\u0648\u0634\u0648\u0646\u062F\u0647\u060C
+      \u0628\u0631\u0627\u06CC \u0647\u0645\u06CC\u0646 \u0628\u0647\u0634 \u0633\u06CC\u0627\u0631\u0647
+      \u0622\u0628\u06CC \u0645\u06CC\u200C\u06AF\u0646. \u0632\u0645\u06CC\u0646
+      \u06CC\u06A9 \u0642\u0645\u0631 \u0628\u0647 \u0646\u0627\u0645 \u0645\u0627\u0647
+      \u062F\u0627\u0631\u0647 \u0648 \u062A\u0642\u0631\u06CC\u0628\u0627\u064B
+      \u0647\u0631 \u06F3\u06F6\u06F5 \u0631\u0648\u0632\u060C \u06CC\u06A9 \u0628\u0627\u0631
+      \u0628\u0647 \u062F\u0648\u0631 \u062E\u0648\u0631\u0634\u06CC\u062F \u0645\u06CC\u200C\u0686\u0631\u062E\u0647!"
     prefab: {fileID: 7802278574216347217, guid: a116c99d23b249647afc503957b3c169, type: 3}
   - displayName: "\u0645\u0631\u06CC\u062E"
     description: "\u0645\u0631\u06CC\u062E \u0628\u0647 \u0633\u06CC\u0627\u0631\u0647
@@ -6277,32 +6309,49 @@ MonoBehaviour:
       \u0622\u0646 \u0642\u0631\u0627\u0631 \u062F\u0627\u0631\u062F."
     prefab: {fileID: 3248526501997794298, guid: 71a433b4069700a47bc02a0cb0a18ebb, type: 3}
   - displayName: "\u0645\u0634\u062A\u0631\u06CC"
-    description: "\u0645\u0634\u062A\u0631\u06CC \u0628\u0632\u0631\u06AF\u200C\u062A\u0631\u06CC\u0646
-      \u0633\u06CC\u0627\u0631\u0647 \u0645\u0646\u0638\u0648\u0645\u0647 \u0634\u0645\u0633\u06CC
-      \u0627\u0633\u062A \u0648 \u0637\u0648\u0641\u0627\u0646 \u0639\u0638\u06CC\u0645\u06CC
-      \u0628\u0647 \u0646\u0627\u0645 \u0644\u06A9\u0647 \u0633\u0631\u062E \u0628\u0632\u0631\u06AF
-      \u062F\u0627\u0631\u062F."
+    description: "\u0645\u064F\u0634\u062A\u064E\u0631\u06CC\u060C \u0628\u0632\u0631\u06AF\u200C\u062A\u0631\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647 \u0645\u0646\u0638\u0648\u0645\u0647 \u0634\u0645\u0633\u06CC!
+      \u0637\u0648\u0641\u0627\u0646\u06CC \u0639\u0638\u06CC\u0645 \u0628\u0647
+      \u0646\u0627\u0645 \u0644\u06A9\u0647 \u0633\u0631\u062E \u0628\u0632\u0631\u06AF
+      \u0631\u0648\u06CC \u0633\u0637\u062D\u0634\u060C \u06A9\u0647 \u0635\u062F\u0647\u0627
+      \u0633\u0627\u0644\u0647 \u0627\u062F\u0627\u0645\u0647 \u062F\u0627\u0631\u0647!
+      \u0628\u06CC\u0634 \u0627\u0632 \u06F9\u06F0 \u0642\u0645\u0631 \u0634\u0646\u0627\u062E\u062A\u0647\u200C\u0634\u062F\u0647
+      \u0648 \u062D\u0644\u0642\u0647\u200C\u0647\u0627\u06CC\u06CC \u06A9\u0645\u200C\u0631\u0646\u06AF
+      \u062F\u0631 \u0627\u0637\u0631\u0627\u0641\u0634!"
     prefab: {fileID: 7057320390155181320, guid: 1f4e46bc71c913048b7acc8e09157bb3, type: 3}
   - displayName: "\u0632\u062D\u0644"
-    description: "\u0632\u062D\u0644 \u0628\u0647 \u062D\u0644\u0642\u0647\u200C\u0647\u0627\u06CC
-      \u06AF\u0633\u062A\u0631\u062F\u0647 \u0648 \u06CC\u062E\u06CC \u062E\u0648\u062F
-      \u0645\u0634\u0647\u0648\u0631 \u0627\u0633\u062A \u06A9\u0647 \u0627\u0632
-      \u062A\u06A9\u0647\u200C\u0647\u0627\u06CC \u06CC\u062E \u0648 \u0633\u0646\u06AF
-      \u0633\u0627\u062E\u062A\u0647 \u0634\u062F\u0647\u200C\u0627\u0646\u062F."
+    description: "\u0632\u064F\u062D\u064E\u0644\u060C \u0634\u0634\u0645\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647 \u0627\u0632 \u062E\u0648\u0631\u0634\u06CC\u062F
+      \u0648 \u0645\u0639\u0631\u0648\u0641 \u0628\u0647 \u062D\u0644\u0642\u0647\u200C\u0647\u0627\u06CC
+      \u0632\u06CC\u0628\u0627\u06CC \u0627\u0637\u0631\u0627\u0641\u0634! \u062D\u0644\u0642\u0647\u200C\u0647\u0627\u0634
+      \u0627\u0632 \u062A\u06A9\u0647\u200C\u0647\u0627\u06CC \u06CC\u062E \u0648
+      \u0633\u0646\u06AF \u0633\u0627\u062E\u062A\u0647 \u0634\u062F\u0646! \u0632\u062D\u0644
+      \u06CC\u06A9 \u063A\u0648\u0644 \u06AF\u0627\u0632\u06CC\u0647 \u0648 \u0686\u06AF\u0627\u0644\u06CC\u0634
+      \u062D\u062A\u06CC \u0627\u0632 \u0622\u0628 \u0647\u0645 \u06A9\u0645\u062A\u0631\u0647!"
     prefab: {fileID: 4855548808254742209, guid: 897087824fb26334281cfbabd690245a, type: 3}
   - displayName: "\u0627\u0648\u0631\u0627\u0646\u0648\u0633"
-    description: "\u0627\u0648\u0631\u0627\u0646\u0648\u0633 \u06CC\u06A9 \u063A\u0648\u0644
-      \u06CC\u062E\u06CC \u0627\u0633\u062A \u06A9\u0647 \u0628\u0631 \u0631\u0648\u06CC
-      \u067E\u0647\u0644\u0648 \u0645\u06CC\u200C\u0686\u0631\u062E\u062F \u0648
-      \u0631\u0646\u06AF \u0622\u0628\u06CC\u2013\u0633\u0628\u0632 \u0622\u0646
-      \u0627\u0632 \u06AF\u0627\u0632 \u0645\u062A\u0627\u0646 \u0645\u06CC\u200C\u0622\u06CC\u062F."
+    description: "\u0627\u064F\u0648\u0631\u0627\u0646\u0648\u0633\u060C \u0647\u0641\u062A\u0645\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647 \u0627\u0632 \u062E\u0648\u0631\u0634\u06CC\u062F
+      \u0648 \u06CC\u06A9\u06CC \u0627\u0632 \u0633\u0631\u062F\u062A\u0631\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647\u200C\u0647\u0627\u06CC \u0645\u0646\u0638\u0648\u0645\u0647
+      \u0634\u0645\u0633\u06CC! \u0631\u0646\u06AF \u0622\u0628\u06CC\u200C\u0640\u200C\u0633\u0628\u0632\u0634
+      \u0628\u0647 \u062E\u0627\u0637\u0631 \u06AF\u0627\u0632 \u0645\u062A\u0627\u0646\u0647!
+      \u0646\u06A9\u062A\u0647 \u0639\u062C\u06CC\u0628\u0634\u061F \u062A\u0642\u0631\u06CC\u0628\u0627\u064B
+      \u0628\u0647 \u067E\u0647\u0644\u0648 \u0645\u06CC\u200C\u0686\u0631\u062E\u0647\u060C
+      \u0627\u0646\u06AF\u0627\u0631 \u0631\u0648\u06CC \u0645\u062F\u0627\u0631\u0634
+      \u063A\u0644\u062A \u0645\u06CC\u200C\u0632\u0646\u0647!"
     prefab: {fileID: 2023715679400801649, guid: 71c6a97fcc3fd064ca778267a74da125, type: 3}
   - displayName: "\u0646\u067E\u062A\u0648\u0646"
-    description: "\u0646\u067E\u062A\u0648\u0646 \u062F\u0648\u0631\u062A\u0631\u06CC\u0646
-      \u0633\u06CC\u0627\u0631\u0647 \u0645\u0646\u0638\u0648\u0645\u0647 \u0634\u0645\u0633\u06CC
-      \u0627\u0633\u062A \u0648 \u0628\u0627\u062F\u0647\u0627\u06CC\u06CC \u0628\u0633\u06CC\u0627\u0631
-      \u0633\u0631\u06CC\u0639 \u0648 \u0642\u062F\u0631\u062A\u0645\u0646\u062F
-      \u062F\u0627\u0631\u062F."
+    description: "\u0646\u0650\u067E\u062A\u0648\u0646\u060C \u062F\u0648\u0631\u062A\u0631\u06CC\u0646
+      \u0633\u06CC\u0627\u0631\u0647 \u0627\u0632 \u062E\u0648\u0631\u0634\u06CC\u062F!
+      \u0631\u0646\u06AF \u0622\u0628\u06CC \u0639\u0645\u06CC\u0642\u0634 \u0628\u0647
+      \u062E\u0627\u0637\u0631 \u062A\u0631\u06A9\u06CC\u0628\u0627\u062A \u0645\u0648\u062C\u0648\u062F
+      \u062F\u0631 \u062C\u0648\u0634\u0647! \u0628\u0627\u062F\u0647\u0627\u06CC\u06CC
+      \u0628\u0627 \u0633\u0631\u0639\u062A \u0628\u0627\u0648\u0631\u0646\u06A9\u0631\u062F\u0646\u06CC\u060C
+      \u0628\u06CC\u0634 \u0627\u0632 \u062F\u0648 \u0647\u0632\u0627\u0631 \u06A9\u06CC\u0644\u0648\u0645\u062A\u0631
+      \u0628\u0631 \u0633\u0627\u0639\u062A! \u06CC\u06A9 \u0633\u0627\u0644 \u0646\u067E\u062A\u0648\u0646\u060C
+      \u0628\u0631\u0627\u0628\u0631 \u0628\u0627 \u06F1\u06F6\u06F5 \u0633\u0627\u0644
+      \u0632\u0645\u06CC\u0646\u06CC!"
     prefab: {fileID: 4378049339878643522, guid: 5304c11cf558aca4a84fcf5b50f6177a, type: 3}
   initialNarrationDelayMin: 3
   initialNarrationDelayMax: 5
@@ -6320,13 +6369,13 @@ MonoBehaviour:
   narrationSource: {fileID: 1039958724}
   victoryNarrationClip: {fileID: 0}
   restartDelayAfterVictoryNarration: 1
-  planetTravelDuration: 30
   spawnDistance: 2000
   initialScaleMultiplier: 0.2
   scaleGrowthJourneyFraction: 0.25
   leftSideX: -250
   rightSideX: 250
-  jupiterSaturnSideMultiplier: 1.5
+  jupiterSideX: 720
+  saturnSideMultiplier: 1.5
   verticalRange: {x: 8, y: 28}
   despawnDistanceBehindPlayer: 300
   earthRotationDegreesPerSecond: 12

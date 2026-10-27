@@ -132,6 +132,12 @@ public class GameManager : MonoBehaviour
         StartCoroutine(RestartGameRoutine());
     }
 
+    public void BeginRestartFade()
+    {
+        if (fadeController != null)
+            fadeController.FadeOut();
+    }
+
 
     private IEnumerator RestartGameRoutine()
     {
