@@ -86,6 +86,12 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private AudioClip[] narrationClips = new AudioClip[8];
     [SerializeField] private AudioSource narrationSource;
 
+    [Header("Victory Sequence")]
+    [Tooltip("Played after Neptune is completed. Assign the success narration here.")]
+    [SerializeField] private AudioClip victoryNarrationClip;
+    [Min(0f)]
+    [SerializeField] private float restartDelayAfterVictoryNarration = 1f;
+
     [Header("Travel")]
     [Min(1f)]
     [SerializeField] private float planetTravelDuration = 30f;
@@ -107,6 +113,9 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private float leftSideX = -200f;
     [Tooltip("Horizontal offset where a right-side planet first appears in the distance.")]
     [SerializeField] private float rightSideX = 200f;
+    [Min(1f)]
+    [Tooltip("Extra side distance used by Jupiter and Saturn so they stay clear of the flight lane.")]
+    [SerializeField] private float jupiterSaturnSideMultiplier = 1.5f;
     [Header("Vertical Placement")]
     [SerializeField] private Vector2 verticalRange = new(8f, 28f);
     [Min(0f)]
@@ -122,6 +131,8 @@ public class PlanetSequenceManager : MonoBehaviour
     private GameManager gameManager;
     private SequencePhase phase = SequencePhase.Waiting;
     private float phaseTimeRemaining;
+    private float currentPlanetCycleDuration;
+    private float currentPlanetCycleElapsed;
     private int nextPlanetIndex;
     private bool initialized;
     private bool currentPlanetOnLeft;
@@ -178,6 +189,15 @@ public class PlanetSequenceManager : MonoBehaviour
             phase != SequencePhase.Gap)
             return;
 
+        if (phase == SequencePhase.Introduction || phase == SequencePhase.Gap)
+        {
+            currentPlanetCycleElapsed += Time.deltaTime;
+            float progress = currentPlanetCycleDuration > 0f
+                ? Mathf.Clamp01(currentPlanetCycleElapsed / currentPlanetCycleDuration)
+                : 1f;
+            GameEvents.RaisePlanetProgressChanged(nextPlanetIndex, progress);
+        }
+
         phaseTimeRemaining = Mathf.Max(0f, phaseTimeRemaining - Time.deltaTime);
         if (phaseTimeRemaining > 0f)
             return;
@@ -219,6 +239,9 @@ public class PlanetSequenceManager : MonoBehaviour
         phaseTimeRemaining = clip != null
             ? Mathf.Max(0.1f, clip.length)
             : fallbackIntroductionDuration;
+        currentPlanetCycleDuration = phaseTimeRemaining + timeBetweenPlanets;
+        currentPlanetCycleElapsed = 0f;
+        GameEvents.RaisePlanetProgressChanged(nextPlanetIndex, 0f);
 
         if (clip != null)
         {
@@ -230,7 +253,8 @@ public class PlanetSequenceManager : MonoBehaviour
             planets[nextPlanetIndex].displayName,
             planets[nextPlanetIndex].description,
             phaseTimeRemaining,
-            currentPlanetOnLeft);
+            currentPlanetOnLeft,
+            nextPlanetIndex);
     }
 
     public Transform PrepareCrashLanding()
@@ -301,16 +325,7 @@ public class PlanetSequenceManager : MonoBehaviour
         {
             phase = SequencePhase.Complete;
             GameEvents.RaisePlanetIntroductionEnded();
-            FadeOutNarration();
-
-            PlaneInteraction planeInteraction = player != null
-                ? player.GetComponent<PlaneInteraction>()
-                : null;
-
-            if (planeInteraction != null)
-                planeInteraction.BeginVictoryOrbit(GetLatestActivePlanet());
-            else
-                gameManager.WinGame();
+            StartCoroutine(VictorySequenceRoutine());
             return;
         }
 
@@ -318,15 +333,35 @@ public class PlanetSequenceManager : MonoBehaviour
         BeginIntroductionPhase();
     }
 
-    private Transform GetLatestActivePlanet()
+    private System.Collections.IEnumerator VictorySequenceRoutine()
     {
-        for (int i = activePlanets.Count - 1; i >= 0; i--)
+        if (gameManager == null || !gameManager.BeginVictorySequence())
+            yield break;
+
+        sessionCheckpointPlanetIndex = 0;
+
+        if (narrationFadeCoroutine != null)
         {
-            if (activePlanets[i].Transform != null)
-                return activePlanets[i].Transform;
+            StopCoroutine(narrationFadeCoroutine);
+            narrationFadeCoroutine = null;
         }
 
-        return null;
+        if (narrationSource != null)
+        {
+            narrationSource.Stop();
+            if (victoryNarrationClip != null)
+            {
+                narrationSource.clip = victoryNarrationClip;
+                narrationSource.Play();
+                while (narrationSource.isPlaying)
+                    yield return null;
+            }
+        }
+
+        if (restartDelayAfterVictoryNarration > 0f)
+            yield return new WaitForSeconds(restartDelayAfterVictoryNarration);
+
+        gameManager.RestartGame();
     }
 
     private void MoveActivePlanets()
@@ -388,6 +423,8 @@ public class PlanetSequenceManager : MonoBehaviour
         float spawnX = currentPlanetOnLeft
             ? -Mathf.Abs(leftSideX)
             : Mathf.Abs(rightSideX);
+        if (nextPlanetIndex == 4 || nextPlanetIndex == 5)
+            spawnX *= jupiterSaturnSideMultiplier;
         float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(spawnX, y, spawnDistance);
         Vector3 targetScale = instance.transform.localScale;

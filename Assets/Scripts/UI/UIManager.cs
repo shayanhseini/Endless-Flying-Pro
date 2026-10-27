@@ -34,6 +34,26 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RTLTextMeshPro leftPlanetDescriptionText;
     [SerializeField] private RTLTextMeshPro rightPlanetNameText;
     [SerializeField] private RTLTextMeshPro rightPlanetDescriptionText;
+    [SerializeField] private UnityEngine.UI.Image leftPlanetImage;
+    [SerializeField] private UnityEngine.UI.Image rightPlanetImage;
+    [SerializeField] private Sprite[] planetSprites = new Sprite[8];
+
+    [Header("Situation Panel")]
+    [SerializeField] private GameObject situationPanel;
+    [SerializeField] private UnityEngine.UI.Image currentPlanetImage;
+    [SerializeField] private TMP_Text planetProgressText;
+    [SerializeField] private RectTransform planetsLine;
+    [SerializeField] private Sprite ringlessSaturnSprite;
+    [SerializeField] private Color reachedPlanetColor = new(0.2f, 0.65f, 1f, 1f);
+    [SerializeField] private Color unreachedPlanetColor = new(0.38f, 0.42f, 0.48f, 1f);
+    [SerializeField] private float reachedPlanetDotSize = 14f;
+    [SerializeField] private float unreachedPlanetDotSize = 18f;
+    [SerializeField] private float currentPlanetDotSize = 30f;
+    [SerializeField] private UnityEngine.UI.Image[] planetProgressDots = new UnityEngine.UI.Image[8];
+    [SerializeField] private UnityEngine.UI.Image progressTrackImage;
+    [SerializeField] private UnityEngine.UI.Image completedProgressImage;
+    [Min(0.05f)]
+    [SerializeField] private float planetImageTransitionDuration = 0.8f;
     [SerializeField] private GameObject planetPhasePanel;
     [SerializeField] private RTLTextMeshPro planetTitleText;
     [SerializeField] private RTLTextMeshPro planetDescriptionText;
@@ -42,14 +62,29 @@ public class UIManager : MonoBehaviour
 
     private CanvasGroup leftPlanetCanvasGroup;
     private CanvasGroup rightPlanetCanvasGroup;
+    private CanvasGroup situationCanvasGroup;
     private Coroutine damagePulseCoroutine;
+    private Coroutine situationImageCoroutine;
+    private Vector2 currentPlanetImageAnchoredPosition;
+    private Vector2 currentPlanetImageSizeDelta;
+    private float currentPlanetImageBaseAlpha = 1f;
+    private int currentSituationPlanetIndex = -1;
 
     private readonly Dictionary<CanvasGroup, Coroutine> fadeCoroutines = new();
 
     private void Awake()
     {
+        ResolvePlanetPanelReferences();
+        ResolveSituationPanelReferences();
+        if (currentPlanetImage != null)
+        {
+            currentPlanetImageAnchoredPosition = currentPlanetImage.rectTransform.anchoredPosition;
+            currentPlanetImageSizeDelta = currentPlanetImage.rectTransform.sizeDelta;
+            currentPlanetImageBaseAlpha = currentPlanetImage.color.a;
+        }
         EnsurePlanetSequenceUI();
         InitializePlanetPanelFades();
+        InitializePlanetProgressLine();
         FindAndInitializeDamageImage();
 
         if (gamePanel != null)
@@ -74,6 +109,7 @@ public class UIManager : MonoBehaviour
         GameEvents.LaunchMissile += StartWarning;
         GameEvents.PlanetIntroductionStarted += ShowPlanetIntroduction;
         GameEvents.PlanetIntroductionEnded += HidePlanetIntroduction;
+        GameEvents.PlanetProgressChanged += UpdateRealtimePlanetProgress;
         GameEvents.GameWon += HandleGameWon;
         GameEvents.CrashLandingStarted += HandleCrashLandingStarted;
         GameEvents.VictoryOrbitStarted += HidePlanetIntroduction;
@@ -87,6 +123,7 @@ public class UIManager : MonoBehaviour
         GameEvents.LaunchMissile -= StartWarning;
         GameEvents.PlanetIntroductionStarted -= ShowPlanetIntroduction;
         GameEvents.PlanetIntroductionEnded -= HidePlanetIntroduction;
+        GameEvents.PlanetProgressChanged -= UpdateRealtimePlanetProgress;
         GameEvents.GameWon -= HandleGameWon;
         GameEvents.CrashLandingStarted -= HandleCrashLandingStarted;
         GameEvents.VictoryOrbitStarted -= HidePlanetIntroduction;
@@ -111,6 +148,7 @@ public class UIManager : MonoBehaviour
     private void HandleCrashLandingStarted()
     {
         HidePlanetIntroduction();
+        FadeOut(situationCanvasGroup);
 
         if (damageImage == null)
             return;
@@ -202,7 +240,8 @@ public class UIManager : MonoBehaviour
         string planetName,
         string description,
         float duration,
-        bool planetOnLeft)
+        bool planetOnLeft,
+        int planetIndex)
     {
         SelectPlanetPanel(planetOnLeft);
 
@@ -218,6 +257,311 @@ public class UIManager : MonoBehaviour
 
         if (descriptionText != null)
             descriptionText.text = description;
+
+        UnityEngine.UI.Image planetImage = planetOnLeft
+            ? rightPlanetImage
+            : leftPlanetImage;
+        SetPlanetImage(planetImage, planetIndex);
+        UpdateSituationPanel(planetIndex);
+        FadeIn(situationCanvasGroup);
+    }
+
+    private void SetPlanetImage(UnityEngine.UI.Image image, int planetIndex)
+    {
+        if (image == null || planetSprites == null ||
+            planetIndex < 0 || planetIndex >= planetSprites.Length)
+            return;
+
+        Sprite sprite = planetSprites[planetIndex];
+        if (sprite == null || sprite.rect.height <= 0f)
+            return;
+
+        SetImageKeepingHeightAndCenter(image, sprite);
+    }
+
+    private static void SetImageKeepingHeightAndCenter(
+        UnityEngine.UI.Image image,
+        Sprite sprite)
+    {
+        if (image == null || sprite == null || sprite.rect.height <= 0f)
+            return;
+
+        image.sprite = sprite;
+        image.preserveAspect = false;
+        image.raycastTarget = false;
+
+        RectTransform rect = image.rectTransform;
+        float fixedHeight = rect.rect.height;
+        if (fixedHeight <= 0f)
+            fixedHeight = rect.sizeDelta.y;
+        if (fixedHeight <= 0f)
+            return;
+
+        Vector3 visualCenterBeforeResize = rect.TransformPoint(rect.rect.center);
+        float aspectRatio = sprite.rect.width / sprite.rect.height;
+        rect.SetSizeWithCurrentAnchors(
+            RectTransform.Axis.Horizontal,
+            fixedHeight * aspectRatio);
+
+        Vector3 visualCenterAfterResize = rect.TransformPoint(rect.rect.center);
+        rect.position += visualCenterBeforeResize - visualCenterAfterResize;
+    }
+
+    private void UpdateSituationPanel(int planetIndex)
+    {
+        if (planetIndex < 0 || planetIndex >= 8)
+            return;
+
+        if (planetProgressText != null)
+            planetProgressText.text = $"{planetIndex + 1}/8";
+
+        Sprite situationSprite = planetIndex == 5 && ringlessSaturnSprite != null
+            ? ringlessSaturnSprite
+            : planetSprites[planetIndex];
+        UpdateSituationPlanetImage(situationSprite, planetIndex);
+
+        if (planetProgressDots == null || planetProgressDots.Length != 8)
+            return;
+
+        for (int i = 0; i < planetProgressDots.Length; i++)
+        {
+            UnityEngine.UI.Image dot = planetProgressDots[i];
+            bool reached = i <= planetIndex;
+            bool current = i == planetIndex;
+            dot.color = reached ? reachedPlanetColor : unreachedPlanetColor;
+            float size = current
+                ? currentPlanetDotSize
+                : reached
+                    ? reachedPlanetDotSize
+                    : unreachedPlanetDotSize;
+            dot.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
+            dot.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+        }
+
+        UpdateCompletedProgressLine(planetIndex);
+        currentSituationPlanetIndex = planetIndex;
+    }
+
+    private void UpdateSituationPlanetImage(Sprite sprite, int planetIndex)
+    {
+        if (currentPlanetImage == null || sprite == null)
+            return;
+
+        if (currentSituationPlanetIndex < 0 || currentSituationPlanetIndex == planetIndex)
+        {
+            SetCurrentPlanetSituationImage(sprite);
+            SetCurrentPlanetImageAlpha(currentPlanetImageBaseAlpha);
+            return;
+        }
+
+        if (situationImageCoroutine != null)
+            StopCoroutine(situationImageCoroutine);
+        situationImageCoroutine = StartCoroutine(ChangeSituationImageRoutine(sprite));
+    }
+
+    private IEnumerator ChangeSituationImageRoutine(Sprite sprite)
+    {
+        float halfDuration = planetImageTransitionDuration * 0.5f;
+        float startAlpha = currentPlanetImage.color.a;
+        float elapsed = 0f;
+
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / halfDuration));
+            SetCurrentPlanetImageAlpha(Mathf.Lerp(startAlpha, 0f, progress));
+            RestoreCurrentPlanetImageRect();
+            yield return null;
+        }
+
+        SetCurrentPlanetImageAlpha(0f);
+        SetCurrentPlanetSituationImage(sprite);
+        elapsed = 0f;
+
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / halfDuration));
+            SetCurrentPlanetImageAlpha(Mathf.Lerp(0f, currentPlanetImageBaseAlpha, progress));
+            RestoreCurrentPlanetImageRect();
+            yield return null;
+        }
+
+        SetCurrentPlanetImageAlpha(currentPlanetImageBaseAlpha);
+        RestoreCurrentPlanetImageRect();
+        situationImageCoroutine = null;
+    }
+
+    private void SetCurrentPlanetSituationImage(Sprite sprite)
+    {
+        if (currentPlanetImage == null || sprite == null || sprite.rect.height <= 0f)
+            return;
+
+        currentPlanetImage.sprite = sprite;
+        currentPlanetImage.preserveAspect = true;
+        currentPlanetImage.raycastTarget = false;
+        RestoreCurrentPlanetImageRect();
+    }
+
+    private void RestoreCurrentPlanetImageRect()
+    {
+        if (currentPlanetImage == null)
+            return;
+
+        RectTransform rect = currentPlanetImage.rectTransform;
+        rect.sizeDelta = currentPlanetImageSizeDelta;
+        rect.anchoredPosition = currentPlanetImageAnchoredPosition;
+    }
+
+    private void SetCurrentPlanetImageAlpha(float alpha)
+    {
+        Color color = currentPlanetImage.color;
+        color.a = alpha;
+        currentPlanetImage.color = color;
+    }
+
+    private void ResolveSituationPanelReferences()
+    {
+        RectTransform[] rectTransforms = FindObjectsByType<RectTransform>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        foreach (RectTransform rectTransform in rectTransforms)
+        {
+            string objectName = rectTransform.gameObject.name;
+            if (situationPanel == null && objectName == "Situation Panel")
+                situationPanel = rectTransform.gameObject;
+            else if (planetsLine == null && objectName == "Planets Line")
+                planetsLine = rectTransform;
+        }
+
+        if (situationPanel == null)
+            return;
+
+        UnityEngine.UI.Image[] images = situationPanel.GetComponentsInChildren<UnityEngine.UI.Image>(true);
+        foreach (UnityEngine.UI.Image image in images)
+        {
+            if (currentPlanetImage == null && image.gameObject.name == "Current planet Image")
+                currentPlanetImage = image;
+        }
+
+        TMP_Text[] texts = situationPanel.GetComponentsInChildren<TMP_Text>(true);
+        foreach (TMP_Text text in texts)
+        {
+            if (text.text.Contains("/8"))
+            {
+                planetProgressText = text;
+                break;
+            }
+        }
+    }
+
+    private void InitializePlanetProgressLine()
+    {
+        if (planetsLine == null || planetProgressDots == null ||
+            planetProgressDots.Length != 8)
+            return;
+
+        for (int i = 0; i < planetProgressDots.Length; i++)
+        {
+            if (planetProgressDots[i] == null)
+                return;
+            planetProgressDots[i].raycastTarget = false;
+        }
+
+        UpdateSituationPanel(0);
+    }
+
+    private static void SetProgressLineRect(RectTransform rect, float startX, float endX)
+    {
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2((startX + endX) * 0.5f, 0f);
+        rect.sizeDelta = new Vector2(Mathf.Max(0f, endX - startX), 3f);
+    }
+
+    private void UpdateCompletedProgressLine(int planetIndex)
+    {
+        if (completedProgressImage == null || planetProgressDots == null)
+            return;
+
+        float startX = planetProgressDots[0].rectTransform.anchoredPosition.x;
+        float endX = planetProgressDots[Mathf.Clamp(planetIndex, 0, 7)]
+            .rectTransform.anchoredPosition.x;
+
+        SetProgressLineRect(completedProgressImage.rectTransform, startX, endX);
+    }
+
+    private void UpdateRealtimePlanetProgress(int planetIndex, float progress)
+    {
+        if (completedProgressImage == null || planetProgressDots == null ||
+            planetProgressDots.Length != 8)
+            return;
+
+        int currentIndex = Mathf.Clamp(planetIndex, 0, 7);
+        int nextIndex = Mathf.Min(currentIndex + 1, 7);
+        float startX = planetProgressDots[0].rectTransform.anchoredPosition.x;
+        float currentX = planetProgressDots[currentIndex].rectTransform.anchoredPosition.x;
+        float nextX = planetProgressDots[nextIndex].rectTransform.anchoredPosition.x;
+        float endX = Mathf.Lerp(currentX, nextX, Mathf.Clamp01(progress));
+        SetProgressLineRect(completedProgressImage.rectTransform, startX, endX);
+    }
+
+    private void ResolvePlanetPanelReferences()
+    {
+        RectTransform[] rectTransforms = FindObjectsByType<RectTransform>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        foreach (RectTransform rectTransform in rectTransforms)
+        {
+            if (leftPlanetPanel == null && rectTransform.gameObject.name == "Left Panel")
+                leftPlanetPanel = rectTransform.gameObject;
+            else if (rightPlanetPanel == null && rectTransform.gameObject.name == "Right Panel")
+                rightPlanetPanel = rectTransform.gameObject;
+        }
+
+        ResolvePanelContent(
+            leftPlanetPanel,
+            ref leftPlanetNameText,
+            ref leftPlanetDescriptionText,
+            ref leftPlanetImage);
+        ResolvePanelContent(
+            rightPlanetPanel,
+            ref rightPlanetNameText,
+            ref rightPlanetDescriptionText,
+            ref rightPlanetImage);
+    }
+
+    private static void ResolvePanelContent(
+        GameObject panel,
+        ref RTLTextMeshPro nameText,
+        ref RTLTextMeshPro descriptionText,
+        ref UnityEngine.UI.Image planetImage)
+    {
+        if (panel == null)
+            return;
+
+        RTLTextMeshPro[] texts = panel.GetComponentsInChildren<RTLTextMeshPro>(true);
+        foreach (RTLTextMeshPro text in texts)
+        {
+            string objectName = text.gameObject.name;
+            if (nameText == null && objectName.Contains("Name"))
+                nameText = text;
+            else if (descriptionText == null && objectName.Contains("Desc"))
+                descriptionText = text;
+        }
+
+        UnityEngine.UI.Image[] images = panel.GetComponentsInChildren<UnityEngine.UI.Image>(true);
+        foreach (UnityEngine.UI.Image image in images)
+        {
+            if (image.gameObject.name == "Planet Image")
+            {
+                planetImage = image;
+                return;
+            }
+        }
     }
 
     private void HidePlanetIntroduction()
@@ -367,9 +711,11 @@ public class UIManager : MonoBehaviour
     {
         leftPlanetCanvasGroup = GetOrAddCanvasGroup(leftPlanetPanel);
         rightPlanetCanvasGroup = GetOrAddCanvasGroup(rightPlanetPanel);
+        situationCanvasGroup = GetOrAddCanvasGroup(situationPanel);
 
         InitializeHiddenCanvasGroup(leftPlanetCanvasGroup);
         InitializeHiddenCanvasGroup(rightPlanetCanvasGroup);
+        InitializeHiddenCanvasGroup(situationCanvasGroup);
     }
 
     private static CanvasGroup GetOrAddCanvasGroup(GameObject panel)

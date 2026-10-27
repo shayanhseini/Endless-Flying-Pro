@@ -8,8 +8,9 @@ public static class GameEvents
     public static event Action CrashLandingStarted;
     public static event Action VictoryOrbitStarted;
     public static event Action AtmosphereReached;
-    public static event Action<string, string, float, bool> PlanetIntroductionStarted;
+    public static event Action<string, string, float, bool, int> PlanetIntroductionStarted;
     public static event Action PlanetIntroductionEnded;
+    public static event Action<int, float> PlanetProgressChanged;
 
     public static event Action PlaneHit;
 
@@ -57,18 +58,25 @@ public static class GameEvents
         string planetName,
         string description,
         float duration,
-        bool planetOnLeft)
+        bool planetOnLeft,
+        int planetIndex)
     {
         PlanetIntroductionStarted?.Invoke(
             planetName,
             description,
             duration,
-            planetOnLeft);
+            planetOnLeft,
+            planetIndex);
     }
 
     public static void RaisePlanetIntroductionEnded()
     {
         PlanetIntroductionEnded?.Invoke();
+    }
+
+    public static void RaisePlanetProgressChanged(int planetIndex, float progress)
+    {
+        PlanetProgressChanged?.Invoke(planetIndex, progress);
     }
 
 

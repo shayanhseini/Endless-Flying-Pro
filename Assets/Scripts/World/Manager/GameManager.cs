@@ -108,6 +108,15 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
+    public bool BeginVictorySequence()
+    {
+        if (State != GameState.Playing)
+            return false;
+
+        State = GameState.VictorySequence;
+        return true;
+    }
+
     public void WinGame()
     {
         if (State != GameState.Playing && State != GameState.VictoryOrbit)
@@ -158,6 +167,7 @@ public enum GameState
     Playing,
     CrashLanding,
     VictoryOrbit,
+    VictorySequence,
     Won,
     GameOver
 }
