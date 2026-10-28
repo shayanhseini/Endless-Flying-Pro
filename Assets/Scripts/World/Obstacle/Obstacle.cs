@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Linq;
+using System.Collections;
 
 
 public class Obstacle : MonoBehaviour
@@ -15,12 +16,15 @@ public class Obstacle : MonoBehaviour
     [Header("Random Size")]
     [SerializeField] private float minScale = 3f;
     [SerializeField] private float maxScale = 4f;
+    [Min(0.05f)]
+    [SerializeField] private float appearDuration = 0.45f;
 
     private Collider[] activeColliders = System.Array.Empty<Collider>();
     private Transform activeVisual;
     private Vector3 rotationAxis;
     private float rotationSpeed;
     private bool hitProcessed;
+    private Coroutine scaleCoroutine;
     private static int nextVariantIndex = -1;
     
     private void Awake()
@@ -31,20 +35,72 @@ public class Obstacle : MonoBehaviour
     
     private void OnEnable()
     {
+        GameEvents.VictorySequenceStarted += BeginVictoryExit;
         hitProcessed = false;
         SelectRandomVariant();
 
         float randomScale = Random.Range(minScale, maxScale);
-        transform.localScale = Vector3.one * randomScale;
+        Vector3 targetScale = Vector3.one * randomScale;
+        transform.localScale = Vector3.zero;
 
-        
-        SetActiveVariantColliders(true);
+        SetActiveVariantColliders(false);
+        scaleCoroutine = StartCoroutine(ScaleRoutine(
+            Vector3.zero,
+            targetScale,
+            appearDuration,
+            false));
 
         rotationAxis = Random.onUnitSphere;
         rotationSpeed = Random.Range(minRotationSpeed, maxRotationSpeed);
 
         if (activeVisual != null)
             activeVisual.localRotation = Random.rotation;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.VictorySequenceStarted -= BeginVictoryExit;
+        scaleCoroutine = null;
+    }
+
+    private void BeginVictoryExit(float duration)
+    {
+        if (scaleCoroutine != null)
+            StopCoroutine(scaleCoroutine);
+
+        SetActiveVariantColliders(false);
+        scaleCoroutine = StartCoroutine(ScaleRoutine(
+            transform.localScale,
+            Vector3.zero,
+            duration,
+            true));
+    }
+
+    private IEnumerator ScaleRoutine(
+        Vector3 startScale,
+        Vector3 endScale,
+        float transitionDuration,
+        bool keepCollidersDisabled)
+    {
+        float elapsed = 0f;
+        while (elapsed < transitionDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / transitionDuration));
+            transform.localScale = Vector3.LerpUnclamped(
+                startScale,
+                endScale,
+                progress);
+            yield return null;
+        }
+
+        transform.localScale = endScale;
+        if (!keepCollidersDisabled)
+            SetActiveVariantColliders(true);
+        scaleCoroutine = null;
     }
 
     private void Update()

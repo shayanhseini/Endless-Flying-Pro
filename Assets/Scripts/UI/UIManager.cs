@@ -17,11 +17,6 @@ public class UIManager : MonoBehaviour
     [Header("Fade")]
     [SerializeField] private float fadeDuration = 0.5f;
 
-    [Header("Warning")]
-    [SerializeField] private UnityEngine.UI.Image targetImage;
-    [SerializeField] private float duration = 2f;
-    [SerializeField] private float flashSpeed = 0.15f;
-
     [Header("Crash Damage")]
     [SerializeField] private UnityEngine.UI.Image damageImage;
     [Min(0.1f)]
@@ -146,7 +141,6 @@ public class UIManager : MonoBehaviour
     {
         GameEvents.GameStarted += HandleGameStarted;
         GameEvents.GameOver += HandleGameOver;
-        GameEvents.LaunchMissile += StartWarning;
         GameEvents.PlanetIntroductionStarted += ShowPlanetIntroduction;
         GameEvents.PlanetIntroductionEnded += HidePlanetIntroduction;
         GameEvents.PlanetProgressChanged += UpdateRealtimePlanetProgress;
@@ -163,7 +157,6 @@ public class UIManager : MonoBehaviour
     {
         GameEvents.GameStarted -= HandleGameStarted;
         GameEvents.GameOver -= HandleGameOver;
-        GameEvents.LaunchMissile -= StartWarning;
         GameEvents.PlanetIntroductionStarted -= ShowPlanetIntroduction;
         GameEvents.PlanetIntroductionEnded -= HidePlanetIntroduction;
         GameEvents.PlanetProgressChanged -= UpdateRealtimePlanetProgress;
@@ -931,32 +924,6 @@ public class UIManager : MonoBehaviour
         canvasGroup.interactable = to > 0f;
         canvasGroup.blocksRaycasts = to > 0f;
         fadeCoroutines.Remove(canvasGroup);
-    }
-
-    public void StartWarning()
-    {
-        if (targetImage == null)
-            return;
-
-        StopAllCoroutines();
-        StartCoroutine(WarningRoutine());
-    }
-
-    private IEnumerator WarningRoutine()
-    {
-        targetImage.color = Color.white;
-
-        float elapsed = 0f;
-        bool isRed = false;
-        while (elapsed < duration)
-        {
-            isRed = !isRed;
-            targetImage.color = isRed ? Color.red : Color.white;
-            yield return new WaitForSeconds(flashSpeed);
-            elapsed += flashSpeed;
-        }
-
-        targetImage.color = Color.white;
     }
 
     private void EnsurePlanetSequenceUI()

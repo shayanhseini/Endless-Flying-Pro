@@ -14,6 +14,7 @@ public static class GameEvents
     public static event Action RoundCountdownStarted;
     public static event Action<int, float> RoundCountdownTick;
     public static event Action RoundCountdownCompleted;
+    public static event Action<float> VictorySequenceStarted;
 
     public static event Action PlaneHit;
 
@@ -95,6 +96,11 @@ public static class GameEvents
     public static void RaiseRoundCountdownCompleted()
     {
         RoundCountdownCompleted?.Invoke();
+    }
+
+    public static void RaiseVictorySequenceStarted(float obstacleFadeDuration)
+    {
+        VictorySequenceStarted?.Invoke(obstacleFadeDuration);
     }
 
 

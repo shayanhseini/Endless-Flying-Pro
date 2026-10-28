@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class ChunkManager : MonoBehaviour
 {
@@ -25,6 +26,7 @@ public class ChunkManager : MonoBehaviour
 
     private bool startChunkActive;
     private bool lastObstaclePhase;
+    private Coroutine obstacleCleanupCoroutine;
 
 
     private void Awake()
@@ -62,7 +64,21 @@ public class ChunkManager : MonoBehaviour
         if (lastObstaclePhase != planetSequence.ObstaclesEnabled)
         {
             lastObstaclePhase = planetSequence.ObstaclesEnabled;
-            ResetAllChunkContent();
+            if (lastObstaclePhase)
+            {
+                if (obstacleCleanupCoroutine != null)
+                {
+                    StopCoroutine(obstacleCleanupCoroutine);
+                    obstacleCleanupCoroutine = null;
+                }
+
+                ResetAllChunkContent();
+            }
+            else
+            {
+                obstacleCleanupCoroutine = StartCoroutine(
+                    ClearObstacleContentAfterExitAnimation());
+            }
         }
 
         if (!worldMovement.IsMovementEnabled)
@@ -238,6 +254,14 @@ public class ChunkManager : MonoBehaviour
     {
         foreach (WorldChunk chunk in chunks)
             ResetChunkContent(chunk);
+    }
+
+    private IEnumerator ClearObstacleContentAfterExitAnimation()
+    {
+        yield return new WaitForSeconds(
+            planetSequence.ObstacleExitDuration + 0.05f);
+        ResetAllChunkContent();
+        obstacleCleanupCoroutine = null;
     }
 
     private void ResetChunkContent(WorldChunk chunk)

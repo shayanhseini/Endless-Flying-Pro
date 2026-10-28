@@ -115,12 +115,13 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    public bool BeginVictorySequence()
+    public bool BeginVictorySequence(float obstacleFadeDuration = 0.45f)
     {
         if (State != GameState.Playing)
             return false;
 
         State = GameState.VictorySequence;
+        GameEvents.RaiseVictorySequenceStarted(obstacleFadeDuration);
         return true;
     }
 

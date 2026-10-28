@@ -5181,7 +5181,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82d65c443fef2954aaf5e279a1164b9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
-  startObstacleCount: 15
+  startObstacleCount: 20
   startWithShield: 0
   startWithSpeedPowerUp: 0
 --- !u!1 &1323806684600583350
@@ -6100,9 +6100,6 @@ MonoBehaviour:
   gameCanvasGroup: {fileID: 4630575218323219145}
   gameOverCanvasGroup: {fileID: 0}
   fadeDuration: 0.5
-  targetImage: {fileID: 0}
-  duration: 2
-  flashSpeed: 0.15
   damageImage: {fileID: 1129591767}
   damagePulseDuration: 0.8
   damageMaximumAlpha: 0.2
@@ -6641,7 +6638,12 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 4d19bc93cf083df4cad2185d8f5a068f, type: 3}
   - {fileID: 8300000, guid: f80a72cf65efacc4eafdc97f2a46a395, type: 3}
   narrationSource: {fileID: 1039958724}
+  startNarrationClip: {fileID: 0}
+  startNarrationDelay: 2
+  firstPlanetDelayAfterStartNarration: 3
   victoryNarrationClip: {fileID: 0}
+  victoryCountdownDelay: 2
+  obstacleExitDuration: 0.45
   spawnDistance: 2000
   initialScaleMultiplier: 0.2
   scaleGrowthJourneyFraction: 0.25

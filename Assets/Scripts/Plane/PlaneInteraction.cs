@@ -29,7 +29,8 @@ public class PlaneInteraction : MonoBehaviour
 
     public void HitObstacle()
     {
-        if (recoveryActive)
+        if (recoveryActive || gameManager == null ||
+            gameManager.State != GameState.Playing)
             return;
 
         GameEvents.RaisePlaneHit();

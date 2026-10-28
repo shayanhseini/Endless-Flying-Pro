@@ -12,6 +12,7 @@ public class PlanetSequenceManager : MonoBehaviour
     private enum SequencePhase
     {
         Waiting,
+        OpeningNarration,
         InitialDelay,
         Introduction,
         Gap,
@@ -87,9 +88,21 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private AudioClip[] narrationClips = new AudioClip[8];
     [SerializeField] private AudioSource narrationSource;
 
+    [Header("First Launch Narration")]
+    [Tooltip("Played once per application run, before the first planet appears.")]
+    [SerializeField] private AudioClip startNarrationClip;
+    [Min(0f)]
+    [SerializeField] private float startNarrationDelay = 2f;
+    [Min(0f)]
+    [SerializeField] private float firstPlanetDelayAfterStartNarration = 3f;
+
     [Header("Victory Sequence")]
     [Tooltip("Played after Neptune is completed. Assign the success narration here.")]
     [SerializeField] private AudioClip victoryNarrationClip;
+    [Min(0f)]
+    [SerializeField] private float victoryCountdownDelay = 2f;
+    [Min(0.05f)]
+    [SerializeField] private float obstacleExitDuration = 0.45f;
     [Header("Placement")]
     [Min(1f)]
     [SerializeField] private float spawnDistance = 2000f;
@@ -135,10 +148,21 @@ public class PlanetSequenceManager : MonoBehaviour
     private bool initialized;
     private bool currentPlanetOnLeft;
     private Coroutine narrationFadeCoroutine;
+    private Coroutine openingNarrationCoroutine;
 
     private static int sessionCheckpointPlanetIndex;
+    private static bool openingNarrationPlayedThisSession;
 
-    public bool ObstaclesEnabled => true;
+    public bool ObstaclesEnabled =>
+        phase == SequencePhase.Introduction || phase == SequencePhase.Gap;
+
+    public float ObstacleExitDuration => obstacleExitDuration;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetOpeningNarrationState()
+    {
+        openingNarrationPlayedThisSession = false;
+    }
 
     public void Initialize(
         Transform playerTransform,
@@ -217,11 +241,52 @@ public class PlanetSequenceManager : MonoBehaviour
             sessionCheckpointPlanetIndex,
             0,
             Mathf.Max(0, planets.Length - 1));
+
+        if (!openingNarrationPlayedThisSession)
+        {
+            openingNarrationPlayedThisSession = true;
+            phase = SequencePhase.OpeningNarration;
+            openingNarrationCoroutine = StartCoroutine(
+                FirstLaunchNarrationRoutine());
+            return;
+        }
+
         phase = SequencePhase.InitialDelay;
 
         float minimumDelay = Mathf.Max(0f, initialNarrationDelayMin);
         float maximumDelay = Mathf.Max(minimumDelay, initialNarrationDelayMax);
         phaseTimeRemaining = minimumDelay;
+    }
+
+    private System.Collections.IEnumerator FirstLaunchNarrationRoutine()
+    {
+        yield return WaitForPlayingSeconds(startNarrationDelay);
+
+        if (narrationSource != null && startNarrationClip != null)
+        {
+            narrationSource.Stop();
+            narrationSource.clip = startNarrationClip;
+            narrationSource.Play();
+            while (narrationSource.isPlaying)
+                yield return null;
+        }
+
+        yield return WaitForPlayingSeconds(firstPlanetDelayAfterStartNarration);
+
+        openingNarrationCoroutine = null;
+        StartFirstIntroduction();
+    }
+
+    private System.Collections.IEnumerator WaitForPlayingSeconds(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (gameManager == null || gameManager.State == GameState.Playing)
+                elapsed += Time.deltaTime;
+
+            yield return null;
+        }
     }
 
     private void StartFirstIntroduction()
@@ -321,7 +386,8 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private System.Collections.IEnumerator VictorySequenceRoutine()
     {
-        if (gameManager == null || !gameManager.BeginVictorySequence())
+        if (gameManager == null ||
+            !gameManager.BeginVictorySequence(obstacleExitDuration))
             yield break;
 
         sessionCheckpointPlanetIndex = 0;
@@ -343,6 +409,9 @@ public class PlanetSequenceManager : MonoBehaviour
                     yield return null;
             }
         }
+
+        if (victoryCountdownDelay > 0f)
+            yield return new WaitForSeconds(victoryCountdownDelay);
 
         gameManager.StartRoundCountdown(true);
     }
