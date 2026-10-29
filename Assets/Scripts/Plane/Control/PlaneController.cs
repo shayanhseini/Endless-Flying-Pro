@@ -74,6 +74,8 @@ public class PlaneController : MonoBehaviour
         GameEvents.GameOver += DisableControl;
         GameEvents.CrashLandingStarted += DisableControl;
         GameEvents.VictoryOrbitStarted += DisableControl;
+        GameEvents.GameWon += DisableControl;
+        GameEvents.VictorySequenceStarted += HandleVictorySequenceStarted;
         GameEvents.RoundCountdownStarted += DisableControl;
         GameEvents.RoundCountdownCompleted += EnableControl;
     }
@@ -85,6 +87,8 @@ public class PlaneController : MonoBehaviour
         GameEvents.GameOver -= DisableControl;
         GameEvents.CrashLandingStarted -= DisableControl;
         GameEvents.VictoryOrbitStarted -= DisableControl;
+        GameEvents.GameWon -= DisableControl;
+        GameEvents.VictorySequenceStarted -= HandleVictorySequenceStarted;
         GameEvents.RoundCountdownStarted -= DisableControl;
         GameEvents.RoundCountdownCompleted -= EnableControl;
     }
@@ -120,12 +124,24 @@ public class PlaneController : MonoBehaviour
     }
 
 
-    private void DisableControl()
+    public void DisableControl()
     {
         canControl = false;
 
         Input = Vector2.zero;
+    }
 
+    private void HandleVictorySequenceStarted(float obstacleFadeDuration)
+    {
+        DisableControl();
+    }
+
+    public void PrepareForVictoryFlyaway()
+    {
+        DisableControl();
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+            col.enabled = false;
     }
 
 

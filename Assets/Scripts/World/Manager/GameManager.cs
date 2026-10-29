@@ -11,9 +11,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Round Countdown")]
     [Min(0.1f)]
-    [SerializeField] private float roundCountdownDuration = 5f;
+    [SerializeField] private float roundCountdownDuration = 3f;
     [Min(1)]
-    [SerializeField] private int countdownStartValue = 5;
+    [SerializeField] private int countdownStartValue = 3;
 
     public GameState State { get; private set; }
 
@@ -41,6 +41,13 @@ public class GameManager : MonoBehaviour
             Keyboard.current.anyKey.wasPressedThisFrame;
         bool mousePressed = Mouse.current != null &&
             Mouse.current.leftButton.wasPressedThisFrame;
+
+#if UNITY_EDITOR
+        if (Keyboard.current != null && Keyboard.current.f10Key.wasPressedThisFrame)
+        {
+            StartVictorySequence();
+        }
+#endif
 
         if (!keyboardPressed && !mousePressed)
             return;
@@ -79,9 +86,7 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Waiting)
             return;
 
-        State = GameState.Playing;
-
-        GameEvents.RaiseGameStarted();
+        StartCountdown(isInitialGameStart: true, restartFromFirstPlanet: false);
     }
 
 
@@ -125,13 +130,83 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    public void WinGame()
+    private Coroutine victorySequenceCoroutine;
+
+    public void StartVictorySequence()
     {
-        if (State != GameState.Playing && State != GameState.VictoryOrbit)
+        if (victorySequenceCoroutine != null)
             return;
 
+        if (State != GameState.Playing && State != GameState.VictorySequence && State != GameState.VictoryOrbit)
+            return;
+
+        victorySequenceCoroutine = StartCoroutine(VictorySequenceRoutine());
+    }
+
+    public void WinGame()
+    {
+        StartVictorySequence();
+    }
+
+    private IEnumerator VictorySequenceRoutine()
+    {
         State = GameState.Won;
         GameEvents.RaiseGameWon();
+        GameEvents.RaiseVictorySequenceStarted(0.45f);
+
+        PlaneController plane = FindFirstObjectByType<PlaneController>();
+        if (plane != null)
+        {
+            plane.PrepareForVictoryFlyaway();
+        }
+
+        // Visible forward flight: smooth ease-in acceleration for ~2.0 seconds
+        float flyDuration = 2.0f;
+        float maxSpeed = 110f;
+        Quaternion planeStartRot = plane != null ? plane.transform.rotation : Quaternion.identity;
+
+        float elapsed = 0f;
+        while (elapsed < flyDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / flyDuration);
+            // Smooth ease-in acceleration (starts gently, accelerates forward into the distance)
+            float speed = Mathf.Lerp(15f, maxSpeed, t * t);
+
+            if (plane != null && plane.gameObject.activeInHierarchy)
+            {
+                plane.transform.rotation = Quaternion.Slerp(planeStartRot, Quaternion.identity, t * 2f);
+                Vector3 moveDelta = (Vector3.forward * speed + Vector3.up * (speed * 0.08f)) * Time.deltaTime;
+                plane.transform.position += moveDelta;
+            }
+
+            yield return null;
+        }
+
+        // Only hide/deactivate ship after it has clearly left the visible area
+        if (plane != null)
+        {
+            plane.gameObject.SetActive(false);
+        }
+
+        // Fade entire screen to full black
+        float fadeDuration = 0.8f;
+        if (fadeController != null)
+        {
+            fadeController.FadeOut(fadeDuration);
+        }
+
+        // Wait until fade completes and screen is fully black
+        yield return new WaitForSeconds(fadeDuration);
+
+        // Keep black overlay visible for exactly 6 seconds
+        yield return new WaitForSeconds(6f);
+
+        // Reset persistent session state so the new run starts clean
+        PlanetSequenceManager.ResetSessionState();
+
+        // Reload the game from the beginning
+        RestartGame();
     }
 
 
@@ -151,18 +226,26 @@ public class GameManager : MonoBehaviour
         if (roundCountdownCoroutine != null)
             return;
 
-        roundCountdownCoroutine = StartCoroutine(
-            RoundCountdownRoutine(restartFromFirstPlanet));
+        StartCountdown(isInitialGameStart: false, restartFromFirstPlanet: restartFromFirstPlanet);
     }
 
-    private IEnumerator RoundCountdownRoutine(bool restartFromFirstPlanet)
+    private void StartCountdown(bool isInitialGameStart, bool restartFromFirstPlanet)
+    {
+        if (roundCountdownCoroutine != null)
+            return;
+
+        roundCountdownCoroutine = StartCoroutine(
+            CountdownRoutine(isInitialGameStart, restartFromFirstPlanet));
+    }
+
+    private IEnumerator CountdownRoutine(bool isInitialGameStart, bool restartFromFirstPlanet)
     {
         State = GameState.Countdown;
         GameEvents.RaiseRoundCountdownStarted();
 
-        int stepCount = countdownStartValue + 1;
+        int stepCount = countdownStartValue;
         float stepDuration = roundCountdownDuration / Mathf.Max(1, stepCount);
-        for (int value = countdownStartValue; value >= 0; value--)
+        for (int value = countdownStartValue; value >= 1; value--)
         {
             GameEvents.RaiseRoundCountdownTick(value, stepDuration);
             yield return new WaitForSeconds(stepDuration);
@@ -178,6 +261,12 @@ public class GameManager : MonoBehaviour
         }
 
         GameEvents.RaiseRoundCountdownCompleted();
+
+        if (isInitialGameStart)
+        {
+            GameEvents.RaiseGameStarted();
+        }
+
         roundCountdownCoroutine = null;
     }
 

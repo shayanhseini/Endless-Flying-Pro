@@ -27,6 +27,7 @@ public class UIManager : MonoBehaviour
     [Header("Round Countdown")]
     [SerializeField] private GameObject countdownPanel;
     [SerializeField] private TMP_Text countdownText;
+    [SerializeField] private TMP_FontAsset countdownFont;
     [Min(1f)]
     [SerializeField] private float countdownStartFontSize = 50f;
     [Min(1f)]
@@ -55,10 +56,31 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float reachedPlanetDotSize = 14f;
     [SerializeField] private float unreachedPlanetDotSize = 18f;
     [SerializeField] private float currentPlanetDotSize = 30f;
+    [Tooltip("Visual scale multiplier for Saturn progress icon to compensate for wide ring aspect ratio.")]
+    [SerializeField] private float saturnProgressDotScale = 1.45f;
     [SerializeField] private UnityEngine.UI.Image[] planetProgressDots = new UnityEngine.UI.Image[8];
     [SerializeField] private UnityEngine.UI.Image progressTrackImage;
     [SerializeField] private UnityEngine.UI.Image completedProgressImage;
     [SerializeField] private UnityEngine.UI.Image planetRingImage;
+    [SerializeField] private RTLTextMeshPro[] planetNameTexts = new RTLTextMeshPro[8];
+    [SerializeField] private Color reachedPlanetNameColor = new(0.9f, 0.9f, 0.9f, 0.85f);
+    [SerializeField] private Color unreachedPlanetNameColor = new(0.6f, 0.6f, 0.6f, 0.45f);
+    [SerializeField] private Color activePlanetNameColor = new(1f, 0.92f, 0.35f, 1f);
+    [SerializeField] private float activePlanetPulseSpeed = 3.5f;
+
+    private static readonly string[] PersianPlanetNames =
+    {
+        "عطارد",
+        "زهره",
+        "زمین",
+        "مریخ",
+        "مشتری",
+        "زحل",
+        "اورانوس",
+        "نپتون"
+    };
+
+    private Coroutine activePlanetPulseCoroutine;
     [Min(0.05f)]
     [SerializeField] private float planetImageTransitionDuration = 0.8f;
     [Header("Planet Reached Effect")]
@@ -155,6 +177,11 @@ public class UIManager : MonoBehaviour
 
     private void OnDisable()
     {
+        if (activePlanetPulseCoroutine != null)
+        {
+            StopCoroutine(activePlanetPulseCoroutine);
+            activePlanetPulseCoroutine = null;
+        }
         GameEvents.GameStarted -= HandleGameStarted;
         GameEvents.GameOver -= HandleGameOver;
         GameEvents.PlanetIntroductionStarted -= ShowPlanetIntroduction;
@@ -176,6 +203,12 @@ public class UIManager : MonoBehaviour
 
     private void HandleGameOver()
     {
+        if (activePlanetPulseCoroutine != null)
+        {
+            StopCoroutine(activePlanetPulseCoroutine);
+            activePlanetPulseCoroutine = null;
+        }
+
         FadeOut(gameCanvasGroup);
 
         if (gameOverPanel != null)
@@ -224,7 +257,8 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator AnimateCountdownNumber(int value, float stepDuration)
     {
-        countdownText.text = value.ToString();
+        EnsureCountdownFont();
+        countdownText.text = ToPersianDigits(value.ToString());
         Color color = countdownText.color;
         color.a = 1f;
         countdownText.color = color;
@@ -287,7 +321,40 @@ public class UIManager : MonoBehaviour
             countdownText = countdownPanel.GetComponentInChildren<TMP_Text>(true);
 
         if (countdownText != null)
+        {
             countdownText.raycastTarget = false;
+            EnsureCountdownFont();
+        }
+    }
+
+    private void EnsureCountdownFont()
+    {
+        if (countdownText == null)
+            return;
+
+        if (countdownFont != null)
+        {
+            if (countdownText.font != countdownFont)
+                countdownText.font = countdownFont;
+        }
+        else if (leftPlanetNameText != null && leftPlanetNameText.font != null)
+        {
+            if (countdownText.font != leftPlanetNameText.font)
+                countdownText.font = leftPlanetNameText.font;
+        }
+
+        // Disable any SDF underlay / shadow on countdown numbers
+        Material mat = countdownText.fontMaterial;
+        if (mat != null)
+        {
+            mat.DisableKeyword("UNDERLAY_ON");
+            mat.DisableKeyword("UNDERLAY_INNER");
+            mat.SetColor("_UnderlayColor", Color.clear);
+            mat.SetFloat("_UnderlayOffsetX", 0f);
+            mat.SetFloat("_UnderlayOffsetY", 0f);
+            mat.SetFloat("_UnderlayDilate", 0f);
+            mat.SetFloat("_UnderlaySoftness", 0f);
+        }
     }
 
     private void FindAndInitializeDamageImage()
@@ -383,10 +450,16 @@ public class UIManager : MonoBehaviour
             : leftPlanetDescriptionText;
 
         if (nameText != null)
+        {
+            nameText.horizontalAlignment = HorizontalAlignmentOptions.Justified;
             nameText.text = planetName;
+        }
 
         if (descriptionText != null)
+        {
+            descriptionText.horizontalAlignment = HorizontalAlignmentOptions.Justified;
             descriptionText.text = description;
+        }
 
         UnityEngine.UI.Image planetImage = planetOnLeft
             ? rightPlanetImage
@@ -419,16 +492,6 @@ public class UIManager : MonoBehaviour
 
     private void PlayPlanetReachedEffects(int planetIndex)
     {
-        if (planetProgressDots != null &&
-            planetIndex >= 0 && planetIndex < planetProgressDots.Length &&
-            planetProgressDots[planetIndex] != null)
-        {
-            if (planetDotPulseCoroutine != null)
-                StopCoroutine(planetDotPulseCoroutine);
-            planetDotPulseCoroutine = StartCoroutine(
-                PulsePlanetDot(planetProgressDots[planetIndex]));
-        }
-
         if (planetRingImage != null)
         {
             if (planetRingFadeCoroutine != null)
@@ -589,13 +652,31 @@ public class UIManager : MonoBehaviour
         rect.position += visualCenterBeforeResize - visualCenterAfterResize;
     }
 
+    private static string ToPersianDigits(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        return input
+            .Replace('0', '۰')
+            .Replace('1', '۱')
+            .Replace('2', '۲')
+            .Replace('3', '۳')
+            .Replace('4', '۴')
+            .Replace('5', '۵')
+            .Replace('6', '۶')
+            .Replace('7', '۷')
+            .Replace('8', '۸')
+            .Replace('9', '۹');
+    }
+
     private void UpdateSituationPanel(int planetIndex)
     {
         if (planetIndex < 0 || planetIndex >= 8)
             return;
 
         if (planetProgressText != null)
-            planetProgressText.text = $"{planetIndex + 1}/8";
+            planetProgressText.text = ToPersianDigits($"{planetIndex + 1}/8");
 
         Sprite situationSprite = GetSituationPlanetSprite(planetIndex);
         UpdateSituationPlanetImage(situationSprite, planetIndex);
@@ -606,20 +687,89 @@ public class UIManager : MonoBehaviour
         for (int i = 0; i < planetProgressDots.Length; i++)
         {
             UnityEngine.UI.Image dot = planetProgressDots[i];
-            bool reached = i <= planetIndex;
-            bool current = i == planetIndex;
-            dot.color = reached ? reachedPlanetColor : unreachedPlanetColor;
-            float size = current
-                ? currentPlanetDotSize
-                : reached
-                    ? reachedPlanetDotSize
-                    : unreachedPlanetDotSize;
-            dot.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
-            dot.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
+            if (dot == null)
+                continue;
+
+            bool isCurrent = i == planetIndex;
+            bool isPassed = i < planetIndex;
+            float dotScale = GetPlanetProgressDotScale(i);
+
+            if (isCurrent)
+            {
+                dot.color = Color.white;
+                SetSquareSize(dot.rectTransform, currentPlanetDotSize * dotScale);
+            }
+            else if (isPassed)
+            {
+                dot.color = reachedPlanetColor;
+                SetSquareSize(dot.rectTransform, reachedPlanetDotSize * dotScale);
+            }
+            else
+            {
+                dot.color = unreachedPlanetColor;
+                SetSquareSize(dot.rectTransform, unreachedPlanetDotSize * dotScale);
+            }
+
+            if (planetNameTexts != null && i < planetNameTexts.Length && planetNameTexts[i] != null)
+            {
+                if (isCurrent)
+                {
+                    planetNameTexts[i].color = activePlanetNameColor;
+                    planetNameTexts[i].fontStyle = FontStyles.Bold;
+                }
+                else if (isPassed)
+                {
+                    planetNameTexts[i].color = reachedPlanetNameColor;
+                    planetNameTexts[i].fontStyle = FontStyles.Normal;
+                }
+                else
+                {
+                    planetNameTexts[i].color = unreachedPlanetNameColor;
+                    planetNameTexts[i].fontStyle = FontStyles.Normal;
+                }
+            }
         }
+
+        if (activePlanetPulseCoroutine != null)
+        {
+            StopCoroutine(activePlanetPulseCoroutine);
+            activePlanetPulseCoroutine = null;
+        }
+
+        activePlanetPulseCoroutine = StartCoroutine(PulseActivePlanetRoutine(planetIndex));
 
         UpdateCompletedProgressLine(planetIndex);
         currentSituationPlanetIndex = planetIndex;
+    }
+
+    private float GetPlanetProgressDotScale(int planetIndex)
+    {
+        if (planetIndex == 5)
+            return saturnProgressDotScale;
+
+        return 1f;
+    }
+
+    private IEnumerator PulseActivePlanetRoutine(int activeIndex)
+    {
+        if (planetProgressDots == null || activeIndex < 0 || activeIndex >= planetProgressDots.Length)
+            yield break;
+
+        UnityEngine.UI.Image activeImage = planetProgressDots[activeIndex];
+        if (activeImage == null)
+            yield break;
+
+        RectTransform rect = activeImage.rectTransform;
+        float baseSize = currentPlanetDotSize * GetPlanetProgressDotScale(activeIndex);
+        float maxSize = baseSize * planetDotPulseMultiplier;
+
+        while (true)
+        {
+            float t = (Mathf.Sin(Time.time * activePlanetPulseSpeed) + 1f) * 0.5f;
+            float size = Mathf.Lerp(baseSize, maxSize, t);
+            SetSquareSize(rect, size);
+            yield return null;
+        }
     }
 
     private Sprite GetSituationPlanetSprite(int planetIndex)
@@ -627,7 +777,15 @@ public class UIManager : MonoBehaviour
         if (situationPlanetSprites != null &&
             planetIndex >= 0 && planetIndex < situationPlanetSprites.Length &&
             situationPlanetSprites[planetIndex] != null)
-            return situationPlanetSprites[planetIndex];
+        {
+            Sprite sprite = situationPlanetSprites[planetIndex];
+            if (planetIndex == 5 && sprite != null && sprite.name.Contains("Ringless"))
+            {
+                if (planetPanelSprites != null && planetPanelSprites.Length > 5 && planetPanelSprites[5] != null)
+                    return planetPanelSprites[5];
+            }
+            return sprite;
+        }
 
         if (planetPanelSprites != null &&
             planetIndex >= 0 && planetIndex < planetPanelSprites.Length)
@@ -742,11 +900,79 @@ public class UIManager : MonoBehaviour
         TMP_Text[] texts = situationPanel.GetComponentsInChildren<TMP_Text>(true);
         foreach (TMP_Text text in texts)
         {
-            if (text.text.Contains("/8"))
+            if (text.text.Contains("/8") || text.text.Contains("/۸"))
             {
                 planetProgressText = text;
                 break;
             }
+        }
+    }
+
+    private void EnsurePlanetNameLabels()
+    {
+        if (planetsLine == null || planetProgressDots == null)
+            return;
+
+        if (planetNameTexts == null || planetNameTexts.Length != 8)
+            planetNameTexts = new RTLTextMeshPro[8];
+
+        TMP_FontAsset persianFont = null;
+        Material persianMaterial = null;
+        if (leftPlanetNameText != null)
+        {
+            persianFont = leftPlanetNameText.font;
+            persianMaterial = leftPlanetNameText.fontSharedMaterial;
+        }
+
+        for (int i = 0; i < planetProgressDots.Length; i++)
+        {
+            if (planetProgressDots[i] == null)
+                continue;
+
+            Transform dotTransform = planetProgressDots[i].transform;
+            RTLTextMeshPro label = dotTransform.GetComponentInChildren<RTLTextMeshPro>(true);
+
+            if (label == null)
+            {
+                Transform labelTransform = dotTransform.Find("PlanetName");
+                if (labelTransform == null)
+                {
+                    GameObject labelObj = new("PlanetName", typeof(RectTransform), typeof(RTLTextMeshPro));
+                    labelObj.layer = 5;
+                    labelTransform = labelObj.transform;
+                    labelTransform.SetParent(dotTransform, false);
+                }
+
+                label = labelTransform.GetComponent<RTLTextMeshPro>();
+            }
+
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            labelRect.pivot = new Vector2(0.5f, 0f);
+            labelRect.anchoredPosition = new Vector2(0f, 28f);
+            labelRect.sizeDelta = new Vector2(70f, 22f);
+
+            label.raycastTarget = false;
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 14f;
+            label.enableAutoSizing = false;
+            label.Farsi = true;
+            label.PreserveNumbers = false;
+
+            if (persianFont != null)
+            {
+                label.font = persianFont;
+                if (persianMaterial != null)
+                    label.fontSharedMaterial = persianMaterial;
+            }
+
+            string planetName = (i >= 0 && i < PersianPlanetNames.Length)
+                ? PersianPlanetNames[i]
+                : string.Empty;
+
+            label.text = planetName;
+            planetNameTexts[i] = label;
         }
     }
 
@@ -756,11 +982,26 @@ public class UIManager : MonoBehaviour
             planetProgressDots.Length != 8)
             return;
 
+        EnsurePlanetNameLabels();
+
+        float startX = -246.0912f;
+        float endX = 246.0912f;
+        float stepX = (endX - startX) / (planetProgressDots.Length - 1);
+
         for (int i = 0; i < planetProgressDots.Length; i++)
         {
             if (planetProgressDots[i] == null)
                 return;
+
             planetProgressDots[i].raycastTarget = false;
+            planetProgressDots[i].preserveAspect = true;
+
+            Sprite sprite = GetSituationPlanetSprite(i);
+            if (sprite != null)
+                planetProgressDots[i].sprite = sprite;
+
+            RectTransform dotRect = planetProgressDots[i].rectTransform;
+            dotRect.anchoredPosition = new Vector2(startX + i * stepX, 0f);
         }
 
         UpdateSituationPanel(0);
@@ -844,9 +1085,15 @@ public class UIManager : MonoBehaviour
         {
             string objectName = text.gameObject.name;
             if (nameText == null && objectName.Contains("Name"))
+            {
                 nameText = text;
+                nameText.horizontalAlignment = HorizontalAlignmentOptions.Justified;
+            }
             else if (descriptionText == null && objectName.Contains("Desc"))
+            {
                 descriptionText = text;
+                descriptionText.horizontalAlignment = HorizontalAlignmentOptions.Justified;
+            }
         }
 
         UnityEngine.UI.Image[] images = panel.GetComponentsInChildren<UnityEngine.UI.Image>(true);
@@ -868,6 +1115,12 @@ public class UIManager : MonoBehaviour
 
     private void HandleGameWon()
     {
+        if (activePlanetPulseCoroutine != null)
+        {
+            StopCoroutine(activePlanetPulseCoroutine);
+            activePlanetPulseCoroutine = null;
+        }
+
         FadeOut(gameCanvasGroup);
 
         FadePlanetPanel(leftPlanetCanvasGroup, false);
@@ -1054,15 +1307,62 @@ public class UIManager : MonoBehaviour
             new Vector2(0.5f, 0.5f),
             Vector2.zero,
             Vector2.zero,
-            new Color(0.01f, 0.025f, 0.06f, 0.94f));
+            new Color(0.01f, 0.02f, 0.05f, 0.35f));
 
-        TMP_Text title = CreateText("Win Title", winPanel.transform, 72f, FontStyles.Bold,
-            new Vector2(0f, -390f), new Vector2(1000f, 100f));
-        title.text = "MISSION COMPLETE";
+        RTLTextMeshPro title = CreateRTLText("Win Title", winPanel.transform, 56f, FontStyles.Bold,
+            new Vector2(0f, -380f), new Vector2(1200f, 90f));
+        title.color = new Color(1f, 0.88f, 0.25f, 1f);
+        title.text = "ماموریت با موفقیت انجام شد";
 
-        TMP_Text message = CreateText("Win Message", winPanel.transform, 34f, FontStyles.Normal,
-            new Vector2(0f, -510f), new Vector2(1100f, 90f));
-        message.text = "You completed all 8 planets of the Solar System.";
+        RTLTextMeshPro message = CreateRTLText("Win Message", winPanel.transform, 32f, FontStyles.Normal,
+            new Vector2(0f, -490f), new Vector2(1300f, 80f));
+        message.color = Color.white;
+        message.text = "شما تمام ۸ سیاره منظومه شمسی را با موفقیت پشت سر گذاشتید.";
+    }
+
+    private RTLTextMeshPro CreateRTLText(
+        string objectName,
+        Transform parent,
+        float fontSize,
+        FontStyles fontStyle,
+        Vector2 anchoredPosition,
+        Vector2 sizeDelta)
+    {
+        GameObject textObject = new(objectName, typeof(RectTransform), typeof(RTLTextMeshPro));
+        textObject.layer = 5;
+        textObject.transform.SetParent(parent, false);
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = sizeDelta;
+
+        RTLTextMeshPro text = textObject.GetComponent<RTLTextMeshPro>();
+        text.fontSize = fontSize;
+        text.fontStyle = fontStyle;
+        text.alignment = TextAlignmentOptions.Center;
+        text.color = Color.white;
+        text.raycastTarget = false;
+        text.Farsi = true;
+        text.PreserveNumbers = false;
+
+        TMP_FontAsset persianFont = null;
+        Material persianMaterial = null;
+        if (leftPlanetNameText != null)
+        {
+            persianFont = leftPlanetNameText.font;
+            persianMaterial = leftPlanetNameText.fontSharedMaterial;
+        }
+
+        if (persianFont != null)
+        {
+            text.font = persianFont;
+            if (persianMaterial != null)
+                text.fontSharedMaterial = persianMaterial;
+        }
+
+        return text;
     }
 
     private static GameObject CreatePanel(

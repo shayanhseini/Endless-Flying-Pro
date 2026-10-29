@@ -13,7 +13,7 @@ public class CameraTransitionController : MonoBehaviour
     [SerializeField] private float moveDuration = 2f;
 
     [SerializeField, Range(0f, 1f)]
-    private float gameStartProgress = 0.85f;
+    private float gameStartProgress = 1f;
 
 
     private Coroutine transitionCoroutine;

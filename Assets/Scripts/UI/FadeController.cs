@@ -34,9 +34,37 @@ public class FadeController : MonoBehaviour
 
     public void FadeOut()
     {
+        if (fadeImage != null)
+        {
+            fadeImage.transform.SetAsLastSibling();
+        }
+
         fadeImage.raycastTarget = true;
 
         StartFade(0f, 1f);
+    }
+
+    public void FadeOut(float duration)
+    {
+        fadeDuration = Mathf.Max(0.01f, duration);
+        FadeOut();
+    }
+
+    public void ResetFade()
+    {
+        if (fadeCoroutine != null)
+        {
+            StopCoroutine(fadeCoroutine);
+            fadeCoroutine = null;
+        }
+
+        if (fadeImage != null)
+        {
+            Color color = fadeImage.color;
+            color.a = 0f;
+            fadeImage.color = color;
+            fadeImage.raycastTarget = false;
+        }
     }
 
 

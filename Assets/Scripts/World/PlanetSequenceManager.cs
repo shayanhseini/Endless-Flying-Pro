@@ -159,9 +159,15 @@ public class PlanetSequenceManager : MonoBehaviour
     public float ObstacleExitDuration => obstacleExitDuration;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    public static void ResetSessionState()
+    {
+        sessionCheckpointPlanetIndex = 0;
+        openingNarrationPlayedThisSession = false;
+    }
+
     private static void ResetOpeningNarrationState()
     {
-        openingNarrationPlayedThisSession = false;
+        ResetSessionState();
     }
 
     public void Initialize(
@@ -376,7 +382,27 @@ public class PlanetSequenceManager : MonoBehaviour
         {
             phase = SequencePhase.Complete;
             GameEvents.RaisePlanetIntroductionEnded();
-            StartCoroutine(VictorySequenceRoutine());
+
+            if (narrationFadeCoroutine != null)
+            {
+                StopCoroutine(narrationFadeCoroutine);
+                narrationFadeCoroutine = null;
+            }
+
+            if (narrationSource != null)
+            {
+                narrationSource.Stop();
+                if (victoryNarrationClip != null)
+                {
+                    narrationSource.clip = victoryNarrationClip;
+                    narrationSource.Play();
+                }
+            }
+
+            if (gameManager != null)
+            {
+                gameManager.StartVictorySequence();
+            }
             return;
         }
 
