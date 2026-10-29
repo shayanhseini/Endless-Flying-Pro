@@ -39,34 +39,38 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private static readonly string[] DefaultNames =
     {
-        "Mercury", "Venus", "Earth", "Mars",
-        "Jupiter", "Saturn", "Uranus", "Neptune"
+        "Neptune", "Uranus", "Saturn", "Jupiter",
+        "Mars", "Earth", "Venus", "Mercury",
+        "Sun"
     };
 
     private static readonly string[] DefaultDescriptions =
     {
-        "Mercury is the smallest and closest planet to the Sun.",
-        "Venus is the hottest planet and is covered by thick clouds.",
-        "Earth is our home and the only known planet with life.",
-        "Mars is the red planet and has the largest volcano in the Solar System.",
-        "Jupiter is the largest planet and has a giant storm called the Great Red Spot.",
-        "Saturn is famous for its wide system of icy rings.",
-        "Uranus rotates on its side and is an ice giant.",
-        "Neptune is the farthest planet and has extremely powerful winds."
+        "نِپتون، دورترین سیاره از خورشید! رنگ آبی عمیقش به خاطر ترکیبات موجود در جوشه! بادهایی با سرعت باورنکردنی، بیش از دو هزار کیلومتر بر ساعت! یک سال نپتون، برابر با ۱۶۵ سال زمینی!",
+        "اُورانوس، هفتمین سیاره از خورشید و یکی از سردترین سیاره‌های منظومه شمسی! رنگ آبی‌ـ‌سبزش به خاطر گاز متانه! نکته عجیبش؟ تقریباً به پهلو می‌چرخه، انگار روی مدارش غلت می‌زنه!",
+        "زُحَل، ششمین سیاره از خورشید و معروف به حلقه‌های زیبای اطرافش! حلقه‌هاش از تکه‌های یخ و سنگ ساخته شدن! زحل یک غول گازیه و چگالیش حتی از آب هم کمتره!",
+        "مُشتَری، بزرگ‌ترین سیاره منظومه شمسی! طوفانی عظیم به نام لکه سرخ بزرگ روی سطحش، که صدها ساله ادامه داره! بیش از ۹۰ قمر شناخته‌شده و حلقه‌هایی کم‌رنگ در اطرافش!",
+        "مریخ به سیاره سرخ مشهور است و بزرگ‌ترین آتشفشان منظومه شمسی در آن قرار دارد.",
+        "زمین، سومین سیاره از خورشیده و تنها سیاره‌ایه که می‌دونیم زندگی روی اون وجود داره! بیشتر سطح زمین رو آب پوشونده، برای همین بهش سیاره آبی می‌گن. زمین یک قمر به نام ماه داره و تقریباً هر ۳۶۵ روز، یک بار به دور خورشید می‌چرخه!",
+        "زُهره، دومین سیاره از خورشیده و داغ‌ترین سیاره منظومه شمسیه! جوّی غلیظ و پر از گازهای سمی داره! اندازه‌ش تقریباً مثل زمینه، اما دماش اون‌قدر بالاست که حتی سرب هم ذوب می‌شه!",
+        "عَطارُد، نزدیک‌ترین سیاره به خورشیده و کوچک‌ترین سیاره منظومه شمسیه! سطحش پر از دهانه‌های برخورده و شباهت زیادی به ماه داره. یک سال عَطارُد فقط ۸۸ روز زمینی طول می‌کشه!",
+        "خورشید، ستاره سوزان و قلب تپنده منظومه شمسی! این غول آتشین عظیم، گرما و نور تمام سیارات را تأمین می‌کند. دمای مرکز آن بیش از ۱۵ میلیون درجه است و گدازه‌ها و فوران‌های خورشیدی پیوسته از سطحش به فضا زبانه می‌کشند!"
     };
 
     // Sidereal rotation speed relative to Earth. Negative values are retrograde.
     private static readonly float[] RealRotationSpeedMultipliers =
     {
-        0.017f, -0.0041f, 1f, 0.972f,
-        2.413f, 2.245f, -1.389f, 1.485f
+        1.485f, -1.389f, 2.245f, 2.413f,
+        0.972f, 1f, -0.0041f, 0.017f,
+        0.04f
     };
 
     // Axial tilt in degrees. Retrograde direction is handled by rotation speed.
     private static readonly float[] AxialTilts =
     {
-        0.034f, 2.64f, 23.44f, 25.19f,
-        3.13f, 26.73f, 82.23f, 28.32f
+        28.32f, 82.23f, 26.73f, 3.13f,
+        25.19f, 23.44f, 2.64f, 0.034f,
+        7.25f
     };
 
     [Header("Planet Assets")]
@@ -85,7 +89,7 @@ public class PlanetSequenceManager : MonoBehaviour
     [Min(1f)]
     [Tooltip("Silent gameplay time between the end of one introduction and the next planet.")]
     [SerializeField] private float timeBetweenPlanets = 10f;
-    [SerializeField] private AudioClip[] narrationClips = new AudioClip[8];
+    [SerializeField] private AudioClip[] narrationClips = new AudioClip[9];
     [SerializeField] private AudioSource narrationSource;
 
     [Header("First Launch Narration")]
@@ -127,6 +131,13 @@ public class PlanetSequenceManager : MonoBehaviour
     [Tooltip("Extra side distance used by Saturn so it stays clear of the flight lane.")]
     [UnityEngine.Serialization.FormerlySerializedAs("jupiterSaturnSideMultiplier")]
     [SerializeField] private float saturnSideMultiplier = 1.5f;
+    [Min(1f)]
+    [Tooltip("Absolute horizontal distance used by the Sun so the spaceship flies safely past its massive corona.")]
+    [SerializeField] private float sunSideX = 820f;
+
+    [Header("Debug & Sequence Control")]
+    [Tooltip("If set >= 0, sequence begins at this planet index (e.g. 0 for Neptune, 8 for Sun). Set to -1 for standard sequence starting from Neptune.")]
+    [SerializeField] private int debugStartPlanetIndex = -1;
     [Header("Vertical Placement")]
     [SerializeField] private Vector2 verticalRange = new(8f, 28f);
     [Min(0f)]
@@ -243,10 +254,19 @@ public class PlanetSequenceManager : MonoBehaviour
         if (!initialized || phase != SequencePhase.Waiting)
             return;
 
+        int startIndex = debugStartPlanetIndex >= 0
+            ? debugStartPlanetIndex
+            : sessionCheckpointPlanetIndex;
+
         nextPlanetIndex = Mathf.Clamp(
-            sessionCheckpointPlanetIndex,
+            startIndex,
             0,
             Mathf.Max(0, planets.Length - 1));
+
+        if (debugStartPlanetIndex >= 0)
+        {
+            openingNarrationPlayedThisSession = true;
+        }
 
         if (!openingNarrationPlayedThisSession)
         {
@@ -318,9 +338,16 @@ public class PlanetSequenceManager : MonoBehaviour
             narrationSource.Play();
         }
 
+        string pName = !string.IsNullOrEmpty(planets[nextPlanetIndex].displayName)
+            ? planets[nextPlanetIndex].displayName
+            : (nextPlanetIndex < DefaultNames.Length ? DefaultNames[nextPlanetIndex] : "");
+        string pDesc = !string.IsNullOrEmpty(planets[nextPlanetIndex].description)
+            ? planets[nextPlanetIndex].description
+            : (nextPlanetIndex < DefaultDescriptions.Length ? DefaultDescriptions[nextPlanetIndex] : "");
+
         GameEvents.RaisePlanetIntroductionStarted(
-            planets[nextPlanetIndex].displayName,
-            planets[nextPlanetIndex].description,
+            pName,
+            pDesc,
             phaseTimeRemaining,
             currentPlanetOnLeft,
             nextPlanetIndex);
@@ -464,7 +491,7 @@ public class PlanetSequenceManager : MonoBehaviour
 
         activePlanets.Clear();
         sessionCheckpointPlanetIndex = 0;
-        nextPlanetIndex = 0;
+        nextPlanetIndex = debugStartPlanetIndex >= 0 ? debugStartPlanetIndex : 0;
         SpawnNextPlanet();
         BeginIntroductionPhase();
     }
@@ -525,12 +552,16 @@ public class PlanetSequenceManager : MonoBehaviour
         float spawnX = currentPlanetOnLeft
             ? -Mathf.Abs(leftSideX)
             : Mathf.Abs(rightSideX);
-        if (nextPlanetIndex == 4)
+        if (nextPlanetIndex == 2)
+            spawnX *= saturnSideMultiplier;
+        else if (nextPlanetIndex == 3)
             spawnX = currentPlanetOnLeft
                 ? -Mathf.Abs(jupiterSideX)
                 : Mathf.Abs(jupiterSideX);
-        else if (nextPlanetIndex == 5)
-            spawnX *= saturnSideMultiplier;
+        else if (nextPlanetIndex == 8)
+            spawnX = currentPlanetOnLeft
+                ? -Mathf.Abs(sunSideX)
+                : Mathf.Abs(sunSideX);
         float y = UnityEngine.Random.Range(verticalRange.x, verticalRange.y);
         instance.transform.position = player.position + new Vector3(spawnX, y, spawnDistance);
         Vector3 targetScale = instance.transform.localScale;
@@ -571,16 +602,16 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private void EnsureNarrationSource()
     {
-        if (narrationSource != null)
-            return;
-
-        narrationSource = GetComponent<AudioSource>();
+        if (narrationSource == null)
+            narrationSource = GetComponent<AudioSource>();
         if (narrationSource == null)
             narrationSource = gameObject.AddComponent<AudioSource>();
 
         narrationSource.playOnAwake = false;
         narrationSource.loop = false;
         narrationSource.spatialBlend = 0f;
+        narrationSource.priority = 0;
+        narrationSource.volume = 1f;
     }
 
     private float GetVisibleRotationSpeed(int planetIndex)
@@ -616,7 +647,10 @@ public class PlanetSequenceManager : MonoBehaviour
     {
         Collider[] colliders = planet.GetComponentsInChildren<Collider>(true);
         foreach (Collider collider in colliders)
+        {
             collider.enabled = false;
+            Destroy(collider);
+        }
     }
 
 }

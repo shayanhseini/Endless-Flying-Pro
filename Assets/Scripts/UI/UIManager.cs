@@ -43,14 +43,15 @@ public class UIManager : MonoBehaviour
     [SerializeField] private UnityEngine.UI.Image leftPlanetImage;
     [SerializeField] private UnityEngine.UI.Image rightPlanetImage;
     [UnityEngine.Serialization.FormerlySerializedAs("planetSprites")]
-    [SerializeField] private Sprite[] planetPanelSprites = new Sprite[8];
+    [SerializeField] private Sprite[] planetPanelSprites = new Sprite[9];
 
     [Header("Situation Panel")]
     [SerializeField] private GameObject situationPanel;
+    [SerializeField] private bool showSituationBackground = false;
     [SerializeField] private UnityEngine.UI.Image currentPlanetImage;
     [SerializeField] private TMP_Text planetProgressText;
     [SerializeField] private RectTransform planetsLine;
-    [SerializeField] private Sprite[] situationPlanetSprites = new Sprite[8];
+    [SerializeField] private Sprite[] situationPlanetSprites = new Sprite[9];
     [SerializeField] private Color reachedPlanetColor = new(0.2f, 0.65f, 1f, 1f);
     [SerializeField] private Color unreachedPlanetColor = new(0.38f, 0.42f, 0.48f, 1f);
     [SerializeField] private float reachedPlanetDotSize = 14f;
@@ -58,11 +59,11 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float currentPlanetDotSize = 30f;
     [Tooltip("Visual scale multiplier for Saturn progress icon to compensate for wide ring aspect ratio.")]
     [SerializeField] private float saturnProgressDotScale = 1.45f;
-    [SerializeField] private UnityEngine.UI.Image[] planetProgressDots = new UnityEngine.UI.Image[8];
+    [SerializeField] private UnityEngine.UI.Image[] planetProgressDots = new UnityEngine.UI.Image[9];
     [SerializeField] private UnityEngine.UI.Image progressTrackImage;
     [SerializeField] private UnityEngine.UI.Image completedProgressImage;
     [SerializeField] private UnityEngine.UI.Image planetRingImage;
-    [SerializeField] private RTLTextMeshPro[] planetNameTexts = new RTLTextMeshPro[8];
+    [SerializeField] private RTLTextMeshPro[] planetNameTexts = new RTLTextMeshPro[9];
     [SerializeField] private Color reachedPlanetNameColor = new(0.9f, 0.9f, 0.9f, 0.85f);
     [SerializeField] private Color unreachedPlanetNameColor = new(0.6f, 0.6f, 0.6f, 0.45f);
     [SerializeField] private Color activePlanetNameColor = new(1f, 0.92f, 0.35f, 1f);
@@ -70,14 +71,15 @@ public class UIManager : MonoBehaviour
 
     private static readonly string[] PersianPlanetNames =
     {
-        "عطارد",
-        "زهره",
-        "زمین",
-        "مریخ",
-        "مشتری",
-        "زحل",
+        "نپتون",
         "اورانوس",
-        "نپتون"
+        "زحل",
+        "مشتری",
+        "مریخ",
+        "زمین",
+        "زهره",
+        "عطارد",
+        "خورشید"
     };
 
     private Coroutine activePlanetPulseCoroutine;
@@ -451,12 +453,14 @@ public class UIManager : MonoBehaviour
 
         if (nameText != null)
         {
+            nameText.gameObject.SetActive(true);
             nameText.horizontalAlignment = HorizontalAlignmentOptions.Justified;
             nameText.text = planetName;
         }
 
         if (descriptionText != null)
         {
+            descriptionText.gameObject.SetActive(true);
             descriptionText.horizontalAlignment = HorizontalAlignmentOptions.Justified;
             descriptionText.text = description;
         }
@@ -672,16 +676,20 @@ public class UIManager : MonoBehaviour
 
     private void UpdateSituationPanel(int planetIndex)
     {
-        if (planetIndex < 0 || planetIndex >= 8)
+        int totalPlanets = planetProgressDots != null && planetProgressDots.Length > 0
+            ? planetProgressDots.Length
+            : PersianPlanetNames.Length;
+
+        if (planetIndex < 0 || planetIndex >= totalPlanets)
             return;
 
         if (planetProgressText != null)
-            planetProgressText.text = ToPersianDigits($"{planetIndex + 1}/8");
+            planetProgressText.text = ToPersianDigits($"{planetIndex + 1}/{totalPlanets}");
 
         Sprite situationSprite = GetSituationPlanetSprite(planetIndex);
         UpdateSituationPlanetImage(situationSprite, planetIndex);
 
-        if (planetProgressDots == null || planetProgressDots.Length != 8)
+        if (planetProgressDots == null || planetProgressDots.Length == 0)
             return;
 
         for (int i = 0; i < planetProgressDots.Length; i++)
@@ -744,7 +752,7 @@ public class UIManager : MonoBehaviour
 
     private float GetPlanetProgressDotScale(int planetIndex)
     {
-        if (planetIndex == 5)
+        if (planetIndex == 2)
             return saturnProgressDotScale;
 
         return 1f;
@@ -779,10 +787,10 @@ public class UIManager : MonoBehaviour
             situationPlanetSprites[planetIndex] != null)
         {
             Sprite sprite = situationPlanetSprites[planetIndex];
-            if (planetIndex == 5 && sprite != null && sprite.name.Contains("Ringless"))
+            if (planetIndex == 2 && sprite != null && sprite.name.Contains("Ringless"))
             {
-                if (planetPanelSprites != null && planetPanelSprites.Length > 5 && planetPanelSprites[5] != null)
-                    return planetPanelSprites[5];
+                if (planetPanelSprites != null && planetPanelSprites.Length > 2 && planetPanelSprites[2] != null)
+                    return planetPanelSprites[2];
             }
             return sprite;
         }
@@ -890,6 +898,11 @@ public class UIManager : MonoBehaviour
         if (situationPanel == null)
             return;
 
+        if (situationPanel.TryGetComponent<UnityEngine.UI.Image>(out var bgImage))
+        {
+            bgImage.enabled = showSituationBackground;
+        }
+
         UnityEngine.UI.Image[] images = situationPanel.GetComponentsInChildren<UnityEngine.UI.Image>(true);
         foreach (UnityEngine.UI.Image image in images)
         {
@@ -900,7 +913,7 @@ public class UIManager : MonoBehaviour
         TMP_Text[] texts = situationPanel.GetComponentsInChildren<TMP_Text>(true);
         foreach (TMP_Text text in texts)
         {
-            if (text.text.Contains("/8") || text.text.Contains("/۸"))
+            if (text.text.Contains("/") && (text.text.Contains("8") || text.text.Contains("۸") || text.text.Contains("9") || text.text.Contains("۹")))
             {
                 planetProgressText = text;
                 break;
@@ -913,8 +926,8 @@ public class UIManager : MonoBehaviour
         if (planetsLine == null || planetProgressDots == null)
             return;
 
-        if (planetNameTexts == null || planetNameTexts.Length != 8)
-            planetNameTexts = new RTLTextMeshPro[8];
+        if (planetNameTexts == null || planetNameTexts.Length != planetProgressDots.Length)
+            planetNameTexts = new RTLTextMeshPro[planetProgressDots.Length];
 
         TMP_FontAsset persianFont = null;
         Material persianMaterial = null;
@@ -978,15 +991,14 @@ public class UIManager : MonoBehaviour
 
     private void InitializePlanetProgressLine()
     {
-        if (planetsLine == null || planetProgressDots == null ||
-            planetProgressDots.Length != 8)
+        if (planetsLine == null || planetProgressDots == null || planetProgressDots.Length == 0)
             return;
 
         EnsurePlanetNameLabels();
 
         float startX = -246.0912f;
         float endX = 246.0912f;
-        float stepX = (endX - startX) / (planetProgressDots.Length - 1);
+        float stepX = (endX - startX) / Mathf.Max(1, planetProgressDots.Length - 1);
 
         for (int i = 0; i < planetProgressDots.Length; i++)
         {
@@ -1020,11 +1032,12 @@ public class UIManager : MonoBehaviour
 
     private void UpdateCompletedProgressLine(int planetIndex)
     {
-        if (completedProgressImage == null || planetProgressDots == null)
+        if (completedProgressImage == null || planetProgressDots == null || planetProgressDots.Length == 0)
             return;
 
+        int maxIdx = planetProgressDots.Length - 1;
         float startX = planetProgressDots[0].rectTransform.anchoredPosition.x;
-        float endX = planetProgressDots[Mathf.Clamp(planetIndex, 0, 7)]
+        float endX = planetProgressDots[Mathf.Clamp(planetIndex, 0, maxIdx)]
             .rectTransform.anchoredPosition.x;
 
         SetProgressLineRect(completedProgressImage.rectTransform, startX, endX);
@@ -1032,12 +1045,12 @@ public class UIManager : MonoBehaviour
 
     private void UpdateRealtimePlanetProgress(int planetIndex, float progress)
     {
-        if (completedProgressImage == null || planetProgressDots == null ||
-            planetProgressDots.Length != 8)
+        if (completedProgressImage == null || planetProgressDots == null || planetProgressDots.Length == 0)
             return;
 
-        int currentIndex = Mathf.Clamp(planetIndex, 0, 7);
-        int nextIndex = Mathf.Min(currentIndex + 1, 7);
+        int maxIdx = planetProgressDots.Length - 1;
+        int currentIndex = Mathf.Clamp(planetIndex, 0, maxIdx);
+        int nextIndex = Mathf.Min(currentIndex + 1, maxIdx);
         float startX = planetProgressDots[0].rectTransform.anchoredPosition.x;
         float currentX = planetProgressDots[currentIndex].rectTransform.anchoredPosition.x;
         float nextX = planetProgressDots[nextIndex].rectTransform.anchoredPosition.x;
@@ -1317,7 +1330,7 @@ public class UIManager : MonoBehaviour
         RTLTextMeshPro message = CreateRTLText("Win Message", winPanel.transform, 32f, FontStyles.Normal,
             new Vector2(0f, -490f), new Vector2(1300f, 80f));
         message.color = Color.white;
-        message.text = "شما تمام ۸ سیاره منظومه شمسی را با موفقیت پشت سر گذاشتید.";
+        message.text = "شما با موفقیت منظومه شمسی را پشت سر گذاشته و به خورشید رسیدید!";
     }
 
     private RTLTextMeshPro CreateRTLText(
