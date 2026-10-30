@@ -154,10 +154,18 @@ public class GameManager : MonoBehaviour
         GameEvents.RaiseGameWon();
         GameEvents.RaiseVictorySequenceStarted(0.45f);
 
+        PlanetSequenceManager sequence = FindFirstObjectByType<PlanetSequenceManager>();
+
         PlaneController plane = FindFirstObjectByType<PlaneController>();
         if (plane != null)
         {
             plane.PrepareForVictoryFlyaway();
+        }
+
+        // Start playing the ending victory audio (End.wav)
+        if (sequence != null)
+        {
+            sequence.PlayVictoryNarration();
         }
 
         // Visible forward flight: smooth ease-in acceleration for ~2.0 seconds
@@ -189,8 +197,20 @@ public class GameManager : MonoBehaviour
             plane.gameObject.SetActive(false);
         }
 
+        // Wait until the ending narration clip (End.wav) finishes playing
+        if (sequence != null)
+        {
+            while (sequence.IsNarrationPlaying)
+            {
+                yield return null;
+            }
+        }
+
+        // Keep the victory state visible briefly after voice ends
+        yield return new WaitForSeconds(1f);
+
         // Fade entire screen to full black
-        float fadeDuration = 0.8f;
+        float fadeDuration = 1.0f;
         if (fadeController != null)
         {
             fadeController.FadeOut(fadeDuration);
@@ -199,8 +219,8 @@ public class GameManager : MonoBehaviour
         // Wait until fade completes and screen is fully black
         yield return new WaitForSeconds(fadeDuration);
 
-        // Keep black overlay visible for exactly 6 seconds
-        yield return new WaitForSeconds(6f);
+        // Keep black overlay visible for a clean 2 seconds
+        yield return new WaitForSeconds(2f);
 
         // Reset persistent session state so the new run starts clean
         PlanetSequenceManager.ResetSessionState();

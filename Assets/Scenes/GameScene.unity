@@ -6732,11 +6732,11 @@ MonoBehaviour:
   - {fileID: 8300000, guid: a8023dbc3be31e84c8cbbd0aa106eb68, type: 3}
   - {fileID: 8300000, guid: 3a5723eb55e33054d9cd4c50aa880907, type: 3}
   narrationSource: {fileID: 1039958724}
-  startNarrationClip: {fileID: 0}
-  startNarrationDelay: 2
-  firstPlanetDelayAfterStartNarration: 3
-  victoryNarrationClip: {fileID: 0}
-  victoryCountdownDelay: 2
+  startNarrationClip: {fileID: 8300000, guid: fd63675e73cb2df4f8f49016f4a4b280, type: 3}
+  startNarrationDelay: 0.5
+  firstPlanetDelayAfterStartNarration: 1.5
+  victoryNarrationClip: {fileID: 8300000, guid: 41875c34485014e48944f41f5f541f89, type: 3}
+  victoryCountdownDelay: 1.5
   obstacleExitDuration: 0.45
   spawnDistance: 2000
   initialScaleMultiplier: 0.2

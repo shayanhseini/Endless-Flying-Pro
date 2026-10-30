@@ -107,6 +107,10 @@ public class PlanetSequenceManager : MonoBehaviour
     [SerializeField] private float victoryCountdownDelay = 2f;
     [Min(0.05f)]
     [SerializeField] private float obstacleExitDuration = 0.45f;
+    [Header("Crash Recovery Audio")]
+    [Tooltip("If true, planet narration resumes from where it stopped after crash recovery. If false, it replays the planet narration from the beginning.")]
+    [SerializeField] private bool resumeNarrationFromInterruptedTime = true;
+
     [Header("Placement")]
     [Min(1f)]
     [SerializeField] private float spawnDistance = 2000f;
@@ -160,6 +164,10 @@ public class PlanetSequenceManager : MonoBehaviour
     private bool currentPlanetOnLeft;
     private Coroutine narrationFadeCoroutine;
     private Coroutine openingNarrationCoroutine;
+    private bool hasUnfinishedNarration;
+    private int interruptedPlanetIndex;
+    private float interruptedNarrationTime;
+    private bool interruptedPlanetOnLeft;
 
     private static int sessionCheckpointPlanetIndex;
     private static bool openingNarrationPlayedThisSession;
@@ -206,11 +214,15 @@ public class PlanetSequenceManager : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.GameStarted += BeginSequence;
+        GameEvents.RoundCountdownCompleted += HandleRoundCountdownCompleted;
+        GameEvents.GameOver += HandleGameOver;
     }
 
     private void OnDisable()
     {
         GameEvents.GameStarted -= BeginSequence;
+        GameEvents.RoundCountdownCompleted -= HandleRoundCountdownCompleted;
+        GameEvents.GameOver -= HandleGameOver;
     }
 
     private void Update()
@@ -290,11 +302,28 @@ public class PlanetSequenceManager : MonoBehaviour
 
         if (narrationSource != null && startNarrationClip != null)
         {
+            EnsureNarrationSource();
             narrationSource.Stop();
             narrationSource.clip = startNarrationClip;
+            narrationSource.volume = 1f;
             narrationSource.Play();
+
+            GameAudioController audioCtrl = FindFirstObjectByType<GameAudioController>();
+            if (audioCtrl != null)
+                audioCtrl.DuckAmbientSounds(true);
+
+            GameMusicController musicCtrl = FindFirstObjectByType<GameMusicController>();
+            if (musicCtrl != null)
+                musicCtrl.DuckMusic(true);
+
             while (narrationSource.isPlaying)
                 yield return null;
+
+            if (audioCtrl != null)
+                audioCtrl.DuckAmbientSounds(false);
+
+            if (musicCtrl != null)
+                musicCtrl.DuckMusic(false);
         }
 
         yield return WaitForPlayingSeconds(firstPlanetDelayAfterStartNarration);
@@ -360,13 +389,36 @@ public class PlanetSequenceManager : MonoBehaviour
             0,
             Mathf.Max(0, planets.Length - 1));
 
+        if (phase == SequencePhase.Introduction && narrationSource != null && narrationSource.clip != null)
+        {
+            float currentTime = narrationSource.time;
+            float totalDuration = narrationSource.clip.length;
+
+            // Only mark as unfinished if the narration file hasn't finished yet (> 0.25s remaining)
+            if (currentTime < totalDuration - 0.25f && (narrationSource.isPlaying || narrationFadeCoroutine != null))
+            {
+                hasUnfinishedNarration = true;
+                interruptedPlanetIndex = nextPlanetIndex;
+                interruptedNarrationTime = currentTime;
+                interruptedPlanetOnLeft = currentPlanetOnLeft;
+            }
+            else
+            {
+                hasUnfinishedNarration = false;
+            }
+        }
+        else
+        {
+            hasUnfinishedNarration = false;
+        }
+
         GameEvents.RaisePlanetIntroductionEnded();
         FadeOutNarration();
     }
 
     private void FadeOutNarration()
     {
-        if (narrationSource == null || !narrationSource.isPlaying)
+        if (narrationSource == null)
             return;
 
         if (narrationFadeCoroutine != null)
@@ -379,21 +431,98 @@ public class PlanetSequenceManager : MonoBehaviour
     {
         float startVolume = narrationSource.volume;
         float elapsed = 0f;
+        float fadeDuration = 0.4f;
 
-        while (elapsed < 0.75f)
+        while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
-            narrationSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / 0.75f);
+            narrationSource.volume = Mathf.Lerp(startVolume, 0f, elapsed / fadeDuration);
             yield return null;
         }
 
-        narrationSource.Stop();
-        narrationSource.volume = startVolume;
+        if (hasUnfinishedNarration)
+        {
+            narrationSource.Pause();
+        }
+        else
+        {
+            narrationSource.Stop();
+        }
+
+        narrationSource.volume = 1f;
         narrationFadeCoroutine = null;
+    }
+
+    private void HandleRoundCountdownCompleted()
+    {
+        if (!hasUnfinishedNarration)
+            return;
+
+        hasUnfinishedNarration = false;
+
+        if (narrationFadeCoroutine != null)
+        {
+            StopCoroutine(narrationFadeCoroutine);
+            narrationFadeCoroutine = null;
+        }
+
+        // Verify we are still on the same planet
+        if (nextPlanetIndex != interruptedPlanetIndex || nextPlanetIndex >= planets.Length)
+            return;
+
+        AudioClip clip = GetNarrationClip(nextPlanetIndex);
+        if (clip == null)
+            return;
+
+        EnsureNarrationSource();
+        narrationSource.clip = clip;
+        narrationSource.volume = 1f;
+
+        float resumeTime = resumeNarrationFromInterruptedTime ? interruptedNarrationTime : 0f;
+        resumeTime = Mathf.Clamp(resumeTime, 0f, Mathf.Max(0f, clip.length - 0.2f));
+
+        narrationSource.time = resumeTime;
+        narrationSource.Play();
+
+        phase = SequencePhase.Introduction;
+        phaseTimeRemaining = Mathf.Max(0.5f, clip.length - resumeTime);
+        currentPlanetCycleDuration = phaseTimeRemaining + timeBetweenPlanets;
+        currentPlanetCycleElapsed = 0f;
+
+        string pName = !string.IsNullOrEmpty(planets[nextPlanetIndex].displayName)
+            ? planets[nextPlanetIndex].displayName
+            : (nextPlanetIndex < DefaultNames.Length ? DefaultNames[nextPlanetIndex] : "");
+        string pDesc = !string.IsNullOrEmpty(planets[nextPlanetIndex].description)
+            ? planets[nextPlanetIndex].description
+            : (nextPlanetIndex < DefaultDescriptions.Length ? DefaultDescriptions[nextPlanetIndex] : "");
+
+        GameEvents.RaisePlanetIntroductionStarted(
+            pName,
+            pDesc,
+            phaseTimeRemaining,
+            interruptedPlanetOnLeft,
+            nextPlanetIndex);
+    }
+
+    private void HandleGameOver()
+    {
+        hasUnfinishedNarration = false;
+        if (narrationFadeCoroutine != null)
+        {
+            StopCoroutine(narrationFadeCoroutine);
+            narrationFadeCoroutine = null;
+        }
+        if (narrationSource != null)
+        {
+            narrationSource.Stop();
+            narrationSource.volume = 1f;
+        }
     }
 
     private void BeginGap()
     {
+        hasUnfinishedNarration = false;
+
         if (narrationSource != null)
             narrationSource.Stop();
 
@@ -437,40 +566,54 @@ public class PlanetSequenceManager : MonoBehaviour
         BeginIntroductionPhase();
     }
 
-    private System.Collections.IEnumerator VictorySequenceRoutine()
+    public bool IsNarrationPlaying => narrationSource != null && narrationSource.isPlaying;
+
+    public void PlayVictoryNarration()
     {
-        if (gameManager == null ||
-            !gameManager.BeginVictorySequence(obstacleExitDuration))
-            yield break;
-
-        sessionCheckpointPlanetIndex = 0;
-
         if (narrationFadeCoroutine != null)
         {
             StopCoroutine(narrationFadeCoroutine);
             narrationFadeCoroutine = null;
         }
 
-        if (narrationSource != null)
+        if (victoryNarrationClip != null)
         {
+            EnsureNarrationSource();
             narrationSource.Stop();
-            if (victoryNarrationClip != null)
-            {
-                narrationSource.clip = victoryNarrationClip;
-                narrationSource.Play();
-                while (narrationSource.isPlaying)
-                    yield return null;
-            }
+            narrationSource.clip = victoryNarrationClip;
+            narrationSource.volume = 1f;
+            narrationSource.Play();
+
+            GameAudioController audioCtrl = FindFirstObjectByType<GameAudioController>();
+            if (audioCtrl != null)
+                audioCtrl.DuckAmbientSounds(true);
+
+            GameMusicController musicCtrl = FindFirstObjectByType<GameMusicController>();
+            if (musicCtrl != null)
+                musicCtrl.DuckMusic(true);
+
+            StartCoroutine(WatchVictoryNarrationRoutine());
         }
+    }
 
-        if (victoryCountdownDelay > 0f)
-            yield return new WaitForSeconds(victoryCountdownDelay);
+    private System.Collections.IEnumerator WatchVictoryNarrationRoutine()
+    {
+        while (narrationSource != null && narrationSource.isPlaying)
+            yield return null;
 
-        gameManager.StartRoundCountdown(true);
+        GameAudioController audioCtrl = FindFirstObjectByType<GameAudioController>();
+        if (audioCtrl != null)
+            audioCtrl.DuckAmbientSounds(false);
+
+        GameMusicController musicCtrl = FindFirstObjectByType<GameMusicController>();
+        if (musicCtrl != null)
+            musicCtrl.DuckMusic(false);
     }
 
     public void RestartFromFirstPlanet()
     {
+        hasUnfinishedNarration = false;
+
         if (narrationFadeCoroutine != null)
         {
             StopCoroutine(narrationFadeCoroutine);

@@ -26,23 +26,26 @@ public class Obstacle : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float trajectoryChance = 0.55f;
 
+    [Tooltip("Minimum distance in front of player (along Z) at which an incoming asteroid begins its dive.")]
+    [SerializeField] private float minTriggerDistance = 50f;
+
+    [Tooltip("Maximum distance in front of player (along Z) at which an incoming asteroid begins its dive.")]
+    [SerializeField] private float maxTriggerDistance = 70f;
+
     [Tooltip("Maximum lateral (X/Y) drift speed in world units per second.")]
-    [SerializeField] private float maxLateralSpeed = 5.0f;
+    [SerializeField] private float maxLateralSpeed = 6.0f;
 
     [Tooltip("Minimum extra forward speed along -Z towards the spaceship.")]
-    [SerializeField] private float minExtraForwardSpeed = 3.5f;
+    [SerializeField] private float minExtraForwardSpeed = 4.0f;
 
     [Tooltip("Maximum extra forward speed along -Z towards the spaceship.")]
-    [SerializeField] private float maxExtraForwardSpeed = 6.5f;
+    [SerializeField] private float maxExtraForwardSpeed = 7.0f;
 
     [Tooltip("Random horizontal aim spread around the player corridor (X axis).")]
-    [SerializeField] private float aimSpreadX = 0.8f;
+    [SerializeField] private float aimSpreadX = 0.5f;
 
     [Tooltip("Random vertical aim spread around the player corridor (Y axis).")]
-    [SerializeField] private float aimSpreadY = 0.6f;
-
-    [Tooltip("Delay in seconds after rock spawns before locking its ballistic trajectory.")]
-    [SerializeField] private float launchDelay = 0.3f;
+    [SerializeField] private float aimSpreadY = 0.4f;
 
     private Collider[] activeColliders = System.Array.Empty<Collider>();
     private Transform activeVisual;
@@ -61,7 +64,7 @@ public class Obstacle : MonoBehaviour
     private static WorldMovementManager cachedWorldMovement;
     private bool isBallistic;
     private bool trajectoryCalculated;
-    private float ballisticTimer;
+    private float currentTriggerDistance;
     private Vector2 ballisticVelocity;
     private float currentExtraZSpeed;
 
@@ -131,7 +134,6 @@ public class Obstacle : MonoBehaviour
     private void InitializeBallistic()
     {
         trajectoryCalculated = false;
-        ballisticTimer = 0f;
         ballisticVelocity = Vector2.zero;
         currentExtraZSpeed = 0f;
 
@@ -139,22 +141,33 @@ public class Obstacle : MonoBehaviour
         {
             isBallistic = true;
             currentExtraZSpeed = Random.Range(minExtraForwardSpeed, maxExtraForwardSpeed);
+            currentTriggerDistance = Random.Range(minTriggerDistance, maxTriggerDistance);
+            EnsureReferences();
+        }
+        else
+        {
+            isBallistic = false;
+        }
+    }
 
-            if (cachedPlayerTransform == null)
+    private static void EnsureReferences()
+    {
+        if (cachedPlayerTransform == null)
+        {
+            PlaneController planeCtrl = FindFirstObjectByType<PlaneController>();
+            if (planeCtrl != null)
+                cachedPlayerTransform = planeCtrl.transform;
+            else
             {
                 GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
                 if (playerObj != null)
                     cachedPlayerTransform = playerObj.transform;
             }
-
-            if (cachedWorldMovement == null)
-            {
-                cachedWorldMovement = FindFirstObjectByType<WorldMovementManager>();
-            }
         }
-        else
+
+        if (cachedWorldMovement == null)
         {
-            isBallistic = false;
+            cachedWorldMovement = FindFirstObjectByType<WorldMovementManager>();
         }
     }
 
@@ -224,48 +237,48 @@ public class Obstacle : MonoBehaviour
         if (!isBallistic || hitProcessed)
             return;
 
+        EnsureReferences();
+
         if (cachedWorldMovement != null && !cachedWorldMovement.IsMovementEnabled)
             return;
 
-        ballisticTimer += Time.deltaTime;
-
-        // Wait for appear animation / launch delay
-        if (ballisticTimer < launchDelay)
+        if (cachedPlayerTransform == null)
             return;
 
-        // Calculate ballistic vector ONCE at launch. It never re-tracks or bends after the player dodges!
+        float deltaZ = transform.position.z - cachedPlayerTransform.position.z;
+
+        // If the rock has already crossed the player's plane, stop ballistic motion
+        if (deltaZ <= 0.5f)
+        {
+            isBallistic = false;
+            return;
+        }
+
+        // Before locking trajectory, wait until the rock enters the engagement / visual zone!
         if (!trajectoryCalculated)
         {
+            // If still too far in the distance, wait and let chunk bring it closer naturally
+            if (deltaZ > currentTriggerDistance)
+                return;
+
+            // If too close (behind reaction window, e.g. < 12m), don't perform sudden unfair dive
+            if (deltaZ < 12f)
+            {
+                isBallistic = false;
+                return;
+            }
+
+            // Ensure scale-in animation is completed so the rock is fully visible
+            if (scaleCoroutine != null)
+                return;
+
+            // LOCK TRAJECTORY ONCE at this precise moment
             trajectoryCalculated = true;
-
-            if (cachedPlayerTransform == null)
-            {
-                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-                if (playerObj != null)
-                    cachedPlayerTransform = playerObj.transform;
-            }
-
-            if (cachedPlayerTransform == null)
-            {
-                isBallistic = false;
-                return;
-            }
-
-            float deltaZ = transform.position.z - cachedPlayerTransform.position.z;
-
-            // If already at or behind player, no incoming motion needed
-            if (deltaZ <= 2f)
-            {
-                isBallistic = false;
-                return;
-            }
 
             float worldSpeed = (cachedWorldMovement != null && cachedWorldMovement.WorldSpeed > 0.1f)
                 ? cachedWorldMovement.WorldSpeed
                 : 10f;
 
-            // Notice: WorldChunk moves chunk back at worldSpeed along -Z.
-            // Extra Z speed makes the obstacle surge forward ahead of its chunk!
             float totalZSpeed = worldSpeed + currentExtraZSpeed;
             float travelTime = deltaZ / totalZSpeed;
 
@@ -275,7 +288,7 @@ public class Obstacle : MonoBehaviour
                 return;
             }
 
-            // Target position: player's position AT THIS MOMENT + tight corridor spread
+            // Target position: player's CURRENT position at this second + tight spread
             Vector3 playerPos = cachedPlayerTransform.position;
             float targetX = playerPos.x + Random.Range(-aimSpreadX, aimSpreadX);
             float targetY = playerPos.y + Random.Range(-aimSpreadY, aimSpreadY);
@@ -293,6 +306,9 @@ public class Obstacle : MonoBehaviour
                 lateral = lateral.normalized * maxLateralSpeed;
 
             ballisticVelocity = lateral;
+
+            // Visual feedback: spin slightly faster as it hurtles towards the player
+            rotationSpeed *= 1.35f;
         }
 
         // Apply constant ballistic motion in WORLD SPACE (completely immune to parent scale distortion!)
@@ -303,12 +319,6 @@ public class Obstacle : MonoBehaviour
         ) * Time.deltaTime;
 
         transform.position += worldDisplacement;
-
-        // Once the rock passes the player's Z plane, stop extra ballistic movement
-        if (cachedPlayerTransform != null && transform.position.z <= cachedPlayerTransform.position.z)
-        {
-            isBallistic = false;
-        }
     }
 
     private void SelectRandomVariant()
