@@ -18,19 +18,16 @@ public class Obstacle : MonoBehaviour
     [Min(0.05f)]
     [SerializeField] private float appearDuration = 0.45f;
 
-    [Header("Player Tracking / Homing Settings")]
-    [Tooltip("Enable missile-like tracking behavior where a portion of rocks drift/aim towards the spaceship.")]
-    [SerializeField] private bool enableHoming = true;
+    [Header("Ballistic Drift Towards Player (Natural Space Trajectory)")]
+    [Tooltip("Enable realistic ballistic trajectory where a random portion of rocks aim towards the spaceship upon appearance without tracking during flight.")]
+    [SerializeField] private bool enableBallisticTrajectory = true;
 
-    [Tooltip("Percentage chance for a rock to track the spaceship (0.5 = 50% of rocks).")]
+    [Tooltip("Percentage chance for an asteroid to launch on an incoming trajectory towards the spaceship (0.5 = 50% of rocks).")]
     [Range(0f, 1f)]
-    [SerializeField] private float homingChance = 0.5f;
+    [SerializeField] private float trajectoryChance = 0.5f;
 
-    [Tooltip("Minimum lateral (X/Y) speed towards the spaceship.")]
-    [SerializeField] private float minLateralSpeed = 1.8f;
-
-    [Tooltip("Maximum lateral (X/Y) speed towards the spaceship.")]
-    [SerializeField] private float maxLateralSpeed = 3.2f;
+    [Tooltip("Maximum lateral (X/Y) drift speed in units per second.")]
+    [SerializeField] private float maxLateralSpeed = 3.5f;
 
     [Tooltip("Minimum extra forward speed along -Z towards the spaceship.")]
     [SerializeField] private float minExtraForwardSpeed = 1.0f;
@@ -38,17 +35,14 @@ public class Obstacle : MonoBehaviour
     [Tooltip("Maximum extra forward speed along -Z towards the spaceship.")]
     [SerializeField] private float maxExtraForwardSpeed = 3.0f;
 
-    [Tooltip("Distance in front of spaceship where tracking locks, giving the player a fair dodge window.")]
-    [SerializeField] private float guidanceLockDistance = 8.0f;
+    [Tooltip("Random horizontal aim spread around the player corridor (X axis).")]
+    [SerializeField] private float aimSpreadX = 2.0f;
 
-    [Tooltip("Random aiming spread around the player (prevents all rocks aiming at the exact same point).")]
-    [SerializeField] private float aimSpread = 1.5f;
+    [Tooltip("Random vertical aim spread around the player corridor (Y axis).")]
+    [SerializeField] private float aimSpreadY = 1.5f;
 
-    [Tooltip("Delay in seconds after rock spawns before homing begins.")]
-    [SerializeField] private float homingStartDelay = 0.45f;
-
-    [Tooltip("Whether to maintain drift velocity after guidance locks.")]
-    [SerializeField] private bool continueDriftAfterLock = true;
+    [Tooltip("Delay in seconds after rock spawns before locking its ballistic trajectory.")]
+    [SerializeField] private float launchDelay = 0.45f;
 
     private Collider[] activeColliders = System.Array.Empty<Collider>();
     private Transform activeVisual;
@@ -58,19 +52,18 @@ public class Obstacle : MonoBehaviour
     private Coroutine scaleCoroutine;
     private static int nextVariantIndex = -1;
 
-    // Position reset caching
+    // Position reset caching across chunk recycles
     private Vector3 initialLocalPosition;
     private bool initialPositionCached;
 
-    // Tracking runtime state
+    // Ballistic trajectory runtime state
     private static Transform cachedPlayerTransform;
-    private bool isHoming;
-    private bool isGuidanceLocked;
-    private float homingTimer;
+    private static WorldMovementManager cachedWorldMovement;
+    private bool isBallistic;
+    private bool trajectoryCalculated;
+    private float ballisticTimer;
+    private Vector2 ballisticVelocity;
     private float currentExtraZSpeed;
-    private float currentLateralSpeed;
-    private Vector2 currentAimOffset;
-    private Vector2 lastLateralDirection;
 
     private void Awake()
     {
@@ -91,9 +84,9 @@ public class Obstacle : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.VictorySequenceStarted += BeginVictoryExit;
-        GameEvents.GameOver += StopHoming;
-        GameEvents.CrashLandingStarted += StopHoming;
-        GameEvents.VictoryOrbitStarted += StopHoming;
+        GameEvents.GameOver += StopBallistic;
+        GameEvents.CrashLandingStarted += StopBallistic;
+        GameEvents.VictoryOrbitStarted += StopBallistic;
 
         hitProcessed = false;
 
@@ -120,32 +113,32 @@ public class Obstacle : MonoBehaviour
         if (activeVisual != null)
             activeVisual.localRotation = Random.rotation;
 
-        // Initialize homing behavior
-        InitializeHoming();
+        // Initialize ballistic trajectory behavior
+        InitializeBallistic();
     }
 
     private void OnDisable()
     {
         GameEvents.VictorySequenceStarted -= BeginVictoryExit;
-        GameEvents.GameOver -= StopHoming;
-        GameEvents.CrashLandingStarted -= StopHoming;
-        GameEvents.VictoryOrbitStarted -= StopHoming;
+        GameEvents.GameOver -= StopBallistic;
+        GameEvents.CrashLandingStarted -= StopBallistic;
+        GameEvents.VictoryOrbitStarted -= StopBallistic;
 
         scaleCoroutine = null;
-        isHoming = false;
+        isBallistic = false;
     }
 
-    private void InitializeHoming()
+    private void InitializeBallistic()
     {
-        if (enableHoming && Random.value < homingChance)
+        trajectoryCalculated = false;
+        ballisticTimer = 0f;
+        ballisticVelocity = Vector2.zero;
+        currentExtraZSpeed = 0f;
+
+        if (enableBallisticTrajectory && Random.value < trajectoryChance)
         {
-            isHoming = true;
-            isGuidanceLocked = false;
-            homingTimer = 0f;
+            isBallistic = true;
             currentExtraZSpeed = Random.Range(minExtraForwardSpeed, maxExtraForwardSpeed);
-            currentLateralSpeed = Random.Range(minLateralSpeed, maxLateralSpeed);
-            currentAimOffset = Random.insideUnitCircle * aimSpread;
-            lastLateralDirection = Vector2.zero;
 
             if (cachedPlayerTransform == null)
             {
@@ -153,21 +146,26 @@ public class Obstacle : MonoBehaviour
                 if (playerObj != null)
                     cachedPlayerTransform = playerObj.transform;
             }
+
+            if (cachedWorldMovement == null)
+            {
+                cachedWorldMovement = FindFirstObjectByType<WorldMovementManager>();
+            }
         }
         else
         {
-            isHoming = false;
+            isBallistic = false;
         }
     }
 
-    private void StopHoming()
+    private void StopBallistic()
     {
-        isHoming = false;
+        isBallistic = false;
     }
 
     private void BeginVictoryExit(float duration)
     {
-        isHoming = false;
+        isBallistic = false;
 
         if (scaleCoroutine != null)
             StopCoroutine(scaleCoroutine);
@@ -218,73 +216,92 @@ public class Obstacle : MonoBehaviour
             );
         }
 
-        UpdateHomingMovement();
+        UpdateBallisticMovement();
     }
 
-    private void UpdateHomingMovement()
+    private void UpdateBallisticMovement()
     {
-        if (!isHoming || hitProcessed)
+        if (!isBallistic || hitProcessed)
             return;
 
-        if (cachedPlayerTransform == null)
+        ballisticTimer += Time.deltaTime;
+
+        // Wait for appear animation / launch delay
+        if (ballisticTimer < launchDelay)
+            return;
+
+        // Calculate ballistic vector ONCE at launch. It never re-tracks or bends after the player dodges!
+        if (!trajectoryCalculated)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-                cachedPlayerTransform = playerObj.transform;
-            else
+            trajectoryCalculated = true;
+
+            if (cachedPlayerTransform == null)
+            {
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj != null)
+                    cachedPlayerTransform = playerObj.transform;
+            }
+
+            if (cachedPlayerTransform == null)
+            {
+                isBallistic = false;
                 return;
+            }
+
+            float deltaZ = transform.position.z - cachedPlayerTransform.position.z;
+
+            // If already at or behind player, no incoming motion needed
+            if (deltaZ <= 2f)
+            {
+                isBallistic = false;
+                return;
+            }
+
+            float worldSpeed = (cachedWorldMovement != null && cachedWorldMovement.WorldSpeed > 0.1f)
+                ? cachedWorldMovement.WorldSpeed
+                : 10f;
+
+            float totalZSpeed = worldSpeed + currentExtraZSpeed;
+            float travelTime = deltaZ / totalZSpeed;
+
+            if (travelTime <= 0.05f)
+            {
+                isBallistic = false;
+                return;
+            }
+
+            // Target position: player's position AT THIS MOMENT + random spread
+            Vector3 playerPos = cachedPlayerTransform.position;
+            float targetX = playerPos.x + Random.Range(-aimSpreadX, aimSpreadX);
+            float targetY = playerPos.y + Random.Range(-aimSpreadY, aimSpreadY);
+
+            float velX = (targetX - transform.position.x) / travelTime;
+            float velY = (targetY - transform.position.y) / travelTime;
+
+            // Clamp lateral speed so distant rocks move naturally without excessive jerk
+            Vector2 lateral = new Vector2(velX, velY);
+            if (lateral.magnitude > maxLateralSpeed)
+                lateral = lateral.normalized * maxLateralSpeed;
+
+            ballisticVelocity = lateral;
         }
 
-        homingTimer += Time.deltaTime;
-        if (homingTimer < homingStartDelay)
-            return;
-
-        float zDistance = transform.position.z - cachedPlayerTransform.position.z;
-
-        // If the obstacle has already passed the player, stop tracking
-        if (zDistance <= 0f)
-        {
-            isHoming = false;
-            return;
-        }
-
-        // Apply extra forward velocity towards player along -Z
+        // Apply constant ballistic motion along its initial path
         if (currentExtraZSpeed > 0f)
         {
             transform.localPosition += Vector3.back * (currentExtraZSpeed * Time.deltaTime);
         }
 
-        // Active guidance towards player's X and Y
-        if (zDistance > guidanceLockDistance && !isGuidanceLocked)
+        transform.localPosition += new Vector3(
+            ballisticVelocity.x * Time.deltaTime,
+            ballisticVelocity.y * Time.deltaTime,
+            0f
+        );
+
+        // Once the rock passes the player's Z plane, stop extra ballistic movement
+        if (cachedPlayerTransform != null && transform.position.z <= cachedPlayerTransform.position.z)
         {
-            Vector3 playerPos = cachedPlayerTransform.position;
-            Vector3 targetPos = playerPos + new Vector3(currentAimOffset.x, currentAimOffset.y, 0f);
-
-            float currentX = transform.position.x;
-            float currentY = transform.position.y;
-
-            Vector2 diff = new Vector2(targetPos.x - currentX, targetPos.y - currentY);
-            if (diff.sqrMagnitude > 0.04f)
-            {
-                Vector2 dir = diff.normalized;
-                Vector2 step = dir * (currentLateralSpeed * Time.deltaTime);
-
-                if (step.sqrMagnitude > diff.sqrMagnitude)
-                    step = diff;
-
-                transform.localPosition += new Vector3(step.x, step.y, 0f);
-                lastLateralDirection = dir;
-            }
-        }
-        else
-        {
-            // Within dodge window: lock guidance and maintain drift
-            isGuidanceLocked = true;
-            if (continueDriftAfterLock && lastLateralDirection.sqrMagnitude > 0.01f)
-            {
-                Vector2 drift = lastLateralDirection * (currentLateralSpeed * 0.75f * Time.deltaTime);
-                transform.localPosition += new Vector3(drift.x, drift.y, 0f);
-            }
+            isBallistic = false;
         }
     }
 
@@ -398,7 +415,7 @@ public class Obstacle : MonoBehaviour
             return;
 
         hitProcessed = true;
-        isHoming = false;
+        isBallistic = false;
         plane.HitObstacle();
         SetActiveVariantColliders(false);
         gameObject.SetActive(false);
