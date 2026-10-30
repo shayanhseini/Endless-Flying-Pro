@@ -113,7 +113,9 @@ public class UIManager : MonoBehaviour
     private Coroutine damagePulseCoroutine;
     private Coroutine situationImageCoroutine;
     private Coroutine countdownAnimationCoroutine;
+#pragma warning disable CS0414
     private Coroutine planetDotPulseCoroutine;
+#pragma warning restore CS0414
     private Coroutine planetRingFadeCoroutine;
     private Coroutine progressGlowCoroutine;
     private Vector2 currentPlanetImageAnchoredPosition;

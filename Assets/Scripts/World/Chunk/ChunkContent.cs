@@ -13,6 +13,19 @@ public class ChunkContent : MonoBehaviour
         bool hasShield,
         bool hasSpeedPowerUp)
     {
+        ApplyDifficulty(
+            obstacleCount,
+            hasShield ? 1 : 0,
+            hasSpeedPowerUp ? 1 : 0
+        );
+    }
+
+
+    public void ApplyDifficulty(
+        int obstacleCount,
+        int shieldCount,
+        int speedPowerUpCount)
+    {
         ActivateRandomObjects(
             obstacles,
             obstacleCount
@@ -20,11 +33,11 @@ public class ChunkContent : MonoBehaviour
 
 
         // Shield
-        if (hasShield)
+        if (shieldCount > 0)
         {
             ActivateRandomObjects(
                 shields,
-                1
+                shieldCount
             );
         }
         else
@@ -34,11 +47,11 @@ public class ChunkContent : MonoBehaviour
 
 
         // Speed Power-Up
-        if (hasSpeedPowerUp)
+        if (speedPowerUpCount > 0)
         {
             ActivateRandomObjects(
                 speedPowerUps,
-                1
+                speedPowerUpCount
             );
         }
         else

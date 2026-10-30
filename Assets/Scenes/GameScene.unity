@@ -5267,8 +5267,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
   startObstacleCount: 20
-  startWithShield: 0
-  startWithSpeedPowerUp: 0
+  startWithShield: 1
+  shieldSpawnChance: 0.85
+  shieldCountPerChunk: 2
+  startWithSpeedPowerUp: 1
+  speedPowerUpSpawnChance: 0.8
+  speedPowerUpCountPerChunk: 2
 --- !u!1 &1323806684600583350
 GameObject:
   m_ObjectHideFlags: 0

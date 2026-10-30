@@ -103,8 +103,10 @@ public class PlanetSequenceManager : MonoBehaviour
     [Header("Victory Sequence")]
     [Tooltip("Played after Neptune is completed. Assign the success narration here.")]
     [SerializeField] private AudioClip victoryNarrationClip;
+#pragma warning disable CS0414
     [Min(0f)]
     [SerializeField] private float victoryCountdownDelay = 2f;
+#pragma warning restore CS0414
     [Min(0.05f)]
     [SerializeField] private float obstacleExitDuration = 0.45f;
     [Header("Crash Recovery Audio")]
@@ -207,6 +209,7 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private void Awake()
     {
+        openingNarrationPlayedThisSession = false;
         EnsureDefinitions();
         EnsureNarrationSource();
     }
@@ -303,8 +306,17 @@ public class PlanetSequenceManager : MonoBehaviour
         if (narrationSource != null && startNarrationClip != null)
         {
             EnsureNarrationSource();
+
+            if (startNarrationClip.loadState != AudioDataLoadState.Loaded)
+            {
+                startNarrationClip.LoadAudioData();
+                while (startNarrationClip.loadState == AudioDataLoadState.Loading)
+                    yield return null;
+            }
+
             narrationSource.Stop();
             narrationSource.clip = startNarrationClip;
+            narrationSource.time = 0f;
             narrationSource.volume = 1f;
             narrationSource.Play();
 
@@ -316,8 +328,18 @@ public class PlanetSequenceManager : MonoBehaviour
             if (musicCtrl != null)
                 musicCtrl.DuckMusic(true);
 
-            while (narrationSource.isPlaying)
+            // Give audio subsystem a frame to confirm playback state
+            yield return null;
+
+            float expectedDuration = startNarrationClip.length;
+            float elapsedPlay = 0f;
+            while (elapsedPlay < expectedDuration && (narrationSource.isPlaying || elapsedPlay < 0.35f))
+            {
+                if (gameManager == null || gameManager.State == GameState.Playing)
+                    elapsedPlay += Time.deltaTime;
+
                 yield return null;
+            }
 
             if (audioCtrl != null)
                 audioCtrl.DuckAmbientSounds(false);
@@ -325,6 +347,39 @@ public class PlanetSequenceManager : MonoBehaviour
             if (musicCtrl != null)
                 musicCtrl.DuckMusic(false);
         }
+
+        yield return WaitForPlayingSeconds(firstPlanetDelayAfterStartNarration);
+
+        openingNarrationCoroutine = null;
+        StartFirstIntroduction();
+    }
+
+    private System.Collections.IEnumerator ResumeOpeningNarrationRoutine(float remainingDuration)
+    {
+        GameAudioController audioCtrl = FindFirstObjectByType<GameAudioController>();
+        if (audioCtrl != null)
+            audioCtrl.DuckAmbientSounds(true);
+
+        GameMusicController musicCtrl = FindFirstObjectByType<GameMusicController>();
+        if (musicCtrl != null)
+            musicCtrl.DuckMusic(true);
+
+        yield return null;
+
+        float elapsed = 0f;
+        while (elapsed < remainingDuration && (narrationSource.isPlaying || elapsed < 0.25f))
+        {
+            if (gameManager == null || gameManager.State == GameState.Playing)
+                elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        if (audioCtrl != null)
+            audioCtrl.DuckAmbientSounds(false);
+
+        if (musicCtrl != null)
+            musicCtrl.DuckMusic(false);
 
         yield return WaitForPlayingSeconds(firstPlanetDelayAfterStartNarration);
 
@@ -389,7 +444,8 @@ public class PlanetSequenceManager : MonoBehaviour
             0,
             Mathf.Max(0, planets.Length - 1));
 
-        if (phase == SequencePhase.Introduction && narrationSource != null && narrationSource.clip != null)
+        if ((phase == SequencePhase.Introduction || phase == SequencePhase.OpeningNarration) &&
+            narrationSource != null && narrationSource.clip != null)
         {
             float currentTime = narrationSource.time;
             float totalDuration = narrationSource.clip.length;
@@ -398,7 +454,7 @@ public class PlanetSequenceManager : MonoBehaviour
             if (currentTime < totalDuration - 0.25f && (narrationSource.isPlaying || narrationFadeCoroutine != null))
             {
                 hasUnfinishedNarration = true;
-                interruptedPlanetIndex = nextPlanetIndex;
+                interruptedPlanetIndex = phase == SequencePhase.OpeningNarration ? -1 : nextPlanetIndex;
                 interruptedNarrationTime = currentTime;
                 interruptedPlanetOnLeft = currentPlanetOnLeft;
             }
@@ -464,6 +520,32 @@ public class PlanetSequenceManager : MonoBehaviour
         {
             StopCoroutine(narrationFadeCoroutine);
             narrationFadeCoroutine = null;
+        }
+
+        if (interruptedPlanetIndex == -1)
+        {
+            if (openingNarrationCoroutine != null)
+            {
+                StopCoroutine(openingNarrationCoroutine);
+                openingNarrationCoroutine = null;
+            }
+
+            if (startNarrationClip != null)
+            {
+                EnsureNarrationSource();
+                narrationSource.clip = startNarrationClip;
+                narrationSource.volume = 1f;
+
+                float openingResumeTime = resumeNarrationFromInterruptedTime ? interruptedNarrationTime : 0f;
+                openingResumeTime = Mathf.Clamp(openingResumeTime, 0f, Mathf.Max(0f, startNarrationClip.length - 0.2f));
+
+                narrationSource.time = openingResumeTime;
+                narrationSource.Play();
+
+                phase = SequencePhase.OpeningNarration;
+                openingNarrationCoroutine = StartCoroutine(ResumeOpeningNarrationRoutine(startNarrationClip.length - openingResumeTime));
+            }
+            return;
         }
 
         // Verify we are still on the same planet
@@ -598,6 +680,7 @@ public class PlanetSequenceManager : MonoBehaviour
 
     private System.Collections.IEnumerator WatchVictoryNarrationRoutine()
     {
+        yield return null;
         while (narrationSource != null && narrationSource.isPlaying)
             yield return null;
 

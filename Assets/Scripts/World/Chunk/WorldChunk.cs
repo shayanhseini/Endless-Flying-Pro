@@ -37,10 +37,21 @@ public class WorldChunk : MonoBehaviour
         else
             DisableAllEnvironments();
 
+        int obstacleCount = 0;
+        int shieldCount = 0;
+        int speedCount = 0;
+
+        if (difficultyManager != null)
+        {
+            obstacleCount = obstaclesEnabled ? difficultyManager.ObstacleCount : 0;
+            shieldCount = obstaclesEnabled ? difficultyManager.GetShieldSpawnCount() : 0;
+            speedCount = obstaclesEnabled ? difficultyManager.GetSpeedPowerUpSpawnCount() : 0;
+        }
+
         content.ApplyDifficulty(
-            obstaclesEnabled ? difficultyManager.ObstacleCount : 0,
-            obstaclesEnabled && difficultyManager.HasShield,
-            obstaclesEnabled && difficultyManager.HasSpeedPowerUp
+            obstacleCount,
+            shieldCount,
+            speedCount
         );
     }
 
