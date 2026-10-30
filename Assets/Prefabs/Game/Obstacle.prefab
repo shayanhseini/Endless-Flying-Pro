@@ -68,13 +68,13 @@ MonoBehaviour:
   minScale: 3
   maxScale: 4
   enableBallisticTrajectory: 1
-  trajectoryChance: 0.5
-  maxLateralSpeed: 3.5
-  minExtraForwardSpeed: 1
-  maxExtraForwardSpeed: 3
-  aimSpreadX: 2
-  aimSpreadY: 1.5
-  launchDelay: 0.45
+  trajectoryChance: 0.55
+  maxLateralSpeed: 5
+  minExtraForwardSpeed: 3.5
+  maxExtraForwardSpeed: 6.5
+  aimSpreadX: 0.8
+  aimSpreadY: 0.6
+  launchDelay: 0.3
 --- !u!1001 &3340612844626962768
 PrefabInstance:
   m_ObjectHideFlags: 0

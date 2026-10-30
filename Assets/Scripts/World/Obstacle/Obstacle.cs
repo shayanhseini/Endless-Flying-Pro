@@ -22,27 +22,27 @@ public class Obstacle : MonoBehaviour
     [Tooltip("Enable realistic ballistic trajectory where a random portion of rocks aim towards the spaceship upon appearance without tracking during flight.")]
     [SerializeField] private bool enableBallisticTrajectory = true;
 
-    [Tooltip("Percentage chance for an asteroid to launch on an incoming trajectory towards the spaceship (0.5 = 50% of rocks).")]
+    [Tooltip("Percentage chance for an asteroid to launch on an incoming trajectory towards the spaceship (0.55 = 55% of rocks).")]
     [Range(0f, 1f)]
-    [SerializeField] private float trajectoryChance = 0.5f;
+    [SerializeField] private float trajectoryChance = 0.55f;
 
-    [Tooltip("Maximum lateral (X/Y) drift speed in units per second.")]
-    [SerializeField] private float maxLateralSpeed = 3.5f;
+    [Tooltip("Maximum lateral (X/Y) drift speed in world units per second.")]
+    [SerializeField] private float maxLateralSpeed = 5.0f;
 
     [Tooltip("Minimum extra forward speed along -Z towards the spaceship.")]
-    [SerializeField] private float minExtraForwardSpeed = 1.0f;
+    [SerializeField] private float minExtraForwardSpeed = 3.5f;
 
     [Tooltip("Maximum extra forward speed along -Z towards the spaceship.")]
-    [SerializeField] private float maxExtraForwardSpeed = 3.0f;
+    [SerializeField] private float maxExtraForwardSpeed = 6.5f;
 
     [Tooltip("Random horizontal aim spread around the player corridor (X axis).")]
-    [SerializeField] private float aimSpreadX = 2.0f;
+    [SerializeField] private float aimSpreadX = 0.8f;
 
     [Tooltip("Random vertical aim spread around the player corridor (Y axis).")]
-    [SerializeField] private float aimSpreadY = 1.5f;
+    [SerializeField] private float aimSpreadY = 0.6f;
 
     [Tooltip("Delay in seconds after rock spawns before locking its ballistic trajectory.")]
-    [SerializeField] private float launchDelay = 0.45f;
+    [SerializeField] private float launchDelay = 0.3f;
 
     private Collider[] activeColliders = System.Array.Empty<Collider>();
     private Transform activeVisual;
@@ -224,6 +224,9 @@ public class Obstacle : MonoBehaviour
         if (!isBallistic || hitProcessed)
             return;
 
+        if (cachedWorldMovement != null && !cachedWorldMovement.IsMovementEnabled)
+            return;
+
         ballisticTimer += Time.deltaTime;
 
         // Wait for appear animation / launch delay
@@ -261,6 +264,8 @@ public class Obstacle : MonoBehaviour
                 ? cachedWorldMovement.WorldSpeed
                 : 10f;
 
+            // Notice: WorldChunk moves chunk back at worldSpeed along -Z.
+            // Extra Z speed makes the obstacle surge forward ahead of its chunk!
             float totalZSpeed = worldSpeed + currentExtraZSpeed;
             float travelTime = deltaZ / totalZSpeed;
 
@@ -270,15 +275,19 @@ public class Obstacle : MonoBehaviour
                 return;
             }
 
-            // Target position: player's position AT THIS MOMENT + random spread
+            // Target position: player's position AT THIS MOMENT + tight corridor spread
             Vector3 playerPos = cachedPlayerTransform.position;
             float targetX = playerPos.x + Random.Range(-aimSpreadX, aimSpreadX);
             float targetY = playerPos.y + Random.Range(-aimSpreadY, aimSpreadY);
 
+            // Keep target within player's reachable flight zone [-4.5, 4.5] and [-3.2, 3.2]
+            targetX = Mathf.Clamp(targetX, -4.5f, 4.5f);
+            targetY = Mathf.Clamp(targetY, -3.2f, 3.2f);
+
+            // World velocity required to intercept target position
             float velX = (targetX - transform.position.x) / travelTime;
             float velY = (targetY - transform.position.y) / travelTime;
 
-            // Clamp lateral speed so distant rocks move naturally without excessive jerk
             Vector2 lateral = new Vector2(velX, velY);
             if (lateral.magnitude > maxLateralSpeed)
                 lateral = lateral.normalized * maxLateralSpeed;
@@ -286,17 +295,14 @@ public class Obstacle : MonoBehaviour
             ballisticVelocity = lateral;
         }
 
-        // Apply constant ballistic motion along its initial path
-        if (currentExtraZSpeed > 0f)
-        {
-            transform.localPosition += Vector3.back * (currentExtraZSpeed * Time.deltaTime);
-        }
+        // Apply constant ballistic motion in WORLD SPACE (completely immune to parent scale distortion!)
+        Vector3 worldDisplacement = new Vector3(
+            ballisticVelocity.x,
+            ballisticVelocity.y,
+            -currentExtraZSpeed
+        ) * Time.deltaTime;
 
-        transform.localPosition += new Vector3(
-            ballisticVelocity.x * Time.deltaTime,
-            ballisticVelocity.y * Time.deltaTime,
-            0f
-        );
+        transform.position += worldDisplacement;
 
         // Once the rock passes the player's Z plane, stop extra ballistic movement
         if (cachedPlayerTransform != null && transform.position.z <= cachedPlayerTransform.position.z)
