@@ -15,6 +15,7 @@ public class ChunkManager : MonoBehaviour
     [Header("Space Route")]
     [SerializeField] private bool hideStartGround = true;
     [SerializeField] private PlanetSequenceManager planetSequence;
+    [SerializeField] private SpacePropManager spacePropManager;
 
 
     public int InitialChunkCount => chunks.Length;
@@ -44,6 +45,14 @@ public class ChunkManager : MonoBehaviour
             planetSequence = gameObject.AddComponent<PlanetSequenceManager>();
 
         planetSequence.Initialize(player, worldMovement, gameManager);
+
+        if (spacePropManager == null)
+            spacePropManager = GetComponent<SpacePropManager>();
+
+        if (spacePropManager == null)
+            spacePropManager = gameObject.AddComponent<SpacePropManager>();
+
+        spacePropManager.Initialize(player, worldMovement, planetSequence);
         lastObstaclePhase = planetSequence.ObstaclesEnabled;
 
 

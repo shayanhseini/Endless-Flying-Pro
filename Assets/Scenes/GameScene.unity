@@ -5956,6 +5956,7 @@ GameObject:
   - component: {fileID: 464032374248214041}
   - component: {fileID: 9142794398186811705}
   - component: {fileID: 9142794398186811706}
+  - component: {fileID: 9142794398186811707}
   m_Layer: 0
   m_Name: Chunk Manager
   m_TagString: Untagged
@@ -6610,7 +6611,39 @@ MonoBehaviour:
   gameManager: {fileID: 4439528306922798773}
   hideStartGround: 1
   planetSequence: {fileID: 0}
+  spacePropManager: {fileID: 9142794398186811707}
   recycleOffset: 50
+--- !u!114 &9142794398186811707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5528010595041518142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9629194b74844d8b7e4c47d10c104e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpacePropManager
+  propPrefabs:
+  - {fileID: 1000000000000001, guid: b471d2b5e4114369b63853671bb37936, type: 3}
+  - {fileID: 1000000000000001, guid: d636a90933a54af198fa98c5482f0cfd, type: 3}
+  - {fileID: 1000000000000001, guid: da8178782fc441048cad2442d2a8d7a7, type: 3}
+  - {fileID: 1000000000000001, guid: 5d6b6c75a3ed42cbbbcd134b732b3d0d, type: 3}
+  - {fileID: 1000000000000001, guid: 98d870065d0d4a1a975de9f7e1382d38, type: 3}
+  minSpawnDelay: 9
+  maxSpawnDelay: 20
+  initialSpawnDelay: 5
+  spawnDistanceAheadMin: 260
+  spawnDistanceAheadMax: 420
+  lateralMinDistance: 38
+  lateralMaxDistance: 115
+  altitudeMin: -20
+  altitudeMax: 42
+  maxActiveProps: 6
+  randomScaleMultiplier: {x: 0.9, y: 1.2}
+  player: {fileID: 9071348200630908506}
+  worldMovement: {fileID: 6057223808009353434}
 --- !u!114 &9142794398186811706
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -676,6 +676,61 @@ public class PlanetSequenceManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks if a planet is actively present in the scene and returns its transform,
+    /// effective outer visual radius, and whether it is positioned on the left side.
+    /// </summary>
+    public bool TryGetActivePlanet(out Transform planetTransform, out float planetOuterRadius, out bool isOnLeft)
+    {
+        for (int i = 0; i < activePlanets.Count; i++)
+        {
+            if (activePlanets[i] != null && activePlanets[i].Transform != null)
+            {
+                planetTransform = activePlanets[i].Transform;
+                Vector3 scale = planetTransform.localScale;
+                float maxDim = Mathf.Max(scale.x, scale.y, scale.z);
+                planetOuterRadius = maxDim * 0.55f;
+                isOnLeft = currentPlanetOnLeft;
+                return true;
+            }
+        }
+
+        planetTransform = null;
+        planetOuterRadius = 0f;
+        isOnLeft = false;
+        return false;
+    }
+
+    /// <summary>
+    /// Returns which side the next planet will appear on.
+    /// </summary>
+    public bool NextPlanetWillBeOnLeft => nextPlanetIndex % 2 == 0;
+
+    /// <summary>
+    /// Returns true if the current or upcoming celestial body is the Sun (index 8).
+    /// Used by decorative spawners (e.g. SpacePropManager) to suppress man-made satellites near extreme solar heat.
+    /// </summary>
+    public bool IsSunApproachingOrActive
+    {
+        get
+        {
+            if (nextPlanetIndex >= 8 || nextPlanetIndex >= planets.Length - 1)
+                return true;
+
+            for (int i = 0; i < activePlanets.Count; i++)
+            {
+                if (activePlanets[i] != null && activePlanets[i].Transform != null)
+                {
+                    string pName = activePlanets[i].Transform.name.ToLower();
+                    if (pName.Contains("sun") || pName.Contains("خورشید"))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     private void SpawnNextPlanet()
     {
         if (planets.Length == 0)
