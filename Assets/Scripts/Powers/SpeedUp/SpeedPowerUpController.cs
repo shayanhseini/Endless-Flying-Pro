@@ -21,6 +21,9 @@ public class SpeedPowerUpController : MonoBehaviour
     [Header("Engine Flame Boost")]
     [SerializeField] private EngineFlameBoostController engineFlameBoost;
 
+    [Header("Speed Tunnel Effect")]
+    [SerializeField] private SpeedTunnelController speedTunnel;
+
     private float initialParticleRate;
     private float remainingTime;
     private Coroutine powerUpCoroutine;
@@ -44,6 +47,11 @@ public class SpeedPowerUpController : MonoBehaviour
             if (engineFlameBoost == null && transform.parent != null)
                 engineFlameBoost = transform.parent.GetComponentInChildren<EngineFlameBoostController>(true);
         }
+
+        if (speedTunnel == null)
+        {
+            speedTunnel = FindFirstObjectByType<SpeedTunnelController>();
+        }
     }
 
     private void OnDisable()
@@ -53,6 +61,8 @@ public class SpeedPowerUpController : MonoBehaviour
             IsActive = false;
             if (engineFlameBoost != null)
                 engineFlameBoost.ResetToNormalImmediate();
+            if (speedTunnel != null)
+                speedTunnel.SetTunnelActive(false, immediate: true);
             if (worldMovement != null)
                 worldMovement.SetSpeedMultiplier(1f);
         }
@@ -71,6 +81,9 @@ public class SpeedPowerUpController : MonoBehaviour
 
             if (engineFlameBoost != null)
                 engineFlameBoost.SetBoostActive(true);
+
+            if (speedTunnel != null)
+                speedTunnel.SetTunnelActive(true);
 
             return;
         }
@@ -91,6 +104,12 @@ public class SpeedPowerUpController : MonoBehaviour
         if (engineFlameBoost != null)
         {
             engineFlameBoost.SetBoostActive(true);
+        }
+
+        // Speed Tunnel
+        if (speedTunnel != null)
+        {
+            speedTunnel.SetTunnelActive(true);
         }
 
         // Event
@@ -134,6 +153,12 @@ public class SpeedPowerUpController : MonoBehaviour
         if (engineFlameBoost != null)
         {
             engineFlameBoost.SetBoostActive(false);
+        }
+
+        // Speed Tunnel
+        if (speedTunnel != null)
+        {
+            speedTunnel.SetTunnelActive(false);
         }
 
         // Event
