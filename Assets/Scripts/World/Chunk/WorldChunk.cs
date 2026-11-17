@@ -47,7 +47,8 @@ public class WorldChunk : MonoBehaviour
         DisableFinalGround();
 
         RandomizeEnvironment(
-            groundType
+            groundType,
+            difficultyManager
         );
 
 
@@ -91,7 +92,8 @@ public class WorldChunk : MonoBehaviour
 
 
     private void RandomizeEnvironment(
-        GroundType groundType)
+        GroundType groundType,
+        DifficultyManager difficultyManager = null)
     {
         DisableAllEnvironments();
 
@@ -133,7 +135,7 @@ public class WorldChunk : MonoBehaviour
 
         if (holder != null)
         {
-            holder.ResetMissile();
+            holder.ResetMissile(difficultyManager);
         }
     }
 

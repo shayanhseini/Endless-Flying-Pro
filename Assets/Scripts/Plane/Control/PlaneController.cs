@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using DroneVision;
 
 public class PlaneController : MonoBehaviour
 {
@@ -217,41 +218,38 @@ public class PlaneController : MonoBehaviour
 
     private void ReadInput()
     {
-        if (Keyboard.current == null)
-        {
-            Input = Vector2.zero;
-
-            return;
-        }
-
-
         float horizontal = 0f;
-
         float vertical = 0f;
 
+        if (Keyboard.current != null)
+        {
+            // A / D
+            if (Keyboard.current.aKey.isPressed)
+                horizontal -= 1f;
 
-        // A / D
-        if (Keyboard.current.aKey.isPressed)
-            horizontal -= 1f;
+            if (Keyboard.current.dKey.isPressed)
+                horizontal += 1f;
 
-        if (Keyboard.current.dKey.isPressed)
-            horizontal += 1f;
+            // S / W
+            if (Keyboard.current.sKey.isPressed)
+                vertical -= 1f;
 
+            if (Keyboard.current.wKey.isPressed)
+                vertical += 1f;
+        }
 
-        // S / W
-        if (Keyboard.current.sKey.isPressed)
-            vertical -= 1f;
-
-        if (Keyboard.current.wKey.isPressed)
-            vertical += 1f;
-
+        // Drone Vision integration (webcam body control)
+        if (DroneVisionInput.Instance != null)
+        {
+            horizontal += DroneVisionInput.Instance.Horizontal;
+            vertical += DroneVisionInput.Instance.Vertical;
+        }
 
         Input =
             new Vector2(
                 horizontal,
                 vertical
             );
-
 
         Input =
             Vector2.ClampMagnitude(

@@ -5,6 +5,8 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get; private set; }
+
     [Header("References")]
     [SerializeField] private FadeController fadeController;
     [SerializeField] private WorldMovementManager worldMovement;
@@ -15,6 +17,11 @@ public class GameManager : MonoBehaviour
 
     [Header("Auto Restart")]
     [SerializeField] private float autoRestartDelay = 3f;
+
+    [Header("Auto Start")]
+    [SerializeField] private bool autoStartEnabled = true;
+    [Min(0.5f)]
+    [SerializeField] private float autoStartDelay = 7f;
 
     public float RemainingTime { get; private set; }
 
@@ -29,10 +36,19 @@ public class GameManager : MonoBehaviour
     
     private bool gameTimeFinished;
     private Coroutine autoRestartCoroutine;
+    private float waitingTimer;
+    private bool waitingForFirstInput = true;
 
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         State = GameState.Waiting;
 
         Score = 0;
@@ -40,6 +56,36 @@ public class GameManager : MonoBehaviour
         Distance = 0f;
 
         RemainingTime = gameDuration;
+
+        waitingForFirstInput = true;
+        waitingTimer = 0f;
+    }
+
+    private void Start()
+    {
+        if (DroneVision.DroneVisionInput.Instance != null)
+        {
+            DroneVision.DroneVisionInput.Instance.OnLockChanged += HandleDroneVisionLockChanged;
+        }
+    }
+
+    private void HandleDroneVisionLockChanged(bool locked)
+    {
+        if (locked && State == GameState.Waiting)
+        {
+            TriggerAutoStart();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+
+        if (DroneVision.DroneVisionInput.Instance != null)
+        {
+            DroneVision.DroneVisionInput.Instance.OnLockChanged -= HandleDroneVisionLockChanged;
+        }
     }
 
 
@@ -53,6 +99,17 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (State == GameState.Waiting && waitingForFirstInput)
+        {
+            waitingTimer += Time.deltaTime;
+            if (autoStartEnabled && waitingTimer >= autoStartDelay)
+            {
+                waitingForFirstInput = false;
+                TriggerAutoStart();
+            }
+            return;
+        }
+
         if (State != GameState.Playing)
             return;
 
@@ -60,6 +117,29 @@ public class GameManager : MonoBehaviour
         UpdateDistance();
 
         UpdateTimer();
+    }
+
+    public void ResetWaitingTimer()
+    {
+        waitingTimer = 0f;
+    }
+
+    public void TriggerAutoStart()
+    {
+        if (State != GameState.Waiting)
+            return;
+
+        waitingForFirstInput = false;
+
+        UIManager uiManager = FindFirstObjectByType<UIManager>();
+        if (uiManager != null)
+        {
+            uiManager.StartGame();
+        }
+        else
+        {
+            StartGame();
+        }
     }
 
 
@@ -93,9 +173,15 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        waitingForFirstInput = false;
+
         if (State != GameState.Waiting)
             return;
 
+        if (DroneVision.DroneVisionInput.Instance != null)
+        {
+            DroneVision.DroneVisionInput.Instance.SetPaused(false);
+        }
 
         State =
             GameState.Playing;
@@ -158,6 +244,10 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Playing)
             return;
 
+        if (DroneVision.DroneVisionInput.Instance != null)
+        {
+            DroneVision.DroneVisionInput.Instance.SetPaused(true);
+        }
 
         State =
             GameState.GameOver;
@@ -182,6 +272,11 @@ public class GameManager : MonoBehaviour
 
     public void Victory()
     {
+        if (DroneVision.DroneVisionInput.Instance != null)
+        {
+            DroneVision.DroneVisionInput.Instance.SetPaused(true);
+        }
+
         State =
             GameState.Victory;
 

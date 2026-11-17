@@ -8,14 +8,53 @@ public class GroundDefenceHolder : MonoBehaviour
 
     public void ResetMissile()
     {
-        foreach (Radar radar in radars)
+        ResetMissile(DifficultyManager.Instance);
+    }
+
+    public void ResetMissile(DifficultyManager difficultyManager)
+    {
+        bool isActive = true;
+        float turnSpeedMult = 1f;
+        float predMult = 1f;
+
+        if (difficultyManager != null)
         {
-            radar.SetDetectedPlayer(false);
+            isActive = difficultyManager.RollAirDefenseActive();
+            difficultyManager.GetAirDefenseAccuracyModifiers(out turnSpeedMult, out predMult);
         }
 
-        foreach (Missile missile in missiles)
+        if (radars != null)
         {
-            missile.StopAndReset();
+            foreach (Radar radar in radars)
+            {
+                if (radar == null) continue;
+                radar.SetDetectedPlayer(false);
+                radar.gameObject.SetActive(isActive);
+            }
+        }
+
+        if (missiles != null)
+        {
+            foreach (Missile missile in missiles)
+            {
+                if (missile == null) continue;
+                missile.StopAndReset();
+                missile.ApplyDifficultyModifiers(turnSpeedMult, predMult);
+                if (!isActive)
+                {
+                    missile.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        AirDefenseController[] controllers = GetComponentsInChildren<AirDefenseController>(true);
+        if (controllers != null)
+        {
+            foreach (AirDefenseController controller in controllers)
+            {
+                if (controller != null)
+                    controller.enabled = isActive;
+            }
         }
     }
 }

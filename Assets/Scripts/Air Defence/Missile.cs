@@ -64,14 +64,43 @@ public class Missile : MonoBehaviour
     private bool isMoving;
     private bool isWaitingToDisable;
 
+    private float baseRotationSpeed;
+    private float baseMaxTurnSpeed;
+    private float baseMaxPredictionTime;
+    private bool baseValuesCaptured;
+
+    private void Awake()
+    {
+        CaptureBaseValues();
+    }
+
+    private void CaptureBaseValues()
+    {
+        if (baseValuesCaptured) return;
+        baseRotationSpeed = rotationSpeed;
+        baseMaxTurnSpeed = maxTurnSpeed;
+        baseMaxPredictionTime = maxPredictionTime;
+        baseValuesCaptured = true;
+    }
+
+    public void ApplyDifficultyModifiers(float turnSpeedMultiplier, float predictionMultiplier)
+    {
+        CaptureBaseValues();
+        rotationSpeed = baseRotationSpeed * turnSpeedMultiplier;
+        maxTurnSpeed = baseMaxTurnSpeed * turnSpeedMultiplier;
+        maxPredictionTime = baseMaxPredictionTime * predictionMultiplier;
+    }
+
 
     private void OnEnable()
     {
+        CaptureBaseValues();
         isMoving = false;
         isWaitingToDisable = false;
         currentTurnSpeed = 0f;
         
-        moveSoundEffect.SetActive(false);
+        if (moveSoundEffect != null)
+            moveSoundEffect.SetActive(false);
     }
 
 
@@ -117,6 +146,7 @@ public class Missile : MonoBehaviour
 
     public void StopAndReset()
     {
+        CaptureBaseValues();
         StopAllCoroutines();
         isMoving = false;
         isWaitingToDisable = false;

@@ -106,3 +106,8 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 # JetBrains Rider / IntelliJ
 .idea/
+ 
+deploy_webgl.py
+wait_for_build.py
+build_webgl.log
+
