@@ -15367,14 +15367,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
   currentDifficulty: 1
   maxScore: 200
-  startCoinCount: 0
+  startCoinCount: 1
   maxCoinCount: 0
-  startObstacleCount: 0
-  maxObstacleCount: 0
+  startObstacleCount: 1
+  maxObstacleCount: 3
   startWithShield: 0
-  shieldDisableScore: 0
+  shieldDisableScore: 1
   startWithSpeedPowerUp: 0
-  speedPowerUpEnableScore: 0
+  speedPowerUpEnableScore: 1
   easyDefenseChance: 0.35
   normalDefenseChance: 0.7
   hardDefenseChance: 1
