@@ -28,6 +28,30 @@ public class GameAudioController : MonoBehaviour
     [SerializeField] private AudioSource dangerSource;
 
 
+    private void Awake()
+    {
+        PreloadAllClips();
+    }
+
+    private void PreloadAllClips()
+    {
+        if (explosionClips != null)
+        {
+            foreach (var clip in explosionClips)
+            {
+                if (clip != null && clip.loadState != AudioDataLoadState.Loaded)
+                    clip.LoadAudioData();
+            }
+        }
+
+        if (coinClip != null && coinClip.loadState != AudioDataLoadState.Loaded) coinClip.LoadAudioData();
+        if (shieldPickupClip != null && shieldPickupClip.loadState != AudioDataLoadState.Loaded) shieldPickupClip.LoadAudioData();
+        if (shieldDeActiveClip != null && shieldDeActiveClip.loadState != AudioDataLoadState.Loaded) shieldDeActiveClip.LoadAudioData();
+        if (speedBoostActiveClip != null && speedBoostActiveClip.loadState != AudioDataLoadState.Loaded) speedBoostActiveClip.LoadAudioData();
+        if (speedBoostDeActiveClip != null && speedBoostDeActiveClip.loadState != AudioDataLoadState.Loaded) speedBoostDeActiveClip.LoadAudioData();
+        if (uiButtonClip != null && uiButtonClip.loadState != AudioDataLoadState.Loaded) uiButtonClip.LoadAudioData();
+    }
+
     private void OnEnable()
     {
         GameEvents.ScoreChanged += OnScoreChanged;
@@ -97,7 +121,14 @@ public class GameAudioController : MonoBehaviour
             position;
 
         int index = Random.Range(0, explosionClips.Length);
-        expSound.PlayOneShot(explosionClips[index]);
+        AudioClip clip = explosionClips[index];
+        if (clip != null)
+        {
+            if (clip.loadState != AudioDataLoadState.Loaded)
+                clip.LoadAudioData();
+
+            expSound.PlayOneShot(clip);
+        }
     }
 
     public void PlayDangerSound()

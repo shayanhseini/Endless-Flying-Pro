@@ -63,6 +63,7 @@ public class Missile : MonoBehaviour
     private bool isLocked;
     private bool isMoving;
     private bool isWaitingToDisable;
+    private bool hasHit;
 
     private float baseRotationSpeed;
     private float baseMaxTurnSpeed;
@@ -97,6 +98,7 @@ public class Missile : MonoBehaviour
         CaptureBaseValues();
         isMoving = false;
         isWaitingToDisable = false;
+        hasHit = false;
         currentTurnSpeed = 0f;
         
         if (moveSoundEffect != null)
@@ -111,6 +113,7 @@ public class Missile : MonoBehaviour
 
         StopAllCoroutines();
         isWaitingToDisable = false;
+        hasHit = false;
 
         this.target = target;
         targetCollider = target.GetComponentInChildren<Collider>();
@@ -150,6 +153,7 @@ public class Missile : MonoBehaviour
         StopAllCoroutines();
         isMoving = false;
         isWaitingToDisable = false;
+        hasHit = false;
 
         target = null;
         targetCollider = null;
@@ -451,17 +455,24 @@ public class Missile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (hasHit || !isMoving)
+            return;
+
         if (!other.CompareTag("Player"))
             return;
 
 
         PlaneInteraction plane =
-            other.GetComponent<PlaneInteraction>();
+            other.GetComponentInParent<PlaneInteraction>();
+
+        if (plane == null)
+            plane = other.GetComponent<PlaneInteraction>();
 
 
         if (plane == null)
             return;
 
+        hasHit = true;
 
         plane.HitObstacle();
 
@@ -475,6 +486,7 @@ public class Missile : MonoBehaviour
         isMoving = false;
         isLocked = false;
         isWaitingToDisable = false;
+        hasHit = false;
         target = null;
         targetCollider = null;
         targetVelocity = Vector3.zero;

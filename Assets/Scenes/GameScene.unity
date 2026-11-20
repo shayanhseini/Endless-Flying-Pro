@@ -11372,11 +11372,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: DroneVision.Runtime::DroneVision.DroneVisionInput
   model: auto
+  modelDelegate: auto
   numPoses: 1
   maxFps: 30
   cameraWidth: 640
   cameraHeight: 360
-  focusCrop: 0
   autoPreview: 1
   previewMode: 0
   previewCorner: 0
@@ -16692,6 +16692,7 @@ MonoBehaviour:
   gameManager: {fileID: 4439528306922798773}
   gameAudioController: {fileID: 2116496927}
   hitEffect: {fileID: 2067943244}
+  shieldBreakGracePeriod: 0.8
 --- !u!4 &4814114025156276649
 Transform:
   m_ObjectHideFlags: 0

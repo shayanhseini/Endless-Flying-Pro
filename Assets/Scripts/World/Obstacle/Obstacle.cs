@@ -15,6 +15,7 @@ public class Obstacle : MonoBehaviour
     
     private Vector3 initialInnerPosition;
     private Collider pickupCollider;
+    private bool hasHit;
     
     private void Awake()
     {
@@ -30,6 +31,8 @@ public class Obstacle : MonoBehaviour
     
     private void OnEnable()
     {
+        hasHit = false;
+
         if (inner != null)
         {
             inner.localPosition =
@@ -48,14 +51,22 @@ public class Obstacle : MonoBehaviour
     
     private void OnTriggerEnter(Collider other)
     {
+        if (hasHit)
+            return;
+
         if (!other.CompareTag("Player"))
             return;
 
         PlaneInteraction plane =
-            other.GetComponent<PlaneInteraction>();
+            other.GetComponentInParent<PlaneInteraction>();
+
+        if (plane == null)
+            plane = other.GetComponent<PlaneInteraction>();
 
         if (plane == null)
             return;
+
+        hasHit = true;
 
         plane.HitObstacle();
         

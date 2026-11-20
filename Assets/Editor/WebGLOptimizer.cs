@@ -111,9 +111,10 @@ public static class WebGLOptimizer
 
                 bool isMusic = path.Contains("/Music/") || path.Contains("Hans Zimmer") || path.Contains("Drone Approach");
                 var settings = importer.GetOverrideSampleSettings("WebGL");
-                settings.loadType = isMusic ? AudioClipLoadType.Streaming : AudioClipLoadType.CompressedInMemory;
+                settings.loadType = isMusic ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
                 settings.compressionFormat = AudioCompressionFormat.Vorbis;
                 settings.quality = 0.70f; // 70% Vorbis = transparent ~128-160kbps, indistinguishable from original
+                settings.preloadAudioData = true;
 
                 importer.SetOverrideSampleSettings("WebGL", settings);
                 count++;
