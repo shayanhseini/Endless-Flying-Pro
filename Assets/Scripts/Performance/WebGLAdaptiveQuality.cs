@@ -40,6 +40,7 @@ public class WebGLAdaptiveQuality : MonoBehaviour
 
     private void Start()
     {
+        Application.targetFrameRate = 60;
         urp = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
         if (urp != null)
             authoredScale = urp.renderScale;
