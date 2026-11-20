@@ -152,14 +152,25 @@ A player who leaves and comes back within 2.5 s is recognised and locked again a
 | `SetPaused(bool)` | Stop the model in menus (camera stays open, keys released). |
 | `SetPreviewMode(PreviewMode)` | Manual preview control (turns `autoPreview` off). |
 | `ResumeAutoPreview()` | Back to automatic: lobby until the lock, then the corner box. |
-| `SetModel("auto"/"lite"/"full"/"heavy")`, `GetCameras`, `UseCamera`, `Retry`, `StopVision`, `ApplyTuning` | Runtime controls. |
+| `SetModel("auto"/"lite"/"full")`, `GetCameras`, `UseCamera`, `Retry`, `StopVision`, `ApplyTuning` | Runtime controls. |
 
 Inspector tuning (defaults = the PC app's): `rollEnter` 0.5, `upMargin` 0.25,
 `downMargin` 0.3 (all in the player's own shoulder widths, so near/far does not
-matter), `lockMs` 450, `lockGraceMs` 1000, `holdLine` 0.9, `invert`. Model `auto` =
-full model on PCs (closest to the PC app), lite on phones, and it drops to lite if
-the PC is too slow (FPS < 18 and the model > 40 ms for 5 s, the PC app's rule).
-Camera 960×540 like the PC app (open wings need a wide picture).
+matter), `lockMs` 450, `lockGraceMs` 1000, `holdLine` 0.9, `invert`.
+
+Performance settings (keep the defaults):
+- `model` = `auto`. Phones and PCs with 4 or fewer CPU threads get `lite` from the first
+  frame, so weak devices never start heavy. Other PCs get `full`, as the PC app, and drop
+  to `lite` by themselves (once per page load) if they cannot keep 18 FPS with a model time
+  over 40 ms for 5 s. Measured on a real exhibition video through the template's own
+  worker: `lite` 19 ms per frame but 31 wrist jumps, `full` 31 ms and 11 jumps (the PC
+  app: 8). Force `lite` only if the exhibition PC was measured to be too slow.
+- `modelDelegate` = `auto`: **CPU on desktops**, a GPU-vs-CPU test on phones. Measured
+  next to a busy WebGL game: on the GPU the model ran at 11 FPS AND made the game stutter
+  (the two share the GPU); on the CPU (in a Web Worker, its own core) it ran at
+  20 FPS and the game kept 60 FPS. Only set `GPU` if you have measured it on the
+  exhibition machine during play, not in a menu.
+- Camera 640×360 (16:9). Bigger frames measured the same model time and landmarks.
 
 ## Rules for AI assistants
 
@@ -191,6 +202,15 @@ Camera 960×540 like the PC app (open wings need a wide picture).
   (`DroneVisionExample` flies a transform, `DroneVisionDebugHUD`).
 
 ## Hosting
+
+**Unity build settings that matter for a hosted page (GitHub Pages and similar):**
+- *Publishing Settings → Compression Format = Gzip* and **Decompression Fallback = on**
+  (static hosts like GitHub Pages cannot send the `Content-Encoding` header Unity needs;
+  with the fallback the loader decompresses by itself). Uncompressed builds make
+  visitors download everything raw (the first hosted build sent a 69 MB data file).
+- *Data Caching = on*, so a second visit loads from the browser cache.
+- Keep the game's own texture sizes and quality modest: the vision model shares the
+  machine with the game.
 
 - HTTPS (camera rule). The template's `.htaccess` sets the MIME types for `.wasm`,
   `.task` and Unity's `.br`/`.gz` files on Apache/cPanel; on other servers set the

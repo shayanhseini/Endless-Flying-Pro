@@ -11374,8 +11374,8 @@ MonoBehaviour:
   model: auto
   numPoses: 1
   maxFps: 30
-  cameraWidth: 960
-  cameraHeight: 540
+  cameraWidth: 640
+  cameraHeight: 360
   focusCrop: 0
   autoPreview: 1
   previewMode: 0

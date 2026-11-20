@@ -169,6 +169,20 @@ public static class BuildWebGL
                 }
             }
 
+            // The scene keeps the values it was saved with, so an older scene overrides the
+            // package's measured defaults. Enforce them (DroneVision 2026-11-20):
+            //   640x360 camera: bigger frames cost more and measured the same landmarks;
+            //   model "auto": lite on phones / weak PCs, full elsewhere (drops to lite if slow);
+            //   modelDelegate "auto": CPU on desktops, so the model never shares the GPU with the game.
+            var vision = existing.GetComponent<DroneVision.DroneVisionInput>();
+            vision.cameraWidth = 640;
+            vision.cameraHeight = 360;
+            vision.model = "auto";
+            vision.modelDelegate = "auto";
+            vision.maxFps = 30;
+            vision.numPoses = 1;
+            EditorUtility.SetDirty(vision);
+
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
             Debug.Log("[BuildWebGL] GameScene saved with DroneVision!");

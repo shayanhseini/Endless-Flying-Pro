@@ -55,17 +55,17 @@ namespace DroneVision
         public static DroneVisionInput Instance { get; private set; }
 
         [Header("Camera & model")]
-        [Tooltip("auto (default): full model on PCs (closest to the PC app), lite on phones/weak PCs, and drops to lite if the PC is too slow · lite · full · heavy")]
+        [Tooltip("auto (default): lite on phones and on PCs with 4 or fewer CPU threads (weak devices never start heavy); full on the others, as the PC app (3x fewer wrist jumps than lite on a real exhibition video), dropping to lite by itself if it cannot keep 18 FPS · full · lite")]
         public string model = "auto";
+        [Tooltip("auto (default): CPU on desktops, so the model never shares the GPU with the game (measured: GPU made the game stutter and ran at 11 FPS during play, CPU 20 FPS with no effect on the game); phones measure GPU vs CPU · CPU · GPU")]
+        public string modelDelegate = "auto";
         [Tooltip("People the model looks for. 1 (default, as the PC app): it follows the player and never looks for anyone else")]
         [Range(1, 3)] public int numPoses = 1;
         [Tooltip("Max model runs per second")]
         [Range(10, 30)] public int maxFps = 30;
-        [Tooltip("Camera format asked of the browser. 960×540 (16:9) as the PC app: open wings need a wide picture")]
-        public int cameraWidth = 960;
-        public int cameraHeight = 540;
-        [Tooltip("After the lock the model only sees a crop around the player. OFF: the web model jumps off the hands on a crop (measured)")]
-        public bool focusCrop = false;
+        [Tooltip("Camera format asked of the browser (16:9: open wings need a wide picture). Bigger frames measured the same model time and landmarks")]
+        public int cameraWidth = 640;
+        public int cameraHeight = 360;
 
         [Header("Preview & connection box (WebGL)")]
         [Tooltip("Lobby (big mirror + frame) until the player is locked, then the small corner box. Turned off by SetPreviewMode().")]
@@ -143,7 +143,6 @@ namespace DroneVision
         /// <summary>Scene brightness where the player stands, 0..1 (WebGL). Below ~0.12 is too dark.</summary>
         public float Brightness { get; private set; }
         public float ExposureGain { get; private set; }
-        public bool Focused { get; private set; }
         /// <summary>Seconds since the lock (0 when not locked).</summary>
         public float SecondsSinceLock { get { return IsLocked ? Time.unscaledTime - _lockedAt : 0f; } }
         /// <summary>The full core state (counters, raw values) for debugging.</summary>
@@ -195,7 +194,7 @@ namespace DroneVision
 
         // JSON DTOs: filled by JsonUtility, which the compiler cannot see
 #pragma warning disable 0649
-        [Serializable] private class StartJson { public string model; public int numPoses; public int maxFps; public int width; public int height; public bool focusCrop; public string previewMode; public string previewCorner; public bool previewLabels; public bool statusBox; public string keyLabels; }
+        [Serializable] private class StartJson { public string model; public string @delegate; public int numPoses; public int maxFps; public int width; public int height; public string previewMode; public string previewCorner; public bool previewLabels; public bool statusBox; public string keyLabels; }
         [Serializable] private class CamerasJson { public string current; public CameraInfo[] cameras; }
 #pragma warning restore 0649
 
@@ -226,7 +225,7 @@ namespace DroneVision
 #if UNITY_WEBGL && !UNITY_EDITOR
             var cfg = new StartJson
             {
-                model = model, numPoses = numPoses, maxFps = maxFps, width = cameraWidth, height = cameraHeight, focusCrop = focusCrop,
+                model = model, @delegate = modelDelegate, numPoses = numPoses, maxFps = maxFps, width = cameraWidth, height = cameraHeight,
                 previewMode = ModeName(previewMode), previewCorner = CornerName(previewCorner), previewLabels = previewLabels,
                 statusBox = statusBox, keyLabels = KeyLabel(keyRight) + "," + KeyLabel(keyLeft) + "," + KeyLabel(keyUp) + "," + KeyLabel(keyDown),
             };
@@ -264,7 +263,6 @@ namespace DroneVision
             LatencyMs = _buf[FeedBuffer.LatencyMs];
             ExposureGain = _buf[FeedBuffer.Gain];
             Brightness = _buf[FeedBuffer.Lum];
-            Focused = _buf[FeedBuffer.Focus] > 0.5f;
 
             int feed = (int)_buf[FeedBuffer.Status];
             if (feed != FeedBuffer.StatusRunning)
@@ -592,7 +590,7 @@ namespace DroneVision
 #endif
         }
 
-        /// <summary>"auto" | "lite" | "full" | "heavy".</summary>
+        /// <summary>"auto" | "lite" | "full".</summary>
         public void SetModel(string modelName)
         {
             model = modelName;

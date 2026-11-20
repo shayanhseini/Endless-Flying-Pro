@@ -49,7 +49,7 @@ const buf = new Float32Array(BUFFER_LENGTH);
 let feed = null;
 let view = null;
 // what C# decided on the last frame (drives the drawing only)
-const ui = { op: -1, phase: 'searching', progress: 0, hint: 0, side: 0, vert: 0, held: false, keys: 0, lockedAt: 0 };
+const ui = { op: -1, phase: 'searching', progress: 0, hint: 0, side: 0, vert: 0, held: false, keys: 0, lockedAt: 0, rev: 0 };
 
 function createView(cfg) {
   const style = document.createElement('style');
@@ -153,6 +153,12 @@ function toast(text) {
 function draw(v, now) {
   requestAnimationFrame(t => draw(v, t));
   if (v.mode === 'hidden' || !feed) return;
+  // redraw only when something changed: a new camera result, a new C# state, or the
+  // short glow right after the lock (it used to redraw on every screen refresh)
+  const pulsing = ui.lockedAt && now - ui.lockedAt < 950;
+  const key = feed.frameSeq + ':' + ui.rev + ':' + v.mode + ':' + feed.status;
+  if (key === v.lastKey && !pulsing) return;
+  v.lastKey = key;
   const vid = feed.video;
   if (vid.videoWidth && (v.canvas.width !== vid.videoWidth || v.canvas.height !== vid.videoHeight)) {
     v.canvas.width = vid.videoWidth;
@@ -203,16 +209,17 @@ async function cameraFromUrl() {
 }
 
 const api = {
-  /** config JSON: { model, numPoses, maxFps, width, height, focusCrop, previewMode, previewCorner, previewLabels, statusBox, keyLabels } */
+  /** config JSON: { model, delegate, numPoses, maxFps, width, height, previewMode, previewCorner, previewLabels, statusBox, keyLabels } */
   async start(json) {
     let cfg = {};
     try { cfg = json ? JSON.parse(json) : {}; } catch (e) { console.warn('[dronevision] bad config json', e); }
     if (feed) { feed.start(); return; }
     view = createView(cfg);
     feed = new VisionFeed({
-      model: cfg.model || 'auto', numPoses: cfg.numPoses || 1, maxFps: cfg.maxFps || 30, video: view.video,
-      width: cfg.width || 960, height: cfg.height || 540,   // 16:9 like the PC app: open wings need a wide picture
-      focus: cfg.focusCrop === true,   // off by default: the web model jumps off the hands on a crop (measured)
+      model: cfg.model === 'lite' || cfg.model === 'full' ? cfg.model : 'auto',   // auto: lite on phones / weak PCs, full elsewhere (drops to lite if slow)
+      delegate: cfg.delegate || 'auto',                // auto = CPU on desktops (no GPU shared with the game), probe on phones
+      numPoses: cfg.numPoses || 1, maxFps: cfg.maxFps || 30, video: view.video,
+      width: cfg.width || 640, height: cfg.height || 360,   // 16:9; bigger frames measured the same model time and landmarks
     });
     window.DroneVisionFeed = feed; // for debugging from the console
     const ok = await feed.start();
@@ -242,12 +249,11 @@ const api = {
     const changed = ph !== ui.phase;
     ui.op = op; ui.phase = ph; ui.progress = progress; ui.hint = hint;
     ui.side = side; ui.vert = vert; ui.held = !!held; ui.keys = keys | 0;
+    ui.rev++;
     if (changed && view) paintClasses(view);
-    // crop around the player only once LOCKED (only if focusCrop is on)
-    if (feed) feed.setFocus(op >= 0 && phase === 2 ? feed.poses[op] : null);
   },
 
-  setPreviewMode(mode) { if (view) setMode(view, mode); },
+  setPreviewMode(mode) { if (view) { setMode(view, mode); view.lastKey = ''; } },
   setPaused(p) { if (feed) feed.setPaused(p); },
   camerasJson() {
     return JSON.stringify({ current: feed ? feed.cameraId : null, cameras: feed ? feed.cameras : [] });

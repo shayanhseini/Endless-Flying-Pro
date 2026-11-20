@@ -236,6 +236,12 @@ public class UIManager : MonoBehaviour
         float displayedSpeed =
             worldMovement.RealSpeed;
 
+        // only when the shown number changes: setting .text rebuilds the text mesh (and the
+        // Persian RTL shaping) and allocates a string, which happened every frame before
+        long shown = (long)System.Math.Round(displayedSpeed, System.MidpointRounding.AwayFromZero);
+        if (shown == lastShownSpeed)
+            return;
+        lastShownSpeed = shown;
 
         speedText.text =
             $"{displayedSpeed:000}";
@@ -248,9 +254,17 @@ public class UIManager : MonoBehaviour
             gameManager == null)
             return;
 
+        long shown = (long)System.Math.Round(gameManager.Distance, System.MidpointRounding.AwayFromZero);
+        if (shown == lastShownDistance)
+            return;
+        lastShownDistance = shown;
+
         distanceText.text =
             $"{gameManager.Distance:000}";
     }
+
+    private long lastShownSpeed = long.MinValue;
+    private long lastShownDistance = long.MinValue;
 
 
     // ==================================================

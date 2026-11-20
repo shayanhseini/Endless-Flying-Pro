@@ -89,6 +89,8 @@ export class FrameCues {
 
     const scale = Math.min(1, MAX_SIDE / Math.max(sw, sh));
     const w = Math.max(2, Math.round(sw * scale)), h = Math.max(2, Math.round(sh * scale));
+    // already the right size (the worker gets a resized ImageBitmap): hand it over as it is
+    if (!this.lift && sx === 0 && sy === 0 && scale === 1 && typeof ImageBitmap !== 'undefined' && src instanceof ImageBitmap) return src;
     if (!this.lift) {
       if (this.gpu.width !== w || this.gpu.height !== h) { this.gpu.width = w; this.gpu.height = h; }
       this.gctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h);

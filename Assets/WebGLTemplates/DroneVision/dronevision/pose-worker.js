@@ -24,7 +24,8 @@ let lastTs = -1;
 let gpuErrors = 0;
 let lastBuild = null;
 
-// delegate 'auto': which is faster is a property of the DEVICE, so measure it.
+// delegate 'auto' (PHONES only since 2026-11-18; desktops get 'CPU', see pose.js):
+// which is faster is a property of the DEVICE, so measure it.
 // Measured on the dev PC with the page rendering (like a game): GPU in this worker
 // 9 FPS (112 ms/frame, waits in steps of 33 ms), CPU in this worker 20.7 FPS (46 ms).
 // Phones may be the other way round. GPU runs first; if it is not clearly fast,
@@ -154,8 +155,8 @@ self.onmessage = async e => {
       let result;
       try {
         const bm = msg.bitmap;
+        // the bitmap goes to the model as it is unless the shadow lift is on (no extra copy)
         const input = cues.prepare(bm, 0, 0, bm.width, bm.height, msg.exposure !== false);
-        bm.close();
         const d0 = performance.now();
         result = landmarker.detectForVideo(input, ts);
         msg.prepMs = d0 - t0;

@@ -1,4 +1,11 @@
-// MediaPipe Tasks Vision PoseLandmarker (WebAssembly + GPU).
+// MediaPipe Tasks Vision PoseLandmarker (WebAssembly; CPU on desktops, GPU or CPU on phones).
+//
+// Delegate (measured 2026-11-18, RTX 3050 Ti laptop, lite model in the worker, next to a
+// busy WebGL game): GPU 91 ms/frame (11 FPS) AND the game's slow frames got worse
+// (p95 27.8 → 41.6 ms): MediaPipe and Unity fight for the same GPU. CPU 45-50 ms
+// (19-20 FPS) and the game was untouched. In a light menu the GPU looked fast (12 ms),
+// so a lobby-time probe picked it and play then lagged. → Desktops: CPU, no probe.
+// Phones (the owner: "works better on the phone"): the GPU/CPU probe stays.
 //
 // Two runners with the same shape:
 //   WorkerPoseDetector — inference in a Web Worker (default): the page/game
@@ -17,7 +24,7 @@ const MODEL_CDN = name =>
 
 import { FrameCues, sigLum } from './image-cues.js';
 
-export const MODELS = ['lite', 'full', 'heavy'];
+export const MODELS = ['lite', 'full'];
 const STRIDE = 33 * 4;
 
 export function isMobile() {
@@ -27,14 +34,30 @@ export function isMobile() {
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
 }
 
-/** Phones and weak PCs start on the lite model; others on full (auto-drops if slow). */
+/** 'auto' = the device decides (2026-11-20):
+ *   · phones, and PCs with 4 or fewer CPU threads: lite from the very first frame. The owner
+ *     reported lag on weak PCs and weak phones; starting them on full would make the first
+ *     ~8 s even heavier before `_adapt` drops to lite.
+ *   · other PCs: full, as the PC app (legacy full + auto-lite), with the same automatic drop
+ *     to lite when the device turns out too slow (vision-feed `_adapt`).
+ *  Measured on a real exhibition video through this worker: lite 19 ms/frame but 31 wrist
+ *  jumps (> 0.6 shoulder widths per frame), full 31 ms and 11 jumps; the PC app's model
+ *  gives 8. On the PC replay the keys agreed with the PC app on 98.7% of frames with full,
+ *  87% with lite. */
 export function autoModel() {
-  const cores = navigator.hardwareConcurrency || 4;
-  return isMobile() || cores <= 4 ? 'lite' : 'full';
+  if (isMobile()) return 'lite';
+  const threads = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
+  return threads <= 4 ? 'lite' : 'full';
 }
 
 function resolveModel(model) {
-  return model && model !== 'auto' ? model : autoModel();
+  return MODELS.includes(model) ? model : autoModel();
+}
+
+/** 'auto' → CPU on desktops (no GPU shared with the game), GPU/CPU probe on phones. */
+export function resolveDelegate(delegate) {
+  if (delegate === 'CPU' || delegate === 'GPU') return delegate;
+  return isMobile() ? 'auto' : 'CPU';
 }
 
 function libCandidates(assetsBase) {
@@ -79,7 +102,7 @@ async function loadLibrary(assetsBase) {
 
 export class PoseDetector {
   /**
-   * @param o.model     'auto' | 'lite' | 'full' | 'heavy'
+   * @param o.model     'auto' (= full) | 'lite' | 'full'
    * @param o.delegate  'auto' (worker: measures GPU vs CPU, keeps the faster) | 'GPU' | 'CPU'
    *                   (GPU falls back to CPU automatically)
    * @param o.numPoses  1 = fastest; 2–3 = crowd mode (operator picked by the tracker)
@@ -211,7 +234,7 @@ export class WorkerPoseDetector {
     const model = resolveModel(o.model);
     d.worker.postMessage({
       type: 'init', libs: libCandidates(d.assetsBase), models: modelCandidates(d.assetsBase, model),
-      delegate: o.delegate || 'auto', numPoses: d.numPoses,
+      delegate: resolveDelegate(o.delegate), numPoses: d.numPoses,
     });
     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('worker init timeout')), 60000));
     try {

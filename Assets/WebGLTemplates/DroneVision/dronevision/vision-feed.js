@@ -4,17 +4,18 @@
 // logic: the wings gesture, the lock and the keys live in the C# core inside
 // Unity (compiled to WebAssembly).
 //
-// Performance on weak devices:
-//   · the model runs in a Web Worker: the page / Unity main thread never waits
-//   · Lite model by default; drops to Lite automatically if a bigger one is slow
-//   · at most `maxFps` inferences per second; setPaused(true) stops inference
-//     entirely (menus, results screen) while keeping the camera open
+// Performance (2026-11-18 rewrite for hosted builds, see pose.js for the measurements):
+//   · the model runs in a Web Worker on the CPU (desktops): the game's main thread and
+//     its GPU never wait for it; one frame in flight, always the newest
+//   · model 'auto': lite on phones and on PCs with ≤ 4 CPU threads, full (as the PC app) on
+//     the others, dropping to lite by itself when too slow (_adapt: < 18 FPS AND model
+//     > 40 ms for 5 s); 640×360 camera (bigger inputs measured the same time and landmarks)
+//   · setPaused(true) stops inference entirely (menus, results) while keeping the camera
 //
-// Accuracy in crowds and bad light (see image-cues.js):
-//   · setFocus(playerLandmarks): once the game has chosen the player, the model
-//     only sees a crop around them (others cut away, player bigger in the input)
-//   · player-priority auto-exposure + the camera's own exposure point on the player
-//   · a clothing-colour signature per person (`sigs`) for identity tracking
+// Accuracy in crowds and bad light (image-cues.js): adaptive shadow lift (back-light),
+// and a clothing-colour signature per person (`sigs`) for the C# crowd tracker.
+// Removed on the web: the crop around the player (Tasks models jump off the hands on a
+// crop, measured) and camera-sensor exposure control (was never switched on).
 
 import { openCamera, listCameras, watchCameras, stopStream, cameraSupport, CameraError, CAMERA_ERROR } from './camera.js';
 import { createPoseDetector, TASKS_VISION_VERSION } from './pose.js';
@@ -37,9 +38,8 @@ const store = {
 
 export class VisionFeed {
   /**
-   * @param o.model       'lite' (default, light on any GPU) | 'full' | 'heavy' | 'auto'
-   * @param o.delegate    'auto' (default: the worker measures GPU vs CPU on this device and keeps
-   *                    the faster — on the dev PC GPU-in-worker gave 9 FPS, CPU 20.7) | 'GPU' | 'CPU'
+   * @param o.model       'auto' (default: lite on phones / ≤ 4 threads, else full) | 'full' | 'lite'
+   * @param o.delegate    'auto' (default: CPU on desktops, GPU/CPU probe on phones) | 'GPU' | 'CPU'
    * @param o.numPoses    1 (default, like the Python app): MediaPipe follows the one person it
    *                    found and never looks for a second, so a neighbour is not even seen.
    *                    2–3 make it search the whole frame every frame (measured 50–75% slower
@@ -47,23 +47,16 @@ export class VisionFeed {
    * @param o.adaptive    drop to the lite model when FPS is low (default true)
    * @param o.worker      'auto' (default): run the model in a Web Worker when supported
    * @param o.maxFps      inference rate cap (default 30)
-   * @param o.focus       crop around the player once setFocus() is called (default FALSE: on a
-   *                    crop the Tasks Lite model jumps off the hands; owner's video 16-35 big wrist
-   *                    jumps vs 2 without, even with a crop that never moves). The callers set it
-   *                    only AFTER the lock: a crop that moved during the "hands still" moment kept
-   *                    the player from locking.
    * @param o.exposure    adaptive shadow lift in software (default true)
-   * @param o.cameraControl  also drive the camera's own exposure / metering point
-   *                    (default false: on some webcams this breaks auto-exposure)
-   * @param o.width/height/fps  requested camera format (default 640×480@30)
+   * @param o.width/height/fps  requested camera format (default 640×360@30)
    * @param o.assetsBase  vendor folder URL (default: ../vendor/ next to src/)
    * @param o.video       existing <video> to use (default: a hidden one is created)
    */
   constructor(o = {}) {
     this.opts = {
-      model: 'lite', delegate: 'auto', numPoses: 1, adaptive: true, worker: 'auto', maxFps: 30,
-      focus: false, exposure: true, cameraControl: false,
-      width: 960, height: 540, fps: 30,
+      model: 'auto', delegate: 'auto', numPoses: 1, adaptive: true, worker: 'auto', maxFps: 30,
+      exposure: true,
+      width: 640, height: 360, fps: 30,
       assetsBase: new URL('../vendor/', import.meta.url).href,
       ...o,
     };
@@ -76,8 +69,6 @@ export class VisionFeed {
     this.cameraLabel = '';
     this.poses = [];           // raw poses of the last processed frame (full-frame coords)
     this.sigs = [];            // clothing-colour signature [r,g,b] per pose, or null
-    this.roi = null;           // crop the model looks at ({x,y,w,h} 0..1), null = whole frame
-    this._focusSeen = 0;
     this.aspect = 4 / 3;
     this.frameSeq = 0;
     this.frameT = 0;
@@ -198,10 +189,6 @@ export class VisionFeed {
     });
     this.stream = cam.stream;
     this.source = 'camera';
-    this.roi = null;
-    this._poiOK = undefined;
-    this._expoOK = undefined;
-    this._expoV = undefined;
     this.cameraId = cam.settings.deviceId || deviceId || null;
     this.cameraLabel = cam.label;
     if (this.cameraId) store.set(this.cameraId);
@@ -373,7 +360,7 @@ export class VisionFeed {
     this._lastSent = t;
     let r;
     try {
-      r = this.detector.detect(v, t, this.roi, this.opts.exposure);
+      r = this.detector.detect(v, t, null, this.opts.exposure);
     } catch (err) {
       console.error('[dronevision] detect failed', err);
       return;
@@ -393,15 +380,12 @@ export class VisionFeed {
       const t0 = performance.now();
       this._lastSent = t0;
       const w = v.videoWidth, h = v.videoHeight;
-      const roi = this.roi;
-      // ship only the region the model should look at, never more than 512 px on its long side
-      const sx = roi ? roi.x * w : 0, sy = roi ? roi.y * h : 0;
-      const sw = roi ? roi.w * w : w, sh = roi ? roi.h * h : h;
-      const k = Math.min(1, 512 / Math.max(sw, sh));
-      const bitmap = await createImageBitmap(v, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh),
-        k < 1 ? { resizeWidth: Math.round(sw * k), resizeHeight: Math.round(sh * k), resizeQuality: 'low' } : undefined);
+      // never more than 512 px on the long side (the model works at 256 anyway)
+      const k = Math.min(1, 512 / Math.max(w, h));
+      const bitmap = await createImageBitmap(v,
+        k < 1 ? { resizeWidth: Math.round(w * k), resizeHeight: Math.round(h * k), resizeQuality: 'low' } : undefined);
       if (token !== this._loopToken || !this.detector) { bitmap.close(); return; }
-      const r = await this.detector.detect(bitmap, t0, roi, this.opts.exposure);
+      const r = await this.detector.detect(bitmap, t0, null, this.opts.exposure);
       if (token !== this._loopToken) return;
       this.stats.inferMs = ema(this.stats.inferMs, r.inferMs, 0.1);
       this.stats.gain = r.gain;
@@ -431,8 +415,7 @@ export class VisionFeed {
     this.aspect = aspect;
     this.frameT = t;
     this.frameSeq = (this.frameSeq + 1) % 16777216;
-    this.stats.focus = !!this.roi;
-    this._cameraExposure();
+    this.stats.focus = false;
     this._onPoses(poses, this.sigs, aspect, t);
   }
 
@@ -441,89 +424,19 @@ export class VisionFeed {
     this._emit('poses', { poses, sigs, aspect, t });
   }
 
-  /**
-   * Tell the feed who the player is (their landmarks, full-frame coords), or null
-   * when there is no player. Call it once per processed frame. The model then
-   * looks only at a stable crop around the player; when the player is lost the
-   * crop widens quickly and returns to the whole frame.
-   */
-  setFocus(landmarks) {
-    const now = performance.now();
-    if (!this.opts.focus) { this.roi = null; return; }
-    const box = landmarks ? bodyExtent(landmarks) : null;
-    if (box) {
-      this._focusSeen = now;
-      const bw = box.x1 - box.x0, bh = box.y1 - box.y0;
-      // generous margins: room to swing the arms, lean, step a little. Extra HEADROOM:
-      // the landmarks stop at the eyes, the head does not, and the model needs the
-      // whole face (measured: a close player with the old crop was found in 34/53
-      // frames, with headroom 30/30)
-      const w = Math.min(1, Math.max(bw * 2.0, 0.45)), h = Math.min(1, Math.max(bh * 1.6 + 0.1, 0.6));
-      const cx = (box.x0 + box.x1) / 2, cy = (box.y0 + box.y1) / 2 - bh * 0.15;
-      const cand = clampRect({ x: cx - w / 2, y: cy - h / 2, w, h });
-      const cur = this.roi;
-      // hysteresis: keep the crop still while the player stays well inside it
-      const inside = cur && box.x0 > cur.x + cur.w * 0.12 && box.x1 < cur.x + cur.w * 0.88
-        && (box.y0 > cur.y + cur.h * 0.15 || cur.y <= 0) && box.y1 < cur.y + cur.h * 0.98;
-      const sameSize = cur && cand.w / cur.w > 0.8 && cand.w / cur.w < 1.25 && cand.h / cur.h > 0.8 && cand.h / cur.h < 1.25;
-      if (!(inside && sameSize)) this.roi = cand.w >= 0.95 && cand.h >= 0.95 ? null : cand;
-      this._pointOfInterest(cx, (box.y0 + box.y1) / 2);
-    } else if (this.roi) {
-      const gone = now - this._focusSeen;
-      if (gone > 700) this.roi = null;
-      else if (gone > 120) {
-        const r = this.roi;
-        const w = Math.min(1, r.w * 1.25), h = Math.min(1, r.h * 1.25);
-        const grown = clampRect({ x: r.x + r.w / 2 - w / 2, y: r.y + r.h / 2 - h / 2, w, h });
-        this.roi = grown.w >= 0.95 && grown.h >= 0.95 ? null : grown;
-      }
-    }
-  }
-
-  // Dark or back-lit scene: ask the camera sensor itself for more exposure where
-  // the browser exposes it (Chrome on Android and many desktop webcams). Real
-  // exposure raises the signal, which a software curve cannot do in the dark.
-  _cameraExposure() {
-    if (!this.opts.cameraControl) return;
-    const tr = this.stream && this.stream.getVideoTracks()[0];
-    if (!tr || !tr.getCapabilities || this._expoOK === false) return;
-    const now = performance.now();
-    if (now - (this._expoT || 0) < 2000) return;
-    this._expoT = now;
-    let cap;
-    try { cap = tr.getCapabilities().exposureCompensation; } catch { cap = null; }
-    if (!cap || typeof cap.max !== 'number') { this._expoOK = false; return; }
-    const want = this.stats.gain > 1 || this.stats.lum < 0.15 ? cap.max * 0.6 : 0;
-    const v = Math.max(cap.min, Math.min(cap.max, want));
-    if (v === this._expoV) return;
-    this._expoV = v;
-    tr.applyConstraints({ advanced: [{ exposureCompensation: v }] }).catch(() => { this._expoOK = false; });
-  }
-
-  // Phones that support it (Chrome on Android): meter exposure/focus on the player.
-  _pointOfInterest(x, y) {
-    if (!this.opts.cameraControl) return;
-    const tr = this.stream && this.stream.getVideoTracks()[0];
-    if (!tr || !tr.getCapabilities) return;
-    if (this._poiOK === undefined) {
-      try { this._poiOK = 'pointsOfInterest' in (tr.getCapabilities() || {}); } catch { this._poiOK = false; }
-    }
-    const now = performance.now();
-    if (!this._poiOK || now - (this._poiT || 0) < 1500) return;
-    this._poiT = now;
-    tr.applyConstraints({ advanced: [{ pointsOfInterest: [{ x, y }] }] }).catch(() => { this._poiOK = false; });
-  }
+  /** Kept for API compatibility: the web build never crops (see the header). */
+  setFocus() {}
 
   // Lower the model when the device cannot keep up (like the Python app's fallback).
   _adapt(now) {
-    if (!this.opts.adaptive || !this.detector || this.detector.model === 'lite') return;
+    if (!this.opts.adaptive || !this.detector || this.detector.model === 'lite') return;   // only 'full' can drop
     if (now - this._startedAt < 3000) return;
     // as the PC app: slow AND the model itself is slow (a slow camera alone is not the model's fault)
     if (this.stats.fps > 0 && this.stats.fps < 18 && this.stats.inferMs > 40) {
       if (!this._slowSince) this._slowSince = now;
       if (now - this._slowSince > 5000 && !this._swapping) {
         this._swapping = true;
-        const next = this.detector.model === 'heavy' ? 'full' : 'lite';
+        const next = 'lite';
         console.info(`[dronevision] ${this.stats.fps.toFixed(1)} fps: switching to ${next} model`);
         this.setModel(next).finally(() => { this._swapping = false; this._startedAt = performance.now(); });
       }
@@ -551,22 +464,6 @@ export class VisionFeed {
     this.detector?.close();
     this.detector = null;
   }
-}
-
-function bodyExtent(lm) {
-  let x0 = 1, y0 = 1, x1 = 0, y1 = 0, n = 0;
-  for (let i = 0; i < lm.length; i++) {
-    const p = lm[i];
-    if (!p || (p.visibility ?? 1) < 0.5 || p.x < -0.05 || p.x > 1.05 || p.y < -0.05 || p.y > 1.05) continue;
-    x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y);
-    n++;
-  }
-  return n >= 4 ? { x0: Math.max(0, x0), y0: Math.max(0, y0), x1: Math.min(1, x1), y1: Math.min(1, y1) } : null;
-}
-
-function clampRect(r) {
-  const w = Math.min(1, r.w), h = Math.min(1, r.h);
-  return { x: Math.min(Math.max(0, r.x), 1 - w), y: Math.min(Math.max(0, r.y), 1 - h), w, h };
 }
 
 function ema(prev, value, a) {
