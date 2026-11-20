@@ -87,7 +87,7 @@ public static class BuildWebGL
                 scenes = scenes,
                 locationPathName = fullOutputPath,
                 target = BuildTarget.WebGL,
-                options = BuildOptions.CleanBuildCache
+                options = BuildOptions.None
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
