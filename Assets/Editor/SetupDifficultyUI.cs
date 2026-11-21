@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.UI;
-using TMPro;
 
 public static class SetupDifficultyUI
 {
@@ -33,7 +32,7 @@ public static class SetupDifficultyUI
             return;
         }
 
-        // Deactivate TopVission (bottom-left logo)
+        // Deactivate TopVission logo
         Transform topVission = FindRecursive(startPanel.transform, "TopVission");
         if (topVission != null)
         {
@@ -48,8 +47,29 @@ public static class SetupDifficultyUI
             GameObject.DestroyImmediate(existingPanel.gameObject);
         }
 
-        // Create Difficulty Panel
-        GameObject diffPanelObj = new GameObject("Difficulty Panel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        // Load Sprites
+        Sprite chassisSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Difficulty_Chassis.png");
+        Sprite badgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Difficulty_Badge.png");
+        Sprite indicatorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Difficulty_Indicator.png");
+
+        Sprite easyNormalSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Easy_Normal.png");
+        Sprite easyActiveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Easy_Active.png");
+
+        Sprite normalNormalSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Normal_Normal.png");
+        Sprite normalActiveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Normal_Active.png");
+
+        Sprite hardNormalSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Hard_Normal.png");
+        Sprite hardActiveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Hard_Active.png");
+
+        if (chassisSprite == null || badgeSprite == null || indicatorSprite == null ||
+            easyNormalSprite == null || normalActiveSprite == null || hardNormalSprite == null)
+        {
+            Debug.LogError("Failed to load one or more Difficulty sprites from Assets/UI/Difficulty!");
+            return;
+        }
+
+        // 1. Root Difficulty Panel
+        GameObject diffPanelObj = new GameObject("Difficulty Panel", typeof(RectTransform));
         diffPanelObj.transform.SetParent(startPanel.transform, false);
         diffPanelObj.transform.SetAsLastSibling(); // Ensure it receives clicks over background start button
         diffPanelObj.layer = 5; // UI layer
@@ -59,99 +79,161 @@ public static class SetupDifficultyUI
         panelRT.anchorMax = new Vector2(0.5f, 0f);
         panelRT.pivot = new Vector2(0.5f, 0f);
         panelRT.anchoredPosition = new Vector2(0f, 65f);
-        panelRT.sizeDelta = new Vector2(460f, 115f);
+        panelRT.sizeDelta = new Vector2(1070f, 220f);
 
-        Image panelImg = diffPanelObj.GetComponent<Image>();
-        panelImg.color = new Color(0.04f, 0.08f, 0.14f, 0.88f);
-        panelImg.raycastTarget = true;
+        // 2. Chassis (Housing with beveled borders and side light flares)
+        GameObject chassisObj = new GameObject("Chassis", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        chassisObj.transform.SetParent(diffPanelObj.transform, false);
+        chassisObj.layer = 5;
 
-        // Load Orbitron font
-        TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/Orbitron/Orbitron-Regular SDF.asset");
+        RectTransform chassisRT = chassisObj.GetComponent<RectTransform>();
+        chassisRT.anchorMin = new Vector2(0.5f, 0.5f);
+        chassisRT.anchorMax = new Vector2(0.5f, 0.5f);
+        chassisRT.pivot = new Vector2(0.5f, 0.5f);
+        chassisRT.anchoredPosition = new Vector2(0f, -20f);
+        chassisRT.sizeDelta = new Vector2(1070f, 131f);
 
-        // Create Title / Label
-        GameObject labelObj = new GameObject("Difficulty Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        labelObj.transform.SetParent(diffPanelObj.transform, false);
+        Image chassisImg = chassisObj.GetComponent<Image>();
+        chassisImg.sprite = chassisSprite;
+        chassisImg.raycastTarget = false;
 
-        RectTransform labelRT = labelObj.GetComponent<RectTransform>();
-        labelRT.anchorMin = new Vector2(0f, 0.52f);
-        labelRT.anchorMax = new Vector2(1f, 0.98f);
-        labelRT.offsetMin = Vector2.zero;
-        labelRT.offsetMax = Vector2.zero;
+        // 3. Top Military Badge (Star circle + wings + "درجه سختی")
+        GameObject badgeObj = new GameObject("Badge", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        badgeObj.transform.SetParent(diffPanelObj.transform, false);
+        badgeObj.layer = 5;
 
-        TextMeshProUGUI labelTMP = labelObj.GetComponent<TextMeshProUGUI>();
-        if (font != null)
-        {
-            labelTMP.font = font;
-            labelTMP.fontSharedMaterial = font.material;
-        }
-        labelTMP.fontSize = 22f;
-        labelTMP.fontStyle = FontStyles.Bold;
-        labelTMP.alignment = TextAlignmentOptions.Center;
-        labelTMP.text = "DIFFICULTY: NORMAL";
-        labelTMP.color = new Color(1f, 0.85f, 0.2f, 1f);
-        labelTMP.raycastTarget = false;
+        RectTransform badgeRT = badgeObj.GetComponent<RectTransform>();
+        badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
+        badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
+        badgeRT.pivot = new Vector2(0.5f, 0.5f);
+        badgeRT.anchoredPosition = new Vector2(0f, 68f);
+        badgeRT.sizeDelta = new Vector2(436f, 92f);
 
-        // Create Slider using DefaultControls
-        DefaultControls.Resources res = new DefaultControls.Resources();
-        GameObject sliderObj = DefaultControls.CreateSlider(res);
-        sliderObj.name = "Difficulty Slider";
-        sliderObj.transform.SetParent(diffPanelObj.transform, false);
+        Image badgeImg = badgeObj.GetComponent<Image>();
+        badgeImg.sprite = badgeSprite;
+        badgeImg.raycastTarget = false;
 
-        RectTransform sliderRT = sliderObj.GetComponent<RectTransform>();
-        sliderRT.anchorMin = new Vector2(0.08f, 0.28f);
-        sliderRT.anchorMax = new Vector2(0.92f, 0.52f);
-        sliderRT.offsetMin = Vector2.zero;
-        sliderRT.offsetMax = Vector2.zero;
+        // 4. Buttons Container
+        GameObject buttonsObj = new GameObject("Buttons", typeof(RectTransform));
+        buttonsObj.transform.SetParent(diffPanelObj.transform, false);
+        buttonsObj.layer = 5;
 
-        Slider slider = sliderObj.GetComponent<Slider>();
-        slider.minValue = 0;
-        slider.maxValue = 2;
-        slider.wholeNumbers = true;
-        slider.value = 1;
+        RectTransform buttonsRT = buttonsObj.GetComponent<RectTransform>();
+        buttonsRT.anchorMin = new Vector2(0.5f, 0.5f);
+        buttonsRT.anchorMax = new Vector2(0.5f, 0.5f);
+        buttonsRT.pivot = new Vector2(0.5f, 0.5f);
+        buttonsRT.anchoredPosition = new Vector2(0f, -16f);
+        buttonsRT.sizeDelta = new Vector2(950f, 94f);
 
-        // Style the slider background
-        Image bgImg = sliderObj.transform.Find("Background")?.GetComponent<Image>();
-        if (bgImg != null)
-        {
-            bgImg.color = new Color(0.12f, 0.18f, 0.25f, 1f);
-        }
+        // 4a. Easy Button
+        GameObject easyObj = new GameObject("Button_Easy", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        easyObj.transform.SetParent(buttonsObj.transform, false);
+        easyObj.layer = 5;
 
-        // Style the fill
-        Image fillImg = sliderObj.transform.Find("Fill Area/Fill")?.GetComponent<Image>();
-        if (fillImg != null)
-        {
-            fillImg.color = new Color(0.2f, 0.8f, 1f, 1f);
-        }
+        RectTransform easyRT = easyObj.GetComponent<RectTransform>();
+        easyRT.anchorMin = new Vector2(0.5f, 0.5f);
+        easyRT.anchorMax = new Vector2(0.5f, 0.5f);
+        easyRT.pivot = new Vector2(0.5f, 0.5f);
+        easyRT.anchoredPosition = new Vector2(-283f, 0f);
+        easyRT.sizeDelta = new Vector2(263f, 94f);
 
-        // Style the handle
-        RectTransform handleRT = sliderObj.transform.Find("Handle Slide Area/Handle")?.GetComponent<RectTransform>();
-        if (handleRT != null)
-        {
-            handleRT.sizeDelta = new Vector2(26f, 26f);
-            Image handleImg = handleRT.GetComponent<Image>();
-            if (handleImg != null)
-            {
-                handleImg.color = new Color(1f, 1f, 1f, 1f);
-            }
-        }
+        Image easyImg = easyObj.GetComponent<Image>();
+        easyImg.sprite = easyNormalSprite;
+        easyImg.raycastTarget = true;
 
-        // Add 3 step labels: EASY, NORMAL, HARD
-        CreateStepLabel(diffPanelObj.transform, font, "EASY", new Vector2(0.08f, 0.05f), new Vector2(0.30f, 0.26f), TextAlignmentOptions.Left, new Color(0.3f, 0.9f, 0.5f, 0.8f));
-        CreateStepLabel(diffPanelObj.transform, font, "NORMAL", new Vector2(0.35f, 0.05f), new Vector2(0.65f, 0.26f), TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f, 0.8f));
-        CreateStepLabel(diffPanelObj.transform, font, "HARD", new Vector2(0.70f, 0.05f), new Vector2(0.92f, 0.26f), TextAlignmentOptions.Right, new Color(1f, 0.35f, 0.35f, 0.8f));
+        Button easyBtn = easyObj.GetComponent<Button>();
+        easyBtn.transition = Selectable.Transition.None;
 
-        // Add DifficultyUIController component
+        // 4b. Normal Button
+        GameObject normalObj = new GameObject("Button_Normal", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        normalObj.transform.SetParent(buttonsObj.transform, false);
+        normalObj.layer = 5;
+
+        RectTransform normalRT = normalObj.GetComponent<RectTransform>();
+        normalRT.anchorMin = new Vector2(0.5f, 0.5f);
+        normalRT.anchorMax = new Vector2(0.5f, 0.5f);
+        normalRT.pivot = new Vector2(0.5f, 0.5f);
+        normalRT.anchoredPosition = new Vector2(0f, 0f);
+        normalRT.sizeDelta = new Vector2(360f, 94f);
+
+        Image normalImg = normalObj.GetComponent<Image>();
+        normalImg.sprite = normalActiveSprite;
+        normalImg.raycastTarget = true;
+
+        Button normalBtn = normalObj.GetComponent<Button>();
+        normalBtn.transition = Selectable.Transition.None;
+
+        // 4c. Hard Button
+        GameObject hardObj = new GameObject("Button_Hard", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        hardObj.transform.SetParent(buttonsObj.transform, false);
+        hardObj.layer = 5;
+
+        RectTransform hardRT = hardObj.GetComponent<RectTransform>();
+        hardRT.anchorMin = new Vector2(0.5f, 0.5f);
+        hardRT.anchorMax = new Vector2(0.5f, 0.5f);
+        hardRT.pivot = new Vector2(0.5f, 0.5f);
+        hardRT.anchoredPosition = new Vector2(283f, 0f);
+        hardRT.sizeDelta = new Vector2(263f, 94f);
+
+        Image hardImg = hardObj.GetComponent<Image>();
+        hardImg.sprite = hardNormalSprite;
+        hardImg.raycastTarget = true;
+
+        Button hardBtn = hardObj.GetComponent<Button>();
+        hardBtn.transition = Selectable.Transition.None;
+
+        // 5. Indicator Arrow (Glowing yellow triangle pointing upwards)
+        GameObject indicatorObj = new GameObject("Indicator_Arrow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        indicatorObj.transform.SetParent(diffPanelObj.transform, false);
+        indicatorObj.layer = 5;
+
+        RectTransform indicatorRT = indicatorObj.GetComponent<RectTransform>();
+        indicatorRT.anchorMin = new Vector2(0.5f, 0.5f);
+        indicatorRT.anchorMax = new Vector2(0.5f, 0.5f);
+        indicatorRT.pivot = new Vector2(0.5f, 0.5f);
+        indicatorRT.anchoredPosition = new Vector2(0f, -64f);
+        indicatorRT.sizeDelta = new Vector2(90f, 45f);
+
+        Image indicatorImg = indicatorObj.GetComponent<Image>();
+        indicatorImg.sprite = indicatorSprite;
+        indicatorImg.raycastTarget = false;
+
+        // 6. Add DifficultyUIController component and hook references
         DifficultyUIController controller = diffPanelObj.AddComponent<DifficultyUIController>();
         SerializedObject so = new SerializedObject(controller);
-        so.FindProperty("difficultySlider").objectReferenceValue = slider;
-        so.FindProperty("difficultyLabel").objectReferenceValue = labelTMP;
+
+        so.FindProperty("easyButton").objectReferenceValue = easyBtn;
+        so.FindProperty("normalButton").objectReferenceValue = normalBtn;
+        so.FindProperty("hardButton").objectReferenceValue = hardBtn;
+
+        so.FindProperty("easyImage").objectReferenceValue = easyImg;
+        so.FindProperty("normalImage").objectReferenceValue = normalImg;
+        so.FindProperty("hardImage").objectReferenceValue = hardImg;
+
+        so.FindProperty("easyNormalSprite").objectReferenceValue = easyNormalSprite;
+        so.FindProperty("easyActiveSprite").objectReferenceValue = easyActiveSprite;
+
+        so.FindProperty("normalNormalSprite").objectReferenceValue = normalNormalSprite;
+        so.FindProperty("normalActiveSprite").objectReferenceValue = normalActiveSprite;
+
+        so.FindProperty("hardNormalSprite").objectReferenceValue = hardNormalSprite;
+        so.FindProperty("hardActiveSprite").objectReferenceValue = hardActiveSprite;
+
+        so.FindProperty("indicatorArrow").objectReferenceValue = indicatorRT;
+        so.FindProperty("easyArrowX").floatValue = -283f;
+        so.FindProperty("normalArrowX").floatValue = 0f;
+        so.FindProperty("hardArrowX").floatValue = 283f;
+        so.FindProperty("arrowY").floatValue = -64f;
+        so.FindProperty("animateIndicator").boolValue = true;
+        so.FindProperty("indicatorSpeed").floatValue = 20f;
+
         so.ApplyModifiedProperties();
 
         SetLayerRecursively(diffPanelObj, 5);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-        Debug.Log("Successfully created Difficulty UI in GameScene!");
+        Debug.Log("Successfully constructed Military Sci-Fi Difficulty UI in GameScene!");
     }
 
     private static void SetLayerRecursively(GameObject obj, int layer)
@@ -161,31 +243,6 @@ public static class SetupDifficultyUI
         {
             SetLayerRecursively(child.gameObject, layer);
         }
-    }
-
-    private static void CreateStepLabel(Transform parent, TMP_FontAsset font, string text, Vector2 anchorMin, Vector2 anchorMax, TextAlignmentOptions align, Color color)
-    {
-        GameObject go = new GameObject("Label_" + text, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        go.transform.SetParent(parent, false);
-
-        RectTransform rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-
-        TextMeshProUGUI tmp = go.GetComponent<TextMeshProUGUI>();
-        if (font != null)
-        {
-            tmp.font = font;
-            tmp.fontSharedMaterial = font.material;
-        }
-        tmp.fontSize = 13f;
-        tmp.fontStyle = FontStyles.Bold;
-        tmp.alignment = align;
-        tmp.text = text;
-        tmp.color = color;
-        tmp.raycastTarget = false;
     }
 
     private static Transform FindRecursive(Transform root, string name)

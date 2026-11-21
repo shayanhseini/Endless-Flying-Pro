@@ -4,96 +4,156 @@ using TMPro;
 
 public class DifficultyUIController : MonoBehaviour
 {
-    [Header("UI Components")]
+    [Header("Buttons")]
+    [SerializeField] private Button easyButton;
+    [SerializeField] private Button normalButton;
+    [SerializeField] private Button hardButton;
+
+    [Header("Button Images")]
+    [SerializeField] private Image easyImage;
+    [SerializeField] private Image normalImage;
+    [SerializeField] private Image hardImage;
+
+    [Header("Sprites - Easy")]
+    [SerializeField] private Sprite easyNormalSprite;
+    [SerializeField] private Sprite easyActiveSprite;
+
+    [Header("Sprites - Normal")]
+    [SerializeField] private Sprite normalNormalSprite;
+    [SerializeField] private Sprite normalActiveSprite;
+
+    [Header("Sprites - Hard")]
+    [SerializeField] private Sprite hardNormalSprite;
+    [SerializeField] private Sprite hardActiveSprite;
+
+    [Header("Indicator Arrow")]
+    [SerializeField] private RectTransform indicatorArrow;
+    [SerializeField] private float easyArrowX = -151f;
+    [SerializeField] private float normalArrowX = 0f;
+    [SerializeField] private float hardArrowX = 151f;
+    [SerializeField] private float arrowY = -23f;
+    [SerializeField] private bool animateIndicator = true;
+    [SerializeField] private float indicatorSpeed = 20f;
+
+    [Header("Legacy Support (Optional)")]
     [SerializeField] private Slider difficultySlider;
     [SerializeField] private TMP_Text difficultyLabel;
 
-    [Header("Difficulty Texts")]
-    [SerializeField] private string easyText = "DIFFICULTY: EASY";
-    [SerializeField] private string normalText = "DIFFICULTY: NORMAL";
-    [SerializeField] private string hardText = "DIFFICULTY: HARD";
-
-    [Header("Difficulty Colors")]
-    [SerializeField] private Color easyColor = new Color(0.2f, 0.95f, 0.45f, 1f);
-    [SerializeField] private Color normalColor = new Color(1f, 0.85f, 0.2f, 1f);
-    [SerializeField] private Color hardColor = new Color(1f, 0.3f, 0.3f, 1f);
-
     private GameManager gameManager;
+    private int currentDifficulty = 1;
+    private float targetArrowX = 0f;
 
     private void Awake()
     {
-        if (difficultySlider == null)
-            difficultySlider = GetComponentInChildren<Slider>();
-
-        if (difficultyLabel == null)
-            difficultyLabel = GetComponentInChildren<TMP_Text>();
-
         gameManager = FindFirstObjectByType<GameManager>();
+
+        if (easyButton != null)
+            easyButton.onClick.AddListener(() => OnDifficultyButtonClicked(0));
+
+        if (normalButton != null)
+            normalButton.onClick.AddListener(() => OnDifficultyButtonClicked(1));
+
+        if (hardButton != null)
+            hardButton.onClick.AddListener(() => OnDifficultyButtonClicked(2));
+
+        if (difficultySlider != null)
+            difficultySlider.onValueChanged.AddListener(OnSliderValueChanged);
     }
 
     private void Start()
     {
-        InitializeSlider();
+        InitializeDifficulty();
     }
 
     private void OnEnable()
     {
-        if (difficultySlider != null)
-        {
-            difficultySlider.onValueChanged.RemoveListener(OnSliderValueChanged);
-            difficultySlider.onValueChanged.AddListener(OnSliderValueChanged);
-        }
-        InitializeSlider();
+        InitializeDifficulty();
     }
 
-    private void OnDisable()
+    private void Update()
     {
+        if (indicatorArrow != null && animateIndicator)
+        {
+            Vector2 pos = indicatorArrow.anchoredPosition;
+            if (Mathf.Abs(pos.x - targetArrowX) > 0.1f)
+            {
+                pos.x = Mathf.Lerp(pos.x, targetArrowX, Time.unscaledDeltaTime * indicatorSpeed);
+                indicatorArrow.anchoredPosition = pos;
+            }
+        }
+    }
+
+    public void InitializeDifficulty()
+    {
+        int level = 1;
+
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.Instance.LoadSavedDifficulty();
+            level = (int)DifficultyManager.Instance.CurrentDifficulty;
+        }
+        else
+        {
+            level = PlayerPrefs.GetInt("GameDifficulty", 1);
+        }
+
+        currentDifficulty = Mathf.Clamp(level, 0, 2);
+
         if (difficultySlider != null)
         {
-            difficultySlider.onValueChanged.RemoveListener(OnSliderValueChanged);
+            difficultySlider.minValue = 0;
+            difficultySlider.maxValue = 2;
+            difficultySlider.wholeNumbers = true;
+            difficultySlider.SetValueWithoutNotify(currentDifficulty);
         }
+
+        UpdateVisuals(currentDifficulty, immediate: true);
     }
 
     public void InitializeSlider()
     {
-        if (DifficultyManager.Instance != null)
+        InitializeDifficulty();
+    }
+
+    public void OnDifficultyButtonClicked(int level)
+    {
+        if (currentDifficulty == level) return;
+
+        SetDifficulty(level);
+
+        GameAudioController audio = FindFirstObjectByType<GameAudioController>();
+        if (audio != null)
         {
-            DifficultyManager.Instance.LoadSavedDifficulty();
-            int current = (int)DifficultyManager.Instance.CurrentDifficulty;
-            if (difficultySlider != null)
-            {
-                difficultySlider.minValue = 0;
-                difficultySlider.maxValue = 2;
-                difficultySlider.wholeNumbers = true;
-                difficultySlider.SetValueWithoutNotify(current);
-            }
-            UpdateLabel(current);
-        }
-        else
-        {
-            int saved = PlayerPrefs.GetInt("GameDifficulty", 1);
-            if (difficultySlider != null)
-            {
-                difficultySlider.minValue = 0;
-                difficultySlider.maxValue = 2;
-                difficultySlider.wholeNumbers = true;
-                difficultySlider.SetValueWithoutNotify(saved);
-            }
-            UpdateLabel(saved);
+            audio.PlayButtonSound();
         }
     }
 
     public void OnSliderValueChanged(float value)
     {
         int level = Mathf.RoundToInt(value);
+        if (level != currentDifficulty)
+        {
+            SetDifficulty(level);
+
+            GameAudioController audio = FindFirstObjectByType<GameAudioController>();
+            if (audio != null)
+            {
+                audio.PlayButtonSound();
+            }
+        }
+    }
+
+    public void SetDifficulty(int level)
+    {
+        currentDifficulty = Mathf.Clamp(level, 0, 2);
 
         if (DifficultyManager.Instance != null)
         {
-            DifficultyManager.Instance.SetDifficulty(level);
+            DifficultyManager.Instance.SetDifficulty(currentDifficulty);
         }
         else
         {
-            PlayerPrefs.SetInt("GameDifficulty", level);
+            PlayerPrefs.SetInt("GameDifficulty", currentDifficulty);
             PlayerPrefs.Save();
         }
 
@@ -102,34 +162,76 @@ public class DifficultyUIController : MonoBehaviour
             gameManager.ResetWaitingTimer();
         }
 
-        GameAudioController audio = FindFirstObjectByType<GameAudioController>();
-        if (audio != null)
+        if (difficultySlider != null && Mathf.RoundToInt(difficultySlider.value) != currentDifficulty)
         {
-            audio.PlayButtonSound();
+            difficultySlider.SetValueWithoutNotify(currentDifficulty);
         }
 
-        UpdateLabel(level);
+        UpdateVisuals(currentDifficulty, immediate: false);
     }
 
-    private void UpdateLabel(int level)
+    private void UpdateVisuals(int level, bool immediate)
     {
-        if (difficultyLabel == null) return;
+        // 1. Easy Button
+        if (easyImage != null)
+        {
+            easyImage.sprite = (level == 0) ? easyActiveSprite : easyNormalSprite;
+        }
 
+        // 2. Normal Button
+        if (normalImage != null)
+        {
+            normalImage.sprite = (level == 1) ? normalActiveSprite : normalNormalSprite;
+        }
+
+        // 3. Hard Button
+        if (hardImage != null)
+        {
+            hardImage.sprite = (level == 2) ? hardActiveSprite : hardNormalSprite;
+        }
+
+        // 4. Indicator Arrow
         switch (level)
         {
             case 0:
-                difficultyLabel.text = easyText;
-                difficultyLabel.color = easyColor;
+                targetArrowX = easyArrowX;
                 break;
             case 2:
-                difficultyLabel.text = hardText;
-                difficultyLabel.color = hardColor;
+                targetArrowX = hardArrowX;
                 break;
             case 1:
             default:
-                difficultyLabel.text = normalText;
-                difficultyLabel.color = normalColor;
+                targetArrowX = normalArrowX;
                 break;
+        }
+
+        if (indicatorArrow != null)
+        {
+            if (immediate || !animateIndicator)
+            {
+                indicatorArrow.anchoredPosition = new Vector2(targetArrowX, arrowY);
+            }
+        }
+
+        // 5. Optional Legacy Label
+        if (difficultyLabel != null)
+        {
+            switch (level)
+            {
+                case 0:
+                    difficultyLabel.text = "DIFFICULTY: EASY";
+                    difficultyLabel.color = new Color(0.2f, 0.95f, 0.95f, 1f);
+                    break;
+                case 2:
+                    difficultyLabel.text = "DIFFICULTY: HARD";
+                    difficultyLabel.color = new Color(1f, 0.3f, 0.3f, 1f);
+                    break;
+                case 1:
+                default:
+                    difficultyLabel.text = "DIFFICULTY: NORMAL";
+                    difficultyLabel.color = new Color(1f, 0.85f, 0.2f, 1f);
+                    break;
+            }
         }
     }
 }
