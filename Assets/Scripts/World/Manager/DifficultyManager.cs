@@ -17,42 +17,57 @@ public class DifficultyManager : MonoBehaviour
     [Header("Score")]
     [SerializeField] private int maxScore = 500;
 
-    [Header("Coins")]
-    [SerializeField] private int startCoinCount = 10;
-    [SerializeField] private int maxCoinCount = 20;
-
-    [Header("Obstacles")]
-    [SerializeField] private int startObstacleCount = 10;
-    [SerializeField] private int maxObstacleCount = 26;
-
-    [Header("Shield")]
+    [Header("Shield & Power-Up Defaults")]
     [SerializeField] private bool startWithShield = true;
     [SerializeField] private int shieldDisableScore = 100;
-
-    [Header("Speed Power-Up")]
     [SerializeField] private bool startWithSpeedPowerUp = true;
     [SerializeField] private int speedPowerUpEnableScore = 150;
 
-    [Header("Air Defense Spawn Probability")]
-    [SerializeField, Range(0f, 1f)] private float easyDefenseChance = 0.35f;
-    [SerializeField, Range(0f, 1f)] private float normalDefenseChance = 0.70f;
-    [SerializeField, Range(0f, 1f)] private float hardDefenseChance = 1.00f;
+    [Header("Easy Settings")]
+    [SerializeField] private int easyStartObstacles = 1;
+    [SerializeField] private int easyMaxObstacles = 2;
+    [SerializeField] private float easyBaseSpeed = 9.0f;
+    [SerializeField] private float easyMaxSpeed = 10.5f;
+    [SerializeField, Range(0f, 1f)] private float easyDefenseChance = 0.0f;
+    [SerializeField] private Vector2 easyTurnSpeedRange = new Vector2(0.20f, 0.30f);
+    [SerializeField] private Vector2 easyPredictionRange = new Vector2(0.10f, 0.20f);
+    [SerializeField] private int easyShieldBonusScore = 150;
 
-    [Header("Missile Tracking Accuracy (Turn Speed Multiplier)")]
-    [SerializeField] private Vector2 easyTurnSpeedRange = new Vector2(0.40f, 0.60f);
+    [Header("Normal Settings")]
+    [SerializeField] private int normalStartObstacles = 6;
+    [SerializeField] private int normalMaxObstacles = 11;
+    [SerializeField] private float normalBaseSpeed = 10.0f;
+    [SerializeField] private float normalMaxSpeed = 12.0f;
+    [SerializeField, Range(0f, 1f)] private float normalDefenseChance = 0.60f;
     [SerializeField] private Vector2 normalTurnSpeedRange = new Vector2(0.70f, 0.85f);
-    [SerializeField] private Vector2 hardTurnSpeedRange = new Vector2(0.95f, 1.20f);
-
-    [Header("Missile Prediction Time Multiplier")]
-    [SerializeField] private Vector2 easyPredictionRange = new Vector2(0.20f, 0.40f);
     [SerializeField] private Vector2 normalPredictionRange = new Vector2(0.65f, 0.85f);
-    [SerializeField] private Vector2 hardPredictionRange = new Vector2(0.95f, 1.15f);
+    [SerializeField] private int normalShieldBonusScore = 0;
+
+    [Header("Hard Settings")]
+    [SerializeField] private int hardStartObstacles = 12;
+    [SerializeField] private int hardMaxObstacles = 18;
+    [SerializeField] private float hardBaseSpeed = 11.5f;
+    [SerializeField] private float hardMaxSpeed = 13.5f;
+    [SerializeField, Range(0f, 1f)] private float hardDefenseChance = 0.90f;
+    [SerializeField] private Vector2 hardTurnSpeedRange = new Vector2(1.05f, 1.30f);
+    [SerializeField] private Vector2 hardPredictionRange = new Vector2(1.00f, 1.25f);
+    [SerializeField] private int hardShieldBonusScore = -50;
 
     public GameDifficulty CurrentDifficulty => currentDifficulty;
 
+    public float EasyBaseSpeed => easyBaseSpeed;
+    public float EasyMaxSpeed => easyMaxSpeed;
+    public float NormalBaseSpeed => normalBaseSpeed;
+    public float NormalMaxSpeed => normalMaxSpeed;
+    public float HardBaseSpeed => hardBaseSpeed;
+    public float HardMaxSpeed => hardMaxSpeed;
+
+    public float CurrentProgress { get; private set; }
+
     public int CoinCount { get; private set; }
     public int ObstacleCount { get; private set; }
-    public bool HasShield { get; private set; }
+    public int ShieldCount { get; private set; }
+    public bool HasShield => ShieldCount > 0;
     public bool HasSpeedPowerUp { get; private set; }
 
     private int currentScore = 0;
@@ -67,7 +82,7 @@ public class DifficultyManager : MonoBehaviour
         Instance = this;
 
         LoadSavedDifficulty();
-        UpdateDifficulty(0);
+        UpdateProgress();
     }
 
     private void OnDestroy()
@@ -86,18 +101,22 @@ public class DifficultyManager : MonoBehaviour
         GameEvents.ScoreChanged -= OnScoreChanged;
     }
 
+    private bool difficultyLoaded = false;
+
     public void LoadSavedDifficulty()
     {
         int saved = PlayerPrefs.GetInt("GameDifficulty", (int)GameDifficulty.Normal);
         currentDifficulty = (GameDifficulty)Mathf.Clamp(saved, 0, 2);
+        difficultyLoaded = true;
     }
 
     public void SetDifficulty(int level)
     {
         currentDifficulty = (GameDifficulty)Mathf.Clamp(level, 0, 2);
+        difficultyLoaded = true;
         PlayerPrefs.SetInt("GameDifficulty", (int)currentDifficulty);
         PlayerPrefs.Save();
-        UpdateDifficulty(currentScore);
+        UpdateProgress();
     }
 
     public void SetDifficulty(float sliderValue)
@@ -108,65 +127,96 @@ public class DifficultyManager : MonoBehaviour
     private void OnScoreChanged(int score)
     {
         currentScore = score;
-        UpdateDifficulty(score);
+        UpdateProgress();
     }
 
-    private void UpdateDifficulty(int score)
+    public void UpdateProgress()
     {
-        float progress =
-            Mathf.Clamp01(
-                (float)score / maxScore
-            );
+        if (!difficultyLoaded)
+        {
+            LoadSavedDifficulty();
+        }
+        float timeProgress = 0f;
+        if (GameManager.Instance != null && GameManager.Instance.State == GameState.Playing)
+        {
+            float duration = GameManager.Instance.GameDuration > 0f ? GameManager.Instance.GameDuration : 65f;
+            timeProgress = Mathf.Clamp01((duration - GameManager.Instance.RemainingTime) / duration);
+        }
 
-        float obstacleMultiplier = 1f;
-        int shieldBonusScore = 0;
+        float scoreProgress = Mathf.Clamp01((float)currentScore / Mathf.Max(1, maxScore));
+
+        // Blended progression: time progress guarantees scaling over 60 seconds
+        CurrentProgress = Mathf.Clamp01(Mathf.Max(timeProgress, scoreProgress * 0.8f));
 
         switch (currentDifficulty)
         {
             case GameDifficulty.Easy:
-                obstacleMultiplier = 0.75f;
-                shieldBonusScore = 50;
+                ObstacleCount = Mathf.RoundToInt(Mathf.Lerp(easyStartObstacles, easyMaxObstacles, CurrentProgress));
+                CoinCount = Mathf.RoundToInt(Mathf.Lerp(12, 18, CurrentProgress));
+                ShieldCount = GetShieldCountForChunk();
                 break;
+
             case GameDifficulty.Hard:
-                obstacleMultiplier = 1.25f;
-                shieldBonusScore = -30;
+                ObstacleCount = Mathf.RoundToInt(Mathf.Lerp(hardStartObstacles, hardMaxObstacles, CurrentProgress));
+                CoinCount = Mathf.RoundToInt(Mathf.Lerp(5, 10, CurrentProgress));
+                ShieldCount = GetShieldCountForChunk();
                 break;
+
             case GameDifficulty.Normal:
             default:
-                obstacleMultiplier = 1.0f;
-                shieldBonusScore = 0;
+                ObstacleCount = Mathf.RoundToInt(Mathf.Lerp(normalStartObstacles, normalMaxObstacles, CurrentProgress));
+                CoinCount = Mathf.RoundToInt(Mathf.Lerp(8, 14, CurrentProgress));
+                ShieldCount = GetShieldCountForChunk();
                 break;
         }
 
-        // Coins
-        CoinCount =
-            Mathf.RoundToInt(
-                Mathf.Lerp(
-                    startCoinCount,
-                    maxCoinCount,
-                    progress
-                )
-            );
+        HasSpeedPowerUp = startWithSpeedPowerUp && (currentScore >= speedPowerUpEnableScore || CurrentProgress >= 0.45f);
+    }
 
-        // Obstacles
-        ObstacleCount =
-            Mathf.RoundToInt(
-                Mathf.Lerp(
-                    startObstacleCount * obstacleMultiplier,
-                    maxObstacleCount * obstacleMultiplier,
-                    progress
-                )
-            );
+    public int GetShieldCountForChunk()
+    {
+        switch (currentDifficulty)
+        {
+            case GameDifficulty.Easy:
+                // Abundant shield balloons on Easy (2 to 4 per chunk)
+                return UnityEngine.Random.Range(2, 5);
 
-        // Shield
-        HasShield =
-            startWithShield &&
-            score < (shieldDisableScore + shieldBonusScore);
+            case GameDifficulty.Hard:
+                // Rare shield balloons on Hard (30% chance for 1, otherwise 0)
+                return UnityEngine.Random.value < 0.30f ? 1 : 0;
 
-        // Speed Power-Up
-        HasSpeedPowerUp =
-            startWithSpeedPowerUp &&
-            score >= speedPowerUpEnableScore;
+            case GameDifficulty.Normal:
+            default:
+                // Balanced: 1 shield balloon per chunk
+                return 1;
+        }
+    }
+
+    public float GetCurrentTargetBaseSpeed()
+    {
+        float startSpd;
+        float maxSpd;
+
+        switch (currentDifficulty)
+        {
+            case GameDifficulty.Easy:
+                startSpd = easyBaseSpeed;
+                maxSpd = easyMaxSpeed;
+                break;
+
+            case GameDifficulty.Hard:
+                startSpd = hardBaseSpeed;
+                maxSpd = hardMaxSpeed;
+                break;
+
+            case GameDifficulty.Normal:
+            default:
+                startSpd = normalBaseSpeed;
+                maxSpd = normalMaxSpeed;
+                break;
+        }
+
+        return Mathf.Lerp(startSpd, maxSpd, CurrentProgress);
     }
 
     public bool RollAirDefenseActive()
@@ -192,10 +242,12 @@ public class DifficultyManager : MonoBehaviour
                 turnRange = easyTurnSpeedRange;
                 predRange = easyPredictionRange;
                 break;
+
             case GameDifficulty.Hard:
                 turnRange = hardTurnSpeedRange;
                 predRange = hardPredictionRange;
                 break;
+
             case GameDifficulty.Normal:
             default:
                 turnRange = normalTurnSpeedRange;

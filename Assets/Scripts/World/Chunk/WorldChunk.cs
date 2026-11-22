@@ -52,12 +52,15 @@ public class WorldChunk : MonoBehaviour
         );
 
 
-        content.ApplyDifficulty(
-            difficultyManager.CoinCount,
-            difficultyManager.ObstacleCount,
-            difficultyManager.HasShield,
-            difficultyManager.HasSpeedPowerUp
-        );
+        if (content != null && difficultyManager != null)
+        {
+            content.ApplyDifficulty(
+                difficultyManager.CoinCount,
+                difficultyManager.ObstacleCount,
+                difficultyManager.GetShieldCountForChunk(),
+                difficultyManager.HasSpeedPowerUp
+            );
+        }
     }
 
 

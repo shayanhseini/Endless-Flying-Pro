@@ -19,6 +19,38 @@ public class CameraTransitionController : MonoBehaviour
     private Coroutine transitionCoroutine;
 
 
+    public void SnapToGameplay()
+    {
+        if (transitionCoroutine != null)
+        {
+            StopCoroutine(transitionCoroutine);
+            transitionCoroutine = null;
+        }
+
+        if (gameplayPoint != null)
+        {
+            transform.SetPositionAndRotation(
+                gameplayPoint.position,
+                gameplayPoint.rotation
+            );
+        }
+
+        if (planeCameraController != null)
+        {
+            if (gameplayPoint != null)
+            {
+                planeCameraController.SetInitialTransform(
+                    gameplayPoint.position,
+                    gameplayPoint.rotation
+                );
+            }
+
+            planeCameraController.StopCinematicFollow();
+            planeCameraController.enabled = true;
+        }
+    }
+
+
     public void StartGameTransition()
     {
         if (transitionCoroutine != null)

@@ -75,7 +75,21 @@ public class UIManager : MonoBehaviour
 
     private void Awake()
     {
-        ShowStartUI();
+        if (GameManager.AutoRestartNextRound)
+        {
+            if (startPanel != null)
+                startPanel.SetActive(false);
+            if (startCanvasGroup != null)
+            {
+                startCanvasGroup.alpha = 0f;
+                startCanvasGroup.interactable = false;
+                startCanvasGroup.blocksRaycasts = false;
+            }
+        }
+        else
+        {
+            ShowStartUI();
+        }
 
         if (gamePanel != null)
             gamePanel.SetActive(false);
@@ -90,6 +104,41 @@ public class UIManager : MonoBehaviour
         UpdateFinalScore(0);
 
         UpdateShieldText(false);
+    }
+
+
+    public void StartAutoRestartGame()
+    {
+        HidePanel(startPanel);
+        HidePanel(gameOverPanel);
+        HidePanel(winPanel);
+
+        if (startCanvasGroup != null)
+        {
+            startCanvasGroup.alpha = 0f;
+            startCanvasGroup.interactable = false;
+            startCanvasGroup.blocksRaycasts = false;
+        }
+
+        if (gamePanel != null)
+            gamePanel.SetActive(true);
+
+        if (gameCanvasGroup != null)
+        {
+            gameCanvasGroup.alpha = 1f;
+            gameCanvasGroup.interactable = true;
+            gameCanvasGroup.blocksRaycasts = true;
+        }
+
+        if (cameraTransition != null)
+        {
+            cameraTransition.SnapToGameplay();
+        }
+
+        if (gameManager != null)
+        {
+            gameManager.StartGame();
+        }
     }
 
 

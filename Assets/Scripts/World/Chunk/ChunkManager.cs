@@ -11,6 +11,8 @@ public class ChunkManager : MonoBehaviour
     [SerializeField] private DifficultyManager difficultyManager;
     [SerializeField] private GameManager gameManager;
     
+    public static ChunkManager Instance { get; private set; }
+
     public int InitialChunkCount =>
         chunks.Length;
     
@@ -23,6 +25,10 @@ public class ChunkManager : MonoBehaviour
     
     private void Awake()
     {
+        Instance = this;
+        finalGroundPending = false;
+        finalGroundActivated = false;
+
         if (startChunk != null)
         {
             startChunkActive = true;
@@ -31,6 +37,11 @@ public class ChunkManager : MonoBehaviour
         SortChunks();
         AlignChunks();
         
+        if (difficultyManager != null)
+        {
+            difficultyManager.UpdateProgress();
+        }
+
         foreach (WorldChunk chunk in chunks)
         {
             chunk.ResetContent(
@@ -40,6 +51,12 @@ public class ChunkManager : MonoBehaviour
         }
     }
     
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     private void OnEnable()
     {
         GameEvents.GameTimeFinished +=
@@ -146,7 +163,19 @@ public class ChunkManager : MonoBehaviour
         
         chunk.MoveTo(position);
         
-        if (finalGroundPending)
+        float currentSpeed = worldMovement != null ? worldMovement.WorldSpeed : 10f;
+        float travelTimeToPlayer = position.z / Mathf.Max(1f, currentSpeed);
+
+        bool shouldActivateFinal = finalGroundPending;
+        if (!shouldActivateFinal && gameManager != null && gameManager.State == GameState.Playing)
+        {
+            if (gameManager.RemainingTime <= travelTimeToPlayer)
+            {
+                shouldActivateFinal = true;
+            }
+        }
+
+        if (shouldActivateFinal)
         {
             ActivateFinalChunk(chunk);
 
@@ -155,6 +184,11 @@ public class ChunkManager : MonoBehaviour
         }
         else
         {
+            if (difficultyManager != null)
+            {
+                difficultyManager.UpdateProgress();
+            }
+
             chunk.ResetContent(
                 difficultyManager,
                 gameManager.CurrentGroundType

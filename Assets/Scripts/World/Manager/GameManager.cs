@@ -7,16 +7,21 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    public static bool AutoRestartNextRound { get; set; } = false;
+
     [Header("References")]
     [SerializeField] private FadeController fadeController;
     [SerializeField] private WorldMovementManager worldMovement;
 
 
     [Header("Game Timer")]
-    [SerializeField] private float gameDuration = 120f;
+    [SerializeField] private float gameDuration = 65f;
+
+    public float GameDuration => gameDuration;
 
     [Header("Auto Restart")]
-    [SerializeField] private float autoRestartDelay = 3f;
+    [SerializeField] private float autoRestartDelay = 1.2f;
+    [SerializeField] private float autoRestartDelayWin = 2.5f;
 
     [Header("Auto Start")]
     [SerializeField] private bool autoStartEnabled = false;
@@ -57,8 +62,11 @@ public class GameManager : MonoBehaviour
 
         RemainingTime = gameDuration;
 
-        waitingForFirstInput = true;
+        gameTimeFinished = false;
+
+        waitingForFirstInput = !AutoRestartNextRound;
         waitingTimer = 0f;
+        autoRestartCoroutine = null;
     }
 
     private void Start()
@@ -66,6 +74,27 @@ public class GameManager : MonoBehaviour
         if (DroneVision.DroneVisionInput.Instance != null)
         {
             DroneVision.DroneVisionInput.Instance.OnLockChanged += HandleDroneVisionLockChanged;
+        }
+
+        if (AutoRestartNextRound)
+        {
+            AutoRestartNextRound = false;
+            TriggerAutoRestartRound();
+        }
+    }
+
+    private void TriggerAutoRestartRound()
+    {
+        waitingForFirstInput = false;
+
+        UIManager uiManager = FindFirstObjectByType<UIManager>();
+        if (uiManager != null)
+        {
+            uiManager.StartAutoRestartGame();
+        }
+        else
+        {
+            StartGame();
         }
     }
 
@@ -249,8 +278,9 @@ public class GameManager : MonoBehaviour
         State =
             GameState.GameOver;
 
-
         GameEvents.RaiseGameOver();
+
+        AutoRestartNextRound = true;
 
         if (autoRestartCoroutine == null)
         {
@@ -269,6 +299,9 @@ public class GameManager : MonoBehaviour
 
     public void Victory()
     {
+        if (State != GameState.Playing)
+            return;
+
         if (DroneVision.DroneVisionInput.Instance != null)
         {
             DroneVision.DroneVisionInput.Instance.SetPaused(true);
@@ -277,8 +310,21 @@ public class GameManager : MonoBehaviour
         State =
             GameState.Victory;
 
-
         GameEvents.RaiseVictory();
+
+        AutoRestartNextRound = true;
+
+        if (autoRestartCoroutine == null)
+        {
+            autoRestartCoroutine =
+                StartCoroutine(AutoRestartAfterVictory());
+        }
+    }
+
+    private IEnumerator AutoRestartAfterVictory()
+    {
+        yield return new WaitForSecondsRealtime(autoRestartDelayWin);
+        RestartGame();
     }
 
 
@@ -314,6 +360,7 @@ public class GameManager : MonoBehaviour
 
     public void Quit()
     {
+        AutoRestartNextRound = false;
         Application.Quit();
     }
 }

@@ -32,19 +32,36 @@ public class WorldMovementManager : MonoBehaviour
     private void Awake()
     {
         _maxScore =
-            difficultyManager.GetMaxScore();
+            difficultyManager != null ? difficultyManager.GetMaxScore() : 500;
+
+        float initialSpeed =
+            difficultyManager != null ? difficultyManager.GetCurrentTargetBaseSpeed() : startSpeed;
 
         BaseWorldSpeed =
-            startSpeed;
+            initialSpeed;
 
         WorldSpeed =
-            startSpeed;
+            initialSpeed;
 
         SpeedMultiplier =
             1f;
 
         IsMovementEnabled =
             false;
+    }
+
+
+    private void Update()
+    {
+        if (!IsMovementEnabled)
+            return;
+
+        if (difficultyManager != null)
+        {
+            difficultyManager.UpdateProgress();
+            BaseWorldSpeed = difficultyManager.GetCurrentTargetBaseSpeed();
+            UpdateWorldSpeed();
+        }
     }
 
 
@@ -84,40 +101,42 @@ public class WorldMovementManager : MonoBehaviour
 
     private void UpdateSpeed(int score)
     {
-        float newBaseSpeed;
-
-
-        if (score <= _maxScore)
+        if (difficultyManager != null)
         {
-            float progress =
-                Mathf.Clamp01(
-                    (float)score / _maxScore
-                );
-
-
-            newBaseSpeed =
-                Mathf.Lerp(
-                    startSpeed,
-                    speedAtMaxScore,
-                    progress
-                );
+            difficultyManager.UpdateProgress();
+            BaseWorldSpeed = difficultyManager.GetCurrentTargetBaseSpeed();
         }
         else
         {
-            int scoreAfterMax =
-                score - _maxScore;
+            float newBaseSpeed;
+            if (score <= _maxScore)
+            {
+                float progress =
+                    Mathf.Clamp01(
+                        (float)score / _maxScore
+                    );
 
+                newBaseSpeed =
+                    Mathf.Lerp(
+                        startSpeed,
+                        speedAtMaxScore,
+                        progress
+                    );
+            }
+            else
+            {
+                int scoreAfterMax =
+                    score - _maxScore;
 
-            newBaseSpeed =
-                speedAtMaxScore +
-                scoreAfterMax *
-                speedIncreaseAfterMaxScore;
+                newBaseSpeed =
+                    speedAtMaxScore +
+                    scoreAfterMax *
+                    speedIncreaseAfterMaxScore;
+            }
+
+            BaseWorldSpeed =
+                newBaseSpeed;
         }
-
-
-        BaseWorldSpeed =
-            newBaseSpeed;
-
 
         UpdateWorldSpeed();
     }

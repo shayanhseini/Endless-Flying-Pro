@@ -1280,32 +1280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b9d21633e53a6c41bbde98a9e2eaf70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChunkContent
-  coins:
-  - {fileID: 234268340716200255}
-  - {fileID: 1657300982819502174}
-  - {fileID: 4497807836011753336}
-  - {fileID: 7386078674449471468}
-  - {fileID: 5655616682476713137}
-  - {fileID: 6945130711703727939}
-  - {fileID: 2067325125204204039}
-  - {fileID: 1352772355072006962}
-  - {fileID: 857482923065856645}
-  - {fileID: 6138777356282927930}
-  - {fileID: 5529749902148509267}
-  - {fileID: 2301608437348267920}
-  - {fileID: 6594038390411531706}
-  - {fileID: 4655504585897769575}
-  - {fileID: 9019255618771103656}
-  - {fileID: 7322633715741938358}
-  - {fileID: 7259591250187410036}
-  - {fileID: 8877839874504105356}
-  - {fileID: 3570333742056612912}
-  - {fileID: 5939676916342775671}
-  - {fileID: 7172176663643686161}
-  - {fileID: 3245930504695420681}
-  - {fileID: 7375527882372694802}
-  - {fileID: 2484647228972234149}
-  - {fileID: 6828524378154141926}
+  coins: []
   obstacles:
   - {fileID: 2368232058473487860}
   - {fileID: 4453218407340223689}
@@ -1797,7 +1772,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4807809123755536791
 Transform:
   m_ObjectHideFlags: 0

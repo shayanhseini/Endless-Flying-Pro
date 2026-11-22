@@ -17,6 +17,19 @@ public class FadeController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (GameManager.AutoRestartNextRound)
+        {
+            if (fadeImage != null)
+            {
+                Color color = fadeImage.color;
+                color.a = 0f;
+                fadeImage.color = color;
+                fadeImage.raycastTarget = false;
+                fadeImage.gameObject.SetActive(false);
+            }
+            return;
+        }
+
         fadeImage.gameObject.SetActive(true);
         FadeIn();
     }

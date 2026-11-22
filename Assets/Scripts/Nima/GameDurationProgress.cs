@@ -9,7 +9,7 @@ public class GameDurationProgress : MonoBehaviour
     [SerializeField] private RectTransform movingImage;
 
     [Header("Extra Time")]
-    [SerializeField] private float extraTime = 1f;
+    [SerializeField] private float extraTime = 0f;
 
     [Header("Cinematic Path")]
     [SerializeField] private int pathSegments = 24;
@@ -21,10 +21,12 @@ public class GameDurationProgress : MonoBehaviour
     [SerializeField] private Color remainingColor = new Color(1f, 1f, 1f, 0.62f);
 
     private float timer;
-    private float totalDuration;
+    private float totalDuration = 65f;
     private RectTransform visualRoot;
     private UnityEngine.UI.Image[] pathImages;
     private UnityEngine.UI.Image[] checkpointImages;
+    private int lastCompletedSegment = -1;
+    private int lastCompletedCheckpoint = -1;
 
     private void Start()
     {
@@ -34,27 +36,64 @@ public class GameDurationProgress : MonoBehaviour
             return;
         }
 
-        totalDuration = gameManager.RemainingTime + extraTime;
-        timer = 0f;
-
         BindOrBuildCinematicPath();
+        ResetProgress();
+    }
+
+    private void OnEnable()
+    {
+        GameEvents.GameStarted += HandleGameStarted;
+        GameEvents.Victory += HandleVictory;
+        GameEvents.GameOver += HandleGameOver;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.GameStarted -= HandleGameStarted;
+        GameEvents.Victory -= HandleVictory;
+        GameEvents.GameOver -= HandleGameOver;
+    }
+
+    private void HandleGameStarted()
+    {
+        enabled = true;
+        ResetProgress();
+    }
+
+    private void HandleVictory()
+    {
+        SetVisualProgress(1f);
+    }
+
+    private void HandleGameOver()
+    {
+        // Keep visual progress frozen at current point
+    }
+
+    public void ResetProgress()
+    {
+        totalDuration = (gameManager != null && gameManager.GameDuration > 0f)
+            ? gameManager.GameDuration
+            : (gameManager != null && gameManager.RemainingTime > 0f ? gameManager.RemainingTime : 65f);
+
+        timer = 0f;
+        lastCompletedSegment = -2;
+        lastCompletedCheckpoint = -2;
         SetVisualProgress(0f);
     }
 
     private void Update()
     {
-        if (gameManager.State != GameState.Playing)
+        if (gameManager == null || gameManager.State != GameState.Playing)
             return;
 
-        timer += Time.deltaTime;
+        float duration = totalDuration > 0f ? totalDuration : 65f;
+        float remaining = Mathf.Clamp(gameManager.RemainingTime, 0f, duration);
 
-        float progress =
-            Mathf.Clamp01(timer / Mathf.Max(totalDuration, 0.01f));
+        // Perfectly synchronized with flight duration and runway touchdown
+        float progress = Mathf.Clamp01((duration - remaining) / duration);
 
         SetVisualProgress(progress);
-
-        if (progress >= 1f)
-            enabled = false;
     }
 
     public void BuildPersistentHierarchy()
@@ -196,26 +235,31 @@ public class GameDurationProgress : MonoBehaviour
         if (visualRoot == null)
             return;
 
-        for (int i = 0; i < pathImages.Length; i++)
+        int totalSegments = pathImages != null ? pathImages.Length : 24;
+        int activeSegment = progress <= 0f ? -1 : Mathf.Min(totalSegments - 1, Mathf.FloorToInt(progress * totalSegments));
+        if (activeSegment != lastCompletedSegment && pathImages != null)
         {
-            float segmentProgress = (i + 0.5f) / pathImages.Length;
-            if (pathImages[i] != null)
+            lastCompletedSegment = activeSegment;
+            for (int i = 0; i < pathImages.Length; i++)
             {
-                pathImages[i].color = segmentProgress <= progress
-                    ? completedColor
-                    : remainingColor;
+                if (pathImages[i] != null)
+                {
+                    pathImages[i].color = (activeSegment >= 0 && i <= activeSegment) ? completedColor : remainingColor;
+                }
             }
         }
 
-        for (int i = 0; i < checkpointImages.Length; i++)
+        int totalCheckpoints = checkpointImages != null ? checkpointImages.Length : 7;
+        int activeCheckpoint = progress <= 0f ? 0 : Mathf.Min(totalCheckpoints - 1, Mathf.FloorToInt(progress * (totalCheckpoints - 1)));
+        if (activeCheckpoint != lastCompletedCheckpoint && checkpointImages != null)
         {
-            float checkpointProgress =
-                i / (float)(checkpointImages.Length - 1);
-            if (checkpointImages[i] != null)
+            lastCompletedCheckpoint = activeCheckpoint;
+            for (int i = 0; i < checkpointImages.Length; i++)
             {
-                checkpointImages[i].color = checkpointProgress <= progress
-                    ? completedColor
-                    : remainingColor;
+                if (checkpointImages[i] != null)
+                {
+                    checkpointImages[i].color = i <= activeCheckpoint ? completedColor : remainingColor;
+                }
             }
         }
 
