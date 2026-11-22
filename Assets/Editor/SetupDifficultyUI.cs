@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -62,13 +63,15 @@ public static class SetupDifficultyUI
         Sprite hardActiveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Difficulty/Button_Hard_Active.png");
 
         if (chassisSprite == null || badgeSprite == null || indicatorSprite == null ||
-            easyNormalSprite == null || normalActiveSprite == null || hardNormalSprite == null)
+            easyNormalSprite == null || easyActiveSprite == null ||
+            normalNormalSprite == null || normalActiveSprite == null ||
+            hardNormalSprite == null || hardActiveSprite == null)
         {
             Debug.LogError("Failed to load one or more Difficulty sprites from Assets/UI/Difficulty!");
             return;
         }
 
-        // 1. Root Difficulty Panel
+        // 1. Root Difficulty Panel (960 x 220)
         GameObject diffPanelObj = new GameObject("Difficulty Panel", typeof(RectTransform));
         diffPanelObj.transform.SetParent(startPanel.transform, false);
         diffPanelObj.transform.SetAsLastSibling(); // Ensure it receives clicks over background start button
@@ -79,9 +82,9 @@ public static class SetupDifficultyUI
         panelRT.anchorMax = new Vector2(0.5f, 0f);
         panelRT.pivot = new Vector2(0.5f, 0f);
         panelRT.anchoredPosition = new Vector2(0f, 65f);
-        panelRT.sizeDelta = new Vector2(1070f, 220f);
+        panelRT.sizeDelta = new Vector2(960f, 220f);
 
-        // 2. Chassis (Housing with beveled borders and side light flares)
+        // 2. Chassis (960 x 150)
         GameObject chassisObj = new GameObject("Chassis", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         chassisObj.transform.SetParent(diffPanelObj.transform, false);
         chassisObj.layer = 5;
@@ -90,14 +93,14 @@ public static class SetupDifficultyUI
         chassisRT.anchorMin = new Vector2(0.5f, 0.5f);
         chassisRT.anchorMax = new Vector2(0.5f, 0.5f);
         chassisRT.pivot = new Vector2(0.5f, 0.5f);
-        chassisRT.anchoredPosition = new Vector2(0f, -20f);
-        chassisRT.sizeDelta = new Vector2(1070f, 131f);
+        chassisRT.anchoredPosition = new Vector2(0f, -12f);
+        chassisRT.sizeDelta = new Vector2(960f, 150f);
 
         Image chassisImg = chassisObj.GetComponent<Image>();
         chassisImg.sprite = chassisSprite;
         chassisImg.raycastTarget = false;
 
-        // 3. Top Military Badge (Star circle + wings + "درجه سختی")
+        // 3. Top Military Badge (440 x 90)
         GameObject badgeObj = new GameObject("Badge", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         badgeObj.transform.SetParent(diffPanelObj.transform, false);
         badgeObj.layer = 5;
@@ -106,14 +109,14 @@ public static class SetupDifficultyUI
         badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
         badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
         badgeRT.pivot = new Vector2(0.5f, 0.5f);
-        badgeRT.anchoredPosition = new Vector2(0f, 68f);
-        badgeRT.sizeDelta = new Vector2(436f, 92f);
+        badgeRT.anchoredPosition = new Vector2(0f, 56f);
+        badgeRT.sizeDelta = new Vector2(440f, 90f);
 
         Image badgeImg = badgeObj.GetComponent<Image>();
         badgeImg.sprite = badgeSprite;
         badgeImg.raycastTarget = false;
 
-        // 4. Buttons Container
+        // 4. Buttons Container (850 x 94)
         GameObject buttonsObj = new GameObject("Buttons", typeof(RectTransform));
         buttonsObj.transform.SetParent(diffPanelObj.transform, false);
         buttonsObj.layer = 5;
@@ -122,10 +125,10 @@ public static class SetupDifficultyUI
         buttonsRT.anchorMin = new Vector2(0.5f, 0.5f);
         buttonsRT.anchorMax = new Vector2(0.5f, 0.5f);
         buttonsRT.pivot = new Vector2(0.5f, 0.5f);
-        buttonsRT.anchoredPosition = new Vector2(0f, -16f);
-        buttonsRT.sizeDelta = new Vector2(950f, 94f);
+        buttonsRT.anchoredPosition = new Vector2(0f, -12f);
+        buttonsRT.sizeDelta = new Vector2(850f, 94f);
 
-        // 4a. Easy Button
+        // 4a. Easy Button (270 x 94)
         GameObject easyObj = new GameObject("Button_Easy", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         easyObj.transform.SetParent(buttonsObj.transform, false);
         easyObj.layer = 5;
@@ -134,8 +137,8 @@ public static class SetupDifficultyUI
         easyRT.anchorMin = new Vector2(0.5f, 0.5f);
         easyRT.anchorMax = new Vector2(0.5f, 0.5f);
         easyRT.pivot = new Vector2(0.5f, 0.5f);
-        easyRT.anchoredPosition = new Vector2(-283f, 0f);
-        easyRT.sizeDelta = new Vector2(263f, 94f);
+        easyRT.anchoredPosition = new Vector2(-260f, 0f);
+        easyRT.sizeDelta = new Vector2(270f, 94f);
 
         Image easyImg = easyObj.GetComponent<Image>();
         easyImg.sprite = easyNormalSprite;
@@ -144,7 +147,7 @@ public static class SetupDifficultyUI
         Button easyBtn = easyObj.GetComponent<Button>();
         easyBtn.transition = Selectable.Transition.None;
 
-        // 4b. Normal Button
+        // 4b. Normal Button (310 x 94)
         GameObject normalObj = new GameObject("Button_Normal", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         normalObj.transform.SetParent(buttonsObj.transform, false);
         normalObj.layer = 5;
@@ -154,7 +157,7 @@ public static class SetupDifficultyUI
         normalRT.anchorMax = new Vector2(0.5f, 0.5f);
         normalRT.pivot = new Vector2(0.5f, 0.5f);
         normalRT.anchoredPosition = new Vector2(0f, 0f);
-        normalRT.sizeDelta = new Vector2(360f, 94f);
+        normalRT.sizeDelta = new Vector2(310f, 94f);
 
         Image normalImg = normalObj.GetComponent<Image>();
         normalImg.sprite = normalActiveSprite;
@@ -163,7 +166,7 @@ public static class SetupDifficultyUI
         Button normalBtn = normalObj.GetComponent<Button>();
         normalBtn.transition = Selectable.Transition.None;
 
-        // 4c. Hard Button
+        // 4c. Hard Button (270 x 94)
         GameObject hardObj = new GameObject("Button_Hard", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
         hardObj.transform.SetParent(buttonsObj.transform, false);
         hardObj.layer = 5;
@@ -172,8 +175,8 @@ public static class SetupDifficultyUI
         hardRT.anchorMin = new Vector2(0.5f, 0.5f);
         hardRT.anchorMax = new Vector2(0.5f, 0.5f);
         hardRT.pivot = new Vector2(0.5f, 0.5f);
-        hardRT.anchoredPosition = new Vector2(283f, 0f);
-        hardRT.sizeDelta = new Vector2(263f, 94f);
+        hardRT.anchoredPosition = new Vector2(260f, 0f);
+        hardRT.sizeDelta = new Vector2(270f, 94f);
 
         Image hardImg = hardObj.GetComponent<Image>();
         hardImg.sprite = hardNormalSprite;
@@ -182,7 +185,7 @@ public static class SetupDifficultyUI
         Button hardBtn = hardObj.GetComponent<Button>();
         hardBtn.transition = Selectable.Transition.None;
 
-        // 5. Indicator Arrow (Glowing yellow triangle pointing upwards)
+        // 5. Indicator Arrow (80 x 40)
         GameObject indicatorObj = new GameObject("Indicator_Arrow", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         indicatorObj.transform.SetParent(diffPanelObj.transform, false);
         indicatorObj.layer = 5;
@@ -191,8 +194,8 @@ public static class SetupDifficultyUI
         indicatorRT.anchorMin = new Vector2(0.5f, 0.5f);
         indicatorRT.anchorMax = new Vector2(0.5f, 0.5f);
         indicatorRT.pivot = new Vector2(0.5f, 0.5f);
-        indicatorRT.anchoredPosition = new Vector2(0f, -64f);
-        indicatorRT.sizeDelta = new Vector2(90f, 45f);
+        indicatorRT.anchoredPosition = new Vector2(0f, -62f);
+        indicatorRT.sizeDelta = new Vector2(80f, 40f);
 
         Image indicatorImg = indicatorObj.GetComponent<Image>();
         indicatorImg.sprite = indicatorSprite;
@@ -220,10 +223,10 @@ public static class SetupDifficultyUI
         so.FindProperty("hardActiveSprite").objectReferenceValue = hardActiveSprite;
 
         so.FindProperty("indicatorArrow").objectReferenceValue = indicatorRT;
-        so.FindProperty("easyArrowX").floatValue = -283f;
+        so.FindProperty("easyArrowX").floatValue = -260f;
         so.FindProperty("normalArrowX").floatValue = 0f;
-        so.FindProperty("hardArrowX").floatValue = 283f;
-        so.FindProperty("arrowY").floatValue = -64f;
+        so.FindProperty("hardArrowX").floatValue = 260f;
+        so.FindProperty("arrowY").floatValue = -62f;
         so.FindProperty("animateIndicator").boolValue = true;
         so.FindProperty("indicatorSpeed").floatValue = 20f;
 

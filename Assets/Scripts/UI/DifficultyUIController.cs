@@ -40,12 +40,14 @@ public class DifficultyUIController : MonoBehaviour
     [SerializeField] private TMP_Text difficultyLabel;
 
     private GameManager gameManager;
+    private GameAudioController audioController;
     private int currentDifficulty = 1;
     private float targetArrowX = 0f;
 
     private void Awake()
     {
         gameManager = FindFirstObjectByType<GameManager>();
+        audioController = FindFirstObjectByType<GameAudioController>();
 
         if (easyButton != null)
             easyButton.onClick.AddListener(() => OnDifficultyButtonClicked(0));
@@ -121,10 +123,12 @@ public class DifficultyUIController : MonoBehaviour
 
         SetDifficulty(level);
 
-        GameAudioController audio = FindFirstObjectByType<GameAudioController>();
-        if (audio != null)
+        if (audioController == null)
+            audioController = FindFirstObjectByType<GameAudioController>();
+
+        if (audioController != null)
         {
-            audio.PlayButtonSound();
+            audioController.PlayButtonSound();
         }
     }
 

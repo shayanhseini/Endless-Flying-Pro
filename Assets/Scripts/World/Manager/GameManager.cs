@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float autoRestartDelay = 3f;
 
     [Header("Auto Start")]
-    [SerializeField] private bool autoStartEnabled = true;
+    [SerializeField] private bool autoStartEnabled = false;
     [Min(0.5f)]
     [SerializeField] private float autoStartDelay = 7f;
 
@@ -71,10 +71,7 @@ public class GameManager : MonoBehaviour
 
     private void HandleDroneVisionLockChanged(bool locked)
     {
-        if (locked && State == GameState.Waiting)
-        {
-            TriggerAutoStart();
-        }
+        // Do not auto-start game on lock changed; wait for user to click Start button
     }
 
     private void OnDestroy()
