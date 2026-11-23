@@ -54,7 +54,7 @@ export class VisionFeed {
    */
   constructor(o = {}) {
     this.opts = {
-      model: 'auto', delegate: 'auto', numPoses: 1, adaptive: true, worker: 'auto', maxFps: 30,
+      model: 'lite', delegate: 'auto', numPoses: 1, adaptive: true, worker: 'auto', maxFps: 30,
       exposure: true,
       width: 640, height: 360, fps: 30,
       assetsBase: new URL('../vendor/', import.meta.url).href,

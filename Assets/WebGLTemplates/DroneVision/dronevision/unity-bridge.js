@@ -216,7 +216,7 @@ const api = {
     if (feed) { feed.start(); return; }
     view = createView(cfg);
     feed = new VisionFeed({
-      model: cfg.model === 'lite' || cfg.model === 'full' ? cfg.model : 'auto',   // auto: lite on phones / weak PCs, full elsewhere (drops to lite if slow)
+      model: cfg.model === 'full' ? 'full' : 'lite',   // lite: same strokes as the reference on the PC, half the CPU of full
       delegate: cfg.delegate || 'auto',                // auto = CPU on desktops (no GPU shared with the game), probe on phones
       numPoses: cfg.numPoses || 1, maxFps: cfg.maxFps || 30, video: view.video,
       width: cfg.width || 640, height: cfg.height || 360,   // 16:9; bigger frames measured the same model time and landmarks

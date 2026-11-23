@@ -37,7 +37,7 @@ public class WorldChunk : MonoBehaviour
 
         try
         {
-            // 1. Optimize shadow casters on background props: dense small props don't need shadow passes
+            // Optimize shadow casters on background props: dense repetitive props don't need expensive shadow maps
             Renderer[] renderers = finalGround.GetComponentsInChildren<Renderer>(true);
             foreach (Renderer r in renderers)
             {
@@ -46,10 +46,13 @@ public class WorldChunk : MonoBehaviour
                 string n = r.gameObject.name.ToLowerInvariant();
                 string parentN = r.transform.parent != null ? r.transform.parent.name.ToLowerInvariant() : "";
 
+                // Small & background props: disable casting shadows to keep WebGL 60 FPS
                 if (n.Contains("humvee") || parentN.Contains("humvee") ||
                     n.Contains("tower") || parentN.Contains("tower") ||
                     n.Contains("shelter") || parentN.Contains("shelter") ||
-                    n.Contains("radar") || parentN.Contains("radar"))
+                    n.Contains("radar") || parentN.Contains("radar") ||
+                    n.Contains("fence") || parentN.Contains("fence") ||
+                    n.Contains("prop") || parentN.Contains("prop"))
                 {
                     r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
@@ -58,15 +61,6 @@ public class WorldChunk : MonoBehaviour
                     r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 }
                 r.receiveShadows = true;
-            }
-
-            // 2. Pre-warm and statically batch the geometry
-            bool wasActive = finalGround.activeSelf;
-            finalGround.SetActive(true);
-            StaticBatchingUtility.Combine(finalGround);
-            if (!wasActive)
-            {
-                finalGround.SetActive(false);
             }
         }
         catch (System.Exception ex)

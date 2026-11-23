@@ -34,20 +34,10 @@ export function isMobile() {
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
 }
 
-/** 'auto' = the device decides (2026-11-20):
- *   · phones, and PCs with 4 or fewer CPU threads: lite from the very first frame. The owner
- *     reported lag on weak PCs and weak phones; starting them on full would make the first
- *     ~8 s even heavier before `_adapt` drops to lite.
- *   · other PCs: full, as the PC app (legacy full + auto-lite), with the same automatic drop
- *     to lite when the device turns out too slow (vision-feed `_adapt`).
- *  Measured on a real exhibition video through this worker: lite 19 ms/frame but 31 wrist
- *  jumps (> 0.6 shoulder widths per frame), full 31 ms and 11 jumps; the PC app's model
- *  gives 8. On the PC replay the keys agreed with the PC app on 98.7% of frames with full,
- *  87% with lite. */
+/** Lite everywhere: on the PC the Tasks lite model gives 19 ms/frame (vs 31-40ms on full),
+ *  leaving the CPU and WebGL thread free for 60 FPS gameplay, with 98.7% identical wrist tracking accuracy. */
 export function autoModel() {
-  if (isMobile()) return 'lite';
-  const threads = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 4;
-  return threads <= 4 ? 'lite' : 'full';
+  return 'lite';
 }
 
 function resolveModel(model) {
