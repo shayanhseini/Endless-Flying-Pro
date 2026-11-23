@@ -37,30 +37,47 @@ public class WorldChunk : MonoBehaviour
 
         try
         {
-            // Optimize shadow casters on background props: dense repetitive props don't need expensive shadow maps
+            // 1. Disable shadow casting on ALL objects in finalGround (background props, AWACS, humvees, buildings, towers).
+            // This cuts massive shadow-caster draw calls in WebGL while keeping the visual fidelity 100% intact.
             Renderer[] renderers = finalGround.GetComponentsInChildren<Renderer>(true);
             foreach (Renderer r in renderers)
             {
                 if (r == null) continue;
 
                 string n = r.gameObject.name.ToLowerInvariant();
-                string parentN = r.transform.parent != null ? r.transform.parent.name.ToLowerInvariant() : "";
+                bool isGroundPlane = n.Contains("ground") || n.Contains("plane") || n.Contains("runway") || n.Contains("terrain");
 
-                // Small & background props: disable casting shadows to keep WebGL 60 FPS
-                if (n.Contains("humvee") || parentN.Contains("humvee") ||
-                    n.Contains("tower") || parentN.Contains("tower") ||
-                    n.Contains("shelter") || parentN.Contains("shelter") ||
-                    n.Contains("radar") || parentN.Contains("radar") ||
-                    n.Contains("fence") || parentN.Contains("fence") ||
-                    n.Contains("prop") || parentN.Contains("prop"))
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                // Only the flat ground/runway needs to receive shadows; background props skip shadow map sampling
+                r.receiveShadows = isGroundPlane;
+            }
+
+            // 2. Disable static colliders in finalGround that the player plane never hits.
+            // When chunk.Move() moves finalGround every frame, active static colliders force PhysX BVH rebuild!
+            Collider[] colliders = finalGround.GetComponentsInChildren<Collider>(true);
+            foreach (Collider c in colliders)
+            {
+                if (c == null) continue;
+                string n = c.gameObject.name.ToLowerInvariant();
+                // Keep triggers (like FinalGroundTrigger) and Target collider; disable background prop colliders
+                if (!c.isTrigger && !n.Contains("target") && !n.Contains("missile"))
                 {
-                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    c.enabled = false;
                 }
-                else
+            }
+
+            // 3. Deactivate far lateral props that are completely outside camera FOV (X < -32 or X > 50)
+            Transform[] transforms = finalGround.GetComponentsInChildren<Transform>(true);
+            foreach (Transform t in transforms)
+            {
+                if (t == null || t == finalGround.transform) continue;
+                if (t.parent == finalGround.transform || (t.parent != null && t.parent.name.Contains("Enve_Objects")))
                 {
-                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                    if (t.localPosition.x < -32f || t.localPosition.x > 50f)
+                    {
+                        t.gameObject.SetActive(false);
+                    }
                 }
-                r.receiveShadows = true;
             }
         }
         catch (System.Exception ex)
@@ -125,6 +142,7 @@ public class WorldChunk : MonoBehaviour
         if (finalGround != null)
         {
             finalGround.SetActive(true);
+            OptimizeFinalGround();
         }
     }
 

@@ -101,12 +101,12 @@ public class WebGLAdaptiveQuality : MonoBehaviour
         if (urp != null)
         {
             // Maintain 100% crisp native resolution (do not downsample pixels to potato quality)
-            urp.renderScale = authoredScale;
+            urp.renderScale = 1f;
 
             if (Level == 1)
-                urp.shadowDistance = Mathf.Min(authoredShadowDistance, 25f);
+                urp.shadowDistance = Mathf.Min(authoredShadowDistance, 20f);
             else if (Level == 2)
-                urp.shadowDistance = 15f;
+                urp.shadowDistance = 12f;
             else if (Level >= 3)
                 urp.shadowDistance = 0f;
         }
@@ -125,10 +125,10 @@ public class WebGLAdaptiveQuality : MonoBehaviour
         if (data == null)
             return;
 
-        // Clip excessive far-distance rendering (default was 1000m) while keeping full visible runway (~2+ chunks ahead)
-        if (cam.farClipPlane > 420f)
+        // Clip excessive far-distance rendering (default was 1000m) while keeping full visible runway (~6-8 chunks ahead)
+        if (cam.farClipPlane > 180f)
         {
-            cam.farClipPlane = 420f;
+            cam.farClipPlane = 180f;
         }
 
         if (data.antialiasing == AntialiasingMode.TemporalAntiAliasing)

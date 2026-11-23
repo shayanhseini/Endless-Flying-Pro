@@ -23266,7 +23266,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e354d0a20cfe9a640ae99295da740225, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraDistanceCulling
-  renderDistance: 500
+  renderDistance: 180
 --- !u!1 &8347696111246641775
 GameObject:
   m_ObjectHideFlags: 0
