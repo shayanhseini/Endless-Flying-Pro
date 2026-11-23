@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -7,9 +8,29 @@ using TMPro;
 [InitializeOnLoad]
 public static class PopulateIranSansGlyphs
 {
+    private const string TriggerPath = "Temp/trigger_fix_font.txt";
+
     static PopulateIranSansGlyphs()
     {
+        EditorApplication.update += CheckTrigger;
         EditorApplication.delayCall += FixFontAsset;
+    }
+
+    private static void CheckTrigger()
+    {
+        if (!File.Exists(TriggerPath))
+            return;
+
+        try
+        {
+            File.Delete(TriggerPath);
+        }
+        catch
+        {
+            return;
+        }
+
+        FixFontAsset();
     }
 
     [MenuItem("Tools/Populate IranSans Glyphs")]
@@ -98,6 +119,9 @@ public static class PopulateIranSansGlyphs
             'K', 'M', 'H', 'S', 'P', 'E', 'D', 'W', 'N'
         };
 
+        // Ensure asset is dynamic while adding characters
+        fontAsset.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+
         int alreadyPresent = 0;
         int added = 0;
         int failed = 0;
@@ -130,11 +154,10 @@ public static class PopulateIranSansGlyphs
             }
         }
 
-        if (added > 0)
-        {
-            EditorUtility.SetDirty(fontAsset);
-            AssetDatabase.SaveAssets();
-            Debug.Log($"[PopulateIranSansGlyphs] Added {added} new glyphs to {fontAsset.name}. Already present: {alreadyPresent}.");
-        }
+        // Freeze as Static so Unity never purges dynamic glyph cache on build or asset refresh
+        fontAsset.atlasPopulationMode = AtlasPopulationMode.Static;
+        EditorUtility.SetDirty(fontAsset);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[PopulateIranSansGlyphs] Froze {fontAsset.name} as Static with {fontAsset.characterTable.Count} glyphs (Added: {added}, Existing: {alreadyPresent}).");
     }
 }

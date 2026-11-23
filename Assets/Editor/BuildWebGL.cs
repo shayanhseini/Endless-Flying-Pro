@@ -29,12 +29,22 @@ public static class BuildWebGL
         if (!File.Exists(TriggerPath))
             return;
 
+        string content = "";
         try
         {
+            content = File.ReadAllText(TriggerPath).Trim();
             File.Delete(TriggerPath);
         }
         catch
         {
+            return;
+        }
+
+        if (content == "font_only")
+        {
+            Debug.Log("[BuildWebGL] Running FixFontAsset only...");
+            PopulateIranSansGlyphs.FixFontAsset();
+            File.WriteAllText(StatusPath, "FONT_FIXED");
             return;
         }
 
@@ -57,6 +67,7 @@ public static class BuildWebGL
             // 1. Settings, Textures, Audio, and Mesh Optimizations
             WebGLOptimizer.ApplyOptimizations();
             ApplyAllOptimizations.ExecuteAll();
+            PopulateIranSansGlyphs.FixFontAsset();
 
             // 2. Gather active scenes
             string[] scenes = EditorBuildSettings.scenes
