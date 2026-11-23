@@ -129,6 +129,12 @@ public class WebGLAdaptiveQuality : MonoBehaviour
         if (data == null)
             return;
 
+        // Clip excessive far-distance rendering (default was 1000m) while keeping full visible runway (~2+ chunks ahead)
+        if (cam.farClipPlane > 420f)
+        {
+            cam.farClipPlane = 420f;
+        }
+
         if (data.antialiasing == AntialiasingMode.TemporalAntiAliasing)
             data.antialiasing = AntialiasingMode.FastApproximateAntialiasing;
 

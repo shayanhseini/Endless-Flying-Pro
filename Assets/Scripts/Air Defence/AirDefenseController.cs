@@ -59,6 +59,10 @@ public class AirDefenseController : MonoBehaviour
         if (player == null)
             return;
 
+        float dz = transform.position.z - player.position.z;
+        if (dz < -15f || dz > 120f)
+            return;
+
         RotateTowardsPlayer();
     }
 

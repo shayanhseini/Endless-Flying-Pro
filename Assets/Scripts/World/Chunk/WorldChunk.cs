@@ -25,6 +25,56 @@ public class WorldChunk : MonoBehaviour
     [SerializeField]
     private Transform finalTarget;
 
+    private void Awake()
+    {
+        OptimizeFinalGround();
+    }
+
+    private void OptimizeFinalGround()
+    {
+        if (finalGround == null)
+            return;
+
+        try
+        {
+            // 1. Optimize shadow casters on background props: dense small props don't need shadow passes
+            Renderer[] renderers = finalGround.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer r in renderers)
+            {
+                if (r == null) continue;
+
+                string n = r.gameObject.name.ToLowerInvariant();
+                string parentN = r.transform.parent != null ? r.transform.parent.name.ToLowerInvariant() : "";
+
+                if (n.Contains("humvee") || parentN.Contains("humvee") ||
+                    n.Contains("tower") || parentN.Contains("tower") ||
+                    n.Contains("shelter") || parentN.Contains("shelter") ||
+                    n.Contains("radar") || parentN.Contains("radar"))
+                {
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
+                else
+                {
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                }
+                r.receiveShadows = true;
+            }
+
+            // 2. Pre-warm and statically batch the geometry
+            bool wasActive = finalGround.activeSelf;
+            finalGround.SetActive(true);
+            StaticBatchingUtility.Combine(finalGround);
+            if (!wasActive)
+            {
+                finalGround.SetActive(false);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[WorldChunk] OptimizeFinalGround warning: {ex.Message}");
+        }
+    }
+
 
     [Header("Event")]
     public UnityEvent onResetContent;

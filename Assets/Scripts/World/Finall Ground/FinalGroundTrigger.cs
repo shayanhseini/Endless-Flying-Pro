@@ -13,16 +13,20 @@ public class FinalGroundTrigger : MonoBehaviour
     [SerializeField] private float missileSpeed = 35f;
 
     private bool triggered;
+    private Transform cachedPatriotTarget;
+    private GameObject cachedHitEffect;
 
 
     private void Awake()
     {
         ResolveMissileReferences();
 
-        GameObject hitEffect = FindMissileHitEffect();
+        cachedHitEffect = FindMissileHitEffect();
 
-        if (hitEffect != null)
-            hitEffect.SetActive(false);
+        if (cachedHitEffect != null)
+            cachedHitEffect.SetActive(false);
+
+        cachedPatriotTarget = FindPatriotTarget();
     }
 
 
@@ -37,6 +41,13 @@ public class FinalGroundTrigger : MonoBehaviour
 
 
         triggered = true;
+
+        if (planeController == null)
+        {
+            planeController = other.GetComponent<PlaneController>();
+            if (planeController == null)
+                planeController = other.GetComponentInParent<PlaneController>();
+        }
 
 
         if (planeController != null)
@@ -54,13 +65,17 @@ public class FinalGroundTrigger : MonoBehaviour
 
     private void LaunchFinalMissile()
     {
-        ResolveMissileReferences();
+        if (missile == null)
+            ResolveMissileReferences();
 
-        Transform patriotTarget = FindPatriotTarget();
-        GameObject hitEffect = FindMissileHitEffect();
+        if (cachedPatriotTarget == null)
+            cachedPatriotTarget = FindPatriotTarget();
+
+        if (cachedHitEffect == null)
+            cachedHitEffect = FindMissileHitEffect();
 
         if (missile == null ||
-            patriotTarget == null ||
+            cachedPatriotTarget == null ||
             planeController == null)
             return;
 
@@ -71,10 +86,10 @@ public class FinalGroundTrigger : MonoBehaviour
         }
 
         missile.Launch(
-            patriotTarget,
+            cachedPatriotTarget,
             missileSpeed * 2f,
-            hitEffect,
-            missileTarget.gameObject,
+            cachedHitEffect,
+            missileTarget != null ? missileTarget.gameObject : null,
             gameAudioController
         );
     }

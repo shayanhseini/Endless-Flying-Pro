@@ -26,6 +26,9 @@ public static class BuildWebGL
 
     private static void CheckTrigger()
     {
+        if (EditorApplication.isCompiling)
+            return;
+
         if (!File.Exists(TriggerPath))
             return;
 
@@ -45,6 +48,22 @@ public static class BuildWebGL
             Debug.Log("[BuildWebGL] Running FixFontAsset only...");
             PopulateIranSansGlyphs.FixFontAsset();
             File.WriteAllText(StatusPath, "FONT_FIXED");
+            return;
+        }
+
+        if (content == "refresh")
+        {
+            Debug.Log("[BuildWebGL] AssetDatabase.Refresh() requested...");
+            AssetDatabase.Refresh();
+            File.WriteAllText(StatusPath, "REFRESHED");
+            return;
+        }
+
+        AssetDatabase.Refresh();
+        if (EditorApplication.isCompiling)
+        {
+            Debug.Log("[BuildWebGL] Compiling scripts before build...");
+            File.WriteAllText(TriggerPath, "build");
             return;
         }
 

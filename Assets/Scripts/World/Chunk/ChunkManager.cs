@@ -93,7 +93,10 @@ public class ChunkManager : MonoBehaviour
         
         foreach (WorldChunk chunk in chunks)
         {
-            chunk.Move(movement);
+            if (chunk != null && chunk.gameObject.activeSelf)
+            {
+                chunk.Move(movement);
+            }
         }
     }
     
@@ -132,7 +135,29 @@ public class ChunkManager : MonoBehaviour
     private void CheckRecycle()
     {
         if (finalGroundActivated)
+        {
+            for (int i = 0; i < chunks.Length; i++)
+            {
+                WorldChunk c = chunks[i];
+                if (c == null || !c.gameObject.activeSelf)
+                    continue;
+
+                // Keep the final ground chunk active
+                if (c == chunks[^1])
+                    continue;
+
+                float endZ =
+                    c.transform.position.z +
+                    c.Length * 0.5f;
+
+                if (endZ <
+                    player.position.z - recycleOffset)
+                {
+                    c.gameObject.SetActive(false);
+                }
+            }
             return;
+        }
         
         WorldChunk first =
             chunks[0];
