@@ -87,14 +87,14 @@ public class DifficultyUIController : MonoBehaviour
 
     public void InitializeDifficulty()
     {
-        int level = 1;
+        int level = (int)DifficultyManager.SelectedDifficulty;
 
         if (DifficultyManager.Instance != null)
         {
             DifficultyManager.Instance.LoadSavedDifficulty();
             level = (int)DifficultyManager.Instance.CurrentDifficulty;
         }
-        else
+        else if (PlayerPrefs.HasKey("GameDifficulty"))
         {
             level = PlayerPrefs.GetInt("GameDifficulty", 1);
         }

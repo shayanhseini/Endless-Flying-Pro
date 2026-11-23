@@ -11,6 +11,9 @@ public class DifficultyManager : MonoBehaviour
 {
     public static DifficultyManager Instance { get; private set; }
 
+    public static GameDifficulty SelectedDifficulty { get; private set; } = GameDifficulty.Normal;
+    public static bool HasUserSelectedDifficulty { get; private set; } = false;
+
     [Header("Difficulty Setting")]
     [SerializeField] private GameDifficulty currentDifficulty = GameDifficulty.Normal;
 
@@ -105,14 +108,29 @@ public class DifficultyManager : MonoBehaviour
 
     public void LoadSavedDifficulty()
     {
-        int saved = PlayerPrefs.GetInt("GameDifficulty", (int)GameDifficulty.Normal);
-        currentDifficulty = (GameDifficulty)Mathf.Clamp(saved, 0, 2);
+        if (HasUserSelectedDifficulty)
+        {
+            currentDifficulty = SelectedDifficulty;
+        }
+        else if (PlayerPrefs.HasKey("GameDifficulty"))
+        {
+            int saved = PlayerPrefs.GetInt("GameDifficulty", (int)GameDifficulty.Normal);
+            SelectedDifficulty = (GameDifficulty)Mathf.Clamp(saved, 0, 2);
+            currentDifficulty = SelectedDifficulty;
+            HasUserSelectedDifficulty = true;
+        }
+        else
+        {
+            SelectedDifficulty = currentDifficulty;
+        }
         difficultyLoaded = true;
     }
 
     public void SetDifficulty(int level)
     {
         currentDifficulty = (GameDifficulty)Mathf.Clamp(level, 0, 2);
+        SelectedDifficulty = currentDifficulty;
+        HasUserSelectedDifficulty = true;
         difficultyLoaded = true;
         PlayerPrefs.SetInt("GameDifficulty", (int)currentDifficulty);
         PlayerPrefs.Save();

@@ -39,6 +39,7 @@ public class WebGLAdaptiveQuality : MonoBehaviour
 
     private void Start()
     {
+        QualitySettings.vSyncCount = 1;
         Application.targetFrameRate = -1;
         urp = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
         if (urp != null)
