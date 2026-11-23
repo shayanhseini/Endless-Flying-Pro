@@ -43,6 +43,22 @@ public static class BuildWebGL
             return;
         }
 
+        if (content == "profile_meshes")
+        {
+            Debug.Log("[BuildWebGL] Profiling meshes...");
+            MeshVertexProfiler.ProfileMeshes();
+            File.WriteAllText(StatusPath, "MESH_PROFILED");
+            return;
+        }
+
+        if (content == "opt_heavy_meshes")
+        {
+            Debug.Log("[BuildWebGL] Optimizing heavy meshes...");
+            MeshVertexProfiler.OptimizeHeavyMeshes();
+            File.WriteAllText(StatusPath, "HEAVY_MESHES_OPTIMIZED");
+            return;
+        }
+
         if (content == "font_only")
         {
             Debug.Log("[BuildWebGL] Running FixFontAsset only...");

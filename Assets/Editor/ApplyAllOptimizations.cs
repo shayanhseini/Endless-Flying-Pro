@@ -87,7 +87,7 @@ public static class ApplyAllOptimizations
         }
         Debug.Log($"[ApplyAllOptimizations] Successfully configured and reimported {texCount} textures.");
 
-        // 3. Meshes
+        // 3. Meshes - High Compression, Vertex Cache Optimization & Welded Vertices
         string[] modelGuids = AssetDatabase.FindAssets("t:Model", new[] { "Assets" });
         int meshCount = 0;
         foreach (var guid in modelGuids)
@@ -99,15 +99,21 @@ public static class ApplyAllOptimizations
             if (importer == null) continue;
 
             var fi = new FileInfo(path);
-            if (fi.Exists && fi.Length > 1.5 * 1024 * 1024)
+            bool isHeavy = fi.Exists && (fi.Length > 500 * 1024 || path.Contains("Box") || path.Contains("Ground") || path.Contains("awacs") || path.Contains("Update-05"));
+            if (isHeavy)
             {
-                importer.meshCompression = ModelImporterMeshCompression.Low;
+                importer.meshCompression = ModelImporterMeshCompression.High;
+                importer.optimizeMeshVertices = true;
+                importer.optimizeMeshPolygons = true;
+                importer.weldVertices = true;
+                importer.isReadable = false;
+
                 EditorUtility.SetDirty(importer);
                 importer.SaveAndReimport();
                 meshCount++;
             }
         }
-        Debug.Log($"[ApplyAllOptimizations] Successfully configured and reimported {meshCount} heavy meshes.");
+        Debug.Log($"[ApplyAllOptimizations] Successfully configured High Compression and Vertex Cache on {meshCount} heavy meshes.");
 
         AssetDatabase.SaveAssets();
         File.WriteAllText("Temp/opt_done.txt", "DONE");
