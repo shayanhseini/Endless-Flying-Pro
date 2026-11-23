@@ -96,9 +96,12 @@
     var loadingText = document.getElementById('loading-text');
     var loadingContainer = document.getElementById('loading-container');
 
-    // High-fidelity rendering: cap DPR at 1.25 to guarantee razor-sharp native pixel density on high-DPI displays
-    // while preventing excessive 4K fill-rate penalty.
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+    // High-fidelity rendering: guarantee crisp native 1080p pixel sharpness without 2.5K/4K fill-rate explosion.
+    var screenW = window.innerWidth || window.screen.width || 1920;
+    var rawDpr = window.devicePixelRatio || 1;
+    // Physical width = screenW * rawDpr. Clamp physical width to max 1920 so 1080p displays are 1:1 pixel sharp.
+    var dpr = Math.min(rawDpr, 1920 / Math.max(1, screenW));
+    dpr = Math.max(1.0, Math.min(dpr, 1.25));
 
     createUnityInstance(document.querySelector('#unity-canvas'), {
       dataUrl: "Build/WebGL.data.unityweb",

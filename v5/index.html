@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1424">
+  <title>Endless Flying Project</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #080d16;
+      overflow: hidden;
+      touch-action: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #unity-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #080d16;
+    }
+    #loading-container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #151e30 0%, #080d16 100%);
+      z-index: 9999;
+      pointer-events: none;
+      transition: opacity 0.5s ease-out;
+    }
+    .logo-wrapper {
+      background: #ffffff;
+      padding: 16px 36px;
+      border-radius: 20px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: min(75vw, 360px);
+    }
+    #loading-logo {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+    #loading-bar-wrap {
+      width: min(65vw, 320px);
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    #loading-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #1abc9c, #f2c14e);
+      border-radius: 3px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 8px rgba(242, 193, 78, 0.6);
+    }
+    #loading-text {
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      direction: rtl;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <div id="loading-container">
+    <div class="logo-wrapper">
+      <img id="loading-logo" src="topvision_logo.png" alt="TopVision.ir">
+    </div>
+    <div id="loading-bar-wrap">
+      <div id="loading-bar"></div>
+    </div>
+    <div id="loading-text">در حال بارگذاری اطلاعات...</div>
+  </div>
+
+  <!-- DroneVision engine: starts loading the pose model while Unity loads -->
+  <script type="module" src="dronevision/unity-bridge.js"></script>
+
+  <script src="Build/WebGL.loader.js"></script>
+  <script>
+    var bar = document.getElementById('loading-bar');
+    var loadingText = document.getElementById('loading-text');
+    var loadingContainer = document.getElementById('loading-container');
+
+    // High-fidelity rendering: guarantee crisp native 1080p pixel sharpness without 2.5K/4K fill-rate explosion.
+    var screenW = window.innerWidth || window.screen.width || 1920;
+    var rawDpr = window.devicePixelRatio || 1;
+    // Physical width = screenW * rawDpr. Clamp physical width to max 1920 so 1080p displays are 1:1 pixel sharp.
+    var dpr = Math.min(rawDpr, 1920 / Math.max(1, screenW));
+    dpr = Math.max(1.0, Math.min(dpr, 1.25));
+
+    createUnityInstance(document.querySelector('#unity-canvas'), {
+      dataUrl: "Build/WebGL.data.unityweb",
+      frameworkUrl: "Build/WebGL.framework.js.unityweb",
+      codeUrl: "Build/WebGL.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "ShayanHsseini",
+      productName: "Endless Flying Project",
+      productVersion: "0.1.0",
+      devicePixelRatio: dpr,
+    }, function (p) {
+      if (bar) bar.style.width = (100 * p) + '%';
+      if (loadingText) loadingText.textContent = 'در حال دریافت اطلاعات... ' + Math.round(100 * p) + '%';
+    })
+    .then(function (instance) {
+      window.unityInstance = instance;
+      if (loadingContainer) {
+        loadingContainer.style.opacity = '0';
+        setTimeout(function() {
+          if (loadingContainer.parentNode) loadingContainer.parentNode.removeChild(loadingContainer);
+        }, 500);
+      }
+    })
+    .catch(function (message) { alert(message); });
+  </script>
+</body>
+</html>
