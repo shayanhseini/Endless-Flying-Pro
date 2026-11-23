@@ -97,10 +97,9 @@
     var loadingContainer = document.getElementById('loading-container');
 
     // Weak GPUs: phones have 2-3x pixel density; rendering at full density costs
-    // 4-9x the pixels for little visible gain. Cap it (the camera model is separate).
-    var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    var dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.25 : 1.5);
+    // 4-9x the pixels for little visible gain. Cap DPR at 1.0 to prevent 1440p/4K overdraw on laptops/desktops
+    // while guaranteeing crisp 1080p and high 60fps performance.
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.0);
 
     createUnityInstance(document.querySelector('#unity-canvas'), {
       dataUrl: "Build/WebGL.data.unityweb",
