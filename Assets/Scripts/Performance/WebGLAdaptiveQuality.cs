@@ -1,20 +1,17 @@
-// WebGL only: keeps the game smooth on weak PCs and phones. Strong machines keep the authored
-// look (level 0). When frames stay slow, the rendering cost is lowered one step at a time:
-//   1  render scale <= 0.7, TAA -> FXAA (TAA keeps history buffers and blurs at low resolution)
-//   2  no post-processing, no real-time shadows
-//   3  render scale 0.55
-// Phones start at level 1. Steps only go down (no flicker between levels), like the
-// DroneVision model's own full -> lite fallback.
-// It creates itself after the first scene loads: nothing to add to a scene. In the Editor it
-// does nothing, so the project's URP assets are never changed on disk.
+// WebGL only: keeps the game smooth on weak PCs and phones while preserving authored visual quality.
+// When frames stay slow, the rendering cost is lowered gracefully:
+//   1  render scale <= 0.85, TAA -> FXAA
+//   2  shadow distance lowered to 20m, render scale <= 0.80 (Post-processing stays active to maintain sci-fi look)
+//   3  real-time shadows disabled, render scale <= 0.75
+// Phones start at level 1.
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 public class WebGLAdaptiveQuality : MonoBehaviour
 {
-    private const float SlowFrameMs = 25f;   // slower than ~40 FPS on average counts as slow
-    private const float SlowForSeconds = 3f; // that long slow -> one step down
+    private const float SlowFrameMs = 28f;   // slower than ~35 FPS on average counts as slow
+    private const float SlowForSeconds = 3.5f; // that long slow -> one step down
     private const float WarmUpSeconds = 5f;  // ignore loading hitches and shader warm-up
     private const float SettleSeconds = 2f;  // after a step, let the new level settle
     private const int MaxLevel = 3;
@@ -23,10 +20,12 @@ public class WebGLAdaptiveQuality : MonoBehaviour
 
     private UniversalRenderPipelineAsset urp;
     private float authoredScale = 1f;
+    private float authoredShadowDistance = 40f;
     private float averageMs;
     private float slowFor;
     private float waitFor = WarmUpSeconds;
     private Camera appliedCamera;
+    private float camCheckTimer;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
@@ -40,10 +39,13 @@ public class WebGLAdaptiveQuality : MonoBehaviour
 
     private void Start()
     {
-        Application.targetFrameRate = 60;
+        Application.targetFrameRate = -1;
         urp = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
         if (urp != null)
+        {
             authoredScale = urp.renderScale;
+            authoredShadowDistance = urp.shadowDistance;
+        }
         Level = 0;
         if (Application.isMobilePlatform)
             SetLevel(1, "phone");
@@ -53,10 +55,14 @@ public class WebGLAdaptiveQuality : MonoBehaviour
     {
         float dt = Time.unscaledDeltaTime;
 
-        // the camera can be replaced (scene changes, camera transitions): give it the current level
-        Camera cam = Camera.main;
-        if (cam != null && cam != appliedCamera)
-            ApplyCamera(cam);
+        camCheckTimer += dt;
+        if (camCheckTimer > 0.5f || appliedCamera == null)
+        {
+            camCheckTimer = 0f;
+            Camera cam = Camera.main;
+            if (cam != null && cam != appliedCamera)
+                ApplyCamera(cam);
+        }
 
         // a frame this long is a tab switch or a load, not the cost of rendering
         if (dt > 0.25f)
@@ -94,30 +100,42 @@ public class WebGLAdaptiveQuality : MonoBehaviour
         if (urp != null)
         {
             float scale = authoredScale;
-            if (Level >= 1) scale = Mathf.Min(scale, 0.7f);
-            if (Level >= 3) scale = Mathf.Min(scale, 0.55f);
+            if (Level == 1) scale = Mathf.Min(scale, 0.85f);
+            else if (Level == 2) scale = Mathf.Min(scale, 0.80f);
+            else if (Level >= 3) scale = Mathf.Min(scale, 0.75f);
+
             urp.renderScale = scale;
-            if (Level >= 2)
+
+            if (Level == 1)
+                urp.shadowDistance = Mathf.Min(authoredShadowDistance, 35f);
+            else if (Level == 2)
+                urp.shadowDistance = 20f;
+            else if (Level >= 3)
                 urp.shadowDistance = 0f;
         }
 
-        appliedCamera = null;   // re-applied to the current camera on the next frame
+        appliedCamera = null;   // re-applied to the current camera
         Debug.Log($"[AdaptiveQuality] level {Level} ({reason})");
     }
 
     private void ApplyCamera(Camera cam)
     {
         appliedCamera = cam;
-        if (Level == 0)
+        if (cam == null)
             return;
+
         var data = cam.GetUniversalAdditionalCameraData();
         if (data == null)
             return;
+
         if (data.antialiasing == AntialiasingMode.TemporalAntiAliasing)
             data.antialiasing = AntialiasingMode.FastApproximateAntialiasing;
-        if (Level >= 2)
+
+        // Preserve Post-Processing across all quality levels to retain visual polish (bloom, tone mapping)
+        data.renderPostProcessing = true;
+
+        if (Level >= 3)
         {
-            data.renderPostProcessing = false;
             data.renderShadows = false;
         }
     }
