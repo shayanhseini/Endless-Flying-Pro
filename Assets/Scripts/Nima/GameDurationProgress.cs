@@ -79,8 +79,11 @@ public class GameDurationProgress : MonoBehaviour
         timer = 0f;
         lastCompletedSegment = -2;
         lastCompletedCheckpoint = -2;
+        lastVisualProgress = -1f;
         SetVisualProgress(0f);
     }
+
+    private float lastVisualProgress = -1f;
 
     private void Update()
     {
@@ -93,7 +96,11 @@ public class GameDurationProgress : MonoBehaviour
         // Perfectly synchronized with flight duration and runway touchdown
         float progress = Mathf.Clamp01((duration - remaining) / duration);
 
-        SetVisualProgress(progress);
+        if (Mathf.Abs(progress - lastVisualProgress) >= 0.001f || progress >= 1f || progress <= 0f)
+        {
+            lastVisualProgress = progress;
+            SetVisualProgress(progress);
+        }
     }
 
     public void BuildPersistentHierarchy()
@@ -196,6 +203,17 @@ public class GameDurationProgress : MonoBehaviour
                 icon.raycastTarget = false;
             }
         }
+
+        EnsureSubCanvas(visualRoot);
+    }
+
+    private void EnsureSubCanvas(RectTransform root)
+    {
+        if (root != null && root.GetComponent<Canvas>() == null)
+        {
+            var subCanvas = root.gameObject.AddComponent<Canvas>();
+            subCanvas.overrideSorting = false;
+        }
     }
 
     private void BindExistingHierarchy(RectTransform existingRoot)
@@ -228,6 +246,8 @@ public class GameDurationProgress : MonoBehaviour
 
         if (planeIcon != null)
             movingImage = planeIcon as RectTransform;
+
+        EnsureSubCanvas(visualRoot);
     }
 
     private void SetVisualProgress(float progress)

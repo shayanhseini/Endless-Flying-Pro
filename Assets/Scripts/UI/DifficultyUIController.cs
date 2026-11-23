@@ -43,6 +43,7 @@ public class DifficultyUIController : MonoBehaviour
     private GameAudioController audioController;
     private int currentDifficulty = 1;
     private float targetArrowX = 0f;
+    private bool isIndicatorMoving = false;
 
     private void Awake()
     {
@@ -74,14 +75,20 @@ public class DifficultyUIController : MonoBehaviour
 
     private void Update()
     {
-        if (indicatorArrow != null && animateIndicator)
+        if (!isIndicatorMoving || indicatorArrow == null || !animateIndicator)
+            return;
+
+        Vector2 pos = indicatorArrow.anchoredPosition;
+        if (Mathf.Abs(pos.x - targetArrowX) > 0.5f)
         {
-            Vector2 pos = indicatorArrow.anchoredPosition;
-            if (Mathf.Abs(pos.x - targetArrowX) > 0.1f)
-            {
-                pos.x = Mathf.Lerp(pos.x, targetArrowX, Time.unscaledDeltaTime * indicatorSpeed);
-                indicatorArrow.anchoredPosition = pos;
-            }
+            pos.x = Mathf.Lerp(pos.x, targetArrowX, Time.unscaledDeltaTime * indicatorSpeed);
+            indicatorArrow.anchoredPosition = pos;
+        }
+        else
+        {
+            pos.x = targetArrowX;
+            indicatorArrow.anchoredPosition = pos;
+            isIndicatorMoving = false;
         }
     }
 
@@ -214,6 +221,11 @@ public class DifficultyUIController : MonoBehaviour
             if (immediate || !animateIndicator)
             {
                 indicatorArrow.anchoredPosition = new Vector2(targetArrowX, arrowY);
+                isIndicatorMoving = false;
+            }
+            else
+            {
+                isIndicatorMoving = true;
             }
         }
 

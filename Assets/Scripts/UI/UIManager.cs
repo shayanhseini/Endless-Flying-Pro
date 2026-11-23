@@ -533,6 +533,10 @@ public class UIManager : MonoBehaviour
         {
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
+            if (canvasGroup == startCanvasGroup && startPanel != null)
+            {
+                startPanel.SetActive(false);
+            }
         }
         else
         {

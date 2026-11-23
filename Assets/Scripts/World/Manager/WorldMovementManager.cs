@@ -51,13 +51,18 @@ public class WorldMovementManager : MonoBehaviour
     }
 
 
+    private float progressThrottleTimer = 0f;
+    private const float PROGRESS_THROTTLE_INTERVAL = 0.25f;
+
     private void Update()
     {
-        if (!IsMovementEnabled)
+        if (!IsMovementEnabled || difficultyManager == null)
             return;
 
-        if (difficultyManager != null)
+        progressThrottleTimer += Time.deltaTime;
+        if (progressThrottleTimer >= PROGRESS_THROTTLE_INTERVAL)
         {
+            progressThrottleTimer = 0f;
             difficultyManager.UpdateProgress();
             BaseWorldSpeed = difficultyManager.GetCurrentTargetBaseSpeed();
             UpdateWorldSpeed();

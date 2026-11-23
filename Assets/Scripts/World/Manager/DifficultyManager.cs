@@ -171,20 +171,17 @@ public class DifficultyManager : MonoBehaviour
             case GameDifficulty.Easy:
                 ObstacleCount = Mathf.RoundToInt(Mathf.Lerp(easyStartObstacles, easyMaxObstacles, CurrentProgress));
                 CoinCount = Mathf.RoundToInt(Mathf.Lerp(12, 18, CurrentProgress));
-                ShieldCount = GetShieldCountForChunk();
                 break;
 
             case GameDifficulty.Hard:
                 ObstacleCount = Mathf.RoundToInt(Mathf.Lerp(hardStartObstacles, hardMaxObstacles, CurrentProgress));
                 CoinCount = Mathf.RoundToInt(Mathf.Lerp(5, 10, CurrentProgress));
-                ShieldCount = GetShieldCountForChunk();
                 break;
 
             case GameDifficulty.Normal:
             default:
                 ObstacleCount = Mathf.RoundToInt(Mathf.Lerp(normalStartObstacles, normalMaxObstacles, CurrentProgress));
                 CoinCount = Mathf.RoundToInt(Mathf.Lerp(8, 14, CurrentProgress));
-                ShieldCount = GetShieldCountForChunk();
                 break;
         }
 

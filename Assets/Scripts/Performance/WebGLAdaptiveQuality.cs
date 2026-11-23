@@ -39,8 +39,8 @@ public class WebGLAdaptiveQuality : MonoBehaviour
 
     private void Start()
     {
-        QualitySettings.vSyncCount = 1;
-        Application.targetFrameRate = -1;
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 60;
         urp = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
         if (urp != null)
         {
@@ -101,16 +101,16 @@ public class WebGLAdaptiveQuality : MonoBehaviour
         if (urp != null)
         {
             float scale = authoredScale;
-            if (Level == 1) scale = Mathf.Min(scale, 0.85f);
-            else if (Level == 2) scale = Mathf.Min(scale, 0.80f);
-            else if (Level >= 3) scale = Mathf.Min(scale, 0.75f);
+            if (Level == 1) scale = Mathf.Min(scale, 0.78f);
+            else if (Level == 2) scale = Mathf.Min(scale, 0.70f);
+            else if (Level >= 3) scale = Mathf.Min(scale, 0.60f);
 
             urp.renderScale = scale;
 
             if (Level == 1)
-                urp.shadowDistance = Mathf.Min(authoredShadowDistance, 35f);
+                urp.shadowDistance = Mathf.Min(authoredShadowDistance, 25f);
             else if (Level == 2)
-                urp.shadowDistance = 20f;
+                urp.shadowDistance = 15f;
             else if (Level >= 3)
                 urp.shadowDistance = 0f;
         }
