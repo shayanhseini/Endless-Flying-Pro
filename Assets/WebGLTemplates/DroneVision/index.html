@@ -96,10 +96,9 @@
     var loadingText = document.getElementById('loading-text');
     var loadingContainer = document.getElementById('loading-container');
 
-    // Weak GPUs: phones have 2-3x pixel density; rendering at full density costs
-    // 4-9x the pixels for little visible gain. Cap DPR at 1.0 to prevent 1440p/4K overdraw on laptops/desktops
-    // while guaranteeing crisp 1080p and high 60fps performance.
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.0);
+    // High-fidelity rendering: cap DPR at 1.25 to guarantee razor-sharp native pixel density on high-DPI displays
+    // while preventing excessive 4K fill-rate penalty.
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.25);
 
     createUnityInstance(document.querySelector('#unity-canvas'), {
       dataUrl: "Build/{{{ DATA_FILENAME }}}",

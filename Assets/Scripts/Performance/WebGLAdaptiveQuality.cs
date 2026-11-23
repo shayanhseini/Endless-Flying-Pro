@@ -100,12 +100,8 @@ public class WebGLAdaptiveQuality : MonoBehaviour
 
         if (urp != null)
         {
-            float scale = authoredScale;
-            if (Level == 1) scale = Mathf.Min(scale, 0.78f);
-            else if (Level == 2) scale = Mathf.Min(scale, 0.70f);
-            else if (Level >= 3) scale = Mathf.Min(scale, 0.60f);
-
-            urp.renderScale = scale;
+            // Maintain 100% crisp native resolution (do not downsample pixels to potato quality)
+            urp.renderScale = authoredScale;
 
             if (Level == 1)
                 urp.shadowDistance = Mathf.Min(authoredShadowDistance, 25f);
