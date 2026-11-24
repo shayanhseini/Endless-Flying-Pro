@@ -27,6 +27,9 @@ public class FinalGroundTrigger : MonoBehaviour
             cachedHitEffect.SetActive(false);
 
         cachedPatriotTarget = FindPatriotTarget();
+
+        if (gameAudioController == null)
+            gameAudioController = FindFirstObjectByType<GameAudioController>();
     }
 
 

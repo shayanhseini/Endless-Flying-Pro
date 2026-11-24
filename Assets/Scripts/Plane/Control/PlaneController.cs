@@ -207,11 +207,10 @@ public class PlaneController : MonoBehaviour
 
 
         transform.rotation =
-            Quaternion.Lerp(
+            Quaternion.Slerp(
                 transform.rotation,
                 targetRotation,
-                autoPilotRotationSpeed *
-                Time.deltaTime
+                1f - Mathf.Exp(-autoPilotRotationSpeed * 2.5f * Time.deltaTime)
             );
     }
 

@@ -40,6 +40,7 @@ public class PlaneCameraController : MonoBehaviour
 
     private Transform cinematicTarget;
     private bool isCinematic;
+    private Vector3 cinematicVelocity;
 
 
     private void Awake()
@@ -147,22 +148,33 @@ public class PlaneCameraController : MonoBehaviour
         if (target == null)
             return;
 
+        cinematicTarget = target;
+        isCinematic = true;
+        cinematicVelocity = Vector3.zero;
 
-        cinematicTarget =
-            target;
+        // Position camera immediately at desired follow position to eliminate any initial catch-up drag/jerk
+        Vector3 desiredPosition =
+            cinematicTarget.position
+            - cinematicTarget.forward * cinematicFollowDistance
+            + Vector3.up * cinematicHeight;
+        transform.position = desiredPosition;
 
-        isCinematic =
-            true;
+        Vector3 lookPosition =
+            cinematicTarget.position
+            + cinematicTarget.forward * cinematicLookAhead;
+        Vector3 direction = lookPosition - transform.position;
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            transform.rotation = Quaternion.LookRotation(direction);
+        }
     }
 
 
     public void StopCinematicFollow()
     {
-        isCinematic =
-            false;
-
-        cinematicTarget =
-            null;
+        isCinematic = false;
+        cinematicTarget = null;
+        cinematicVelocity = Vector3.zero;
     }
 
 
@@ -171,52 +183,36 @@ public class PlaneCameraController : MonoBehaviour
         if (cinematicTarget == null)
             return;
 
-
         Vector3 desiredPosition =
             cinematicTarget.position
-            - cinematicTarget.forward *
-              cinematicFollowDistance
-            + Vector3.up *
-              cinematicHeight;
+            - cinematicTarget.forward * cinematicFollowDistance
+            + Vector3.up * cinematicHeight;
 
-
-        transform.position =
-            Vector3.Lerp(
-                transform.position,
-                desiredPosition,
-                cinematicPositionSmoothness *
-                Time.deltaTime
-            );
-
+        // Framerate-independent critically damped smooth follow (zero rubber-banding / zero stutter)
+        transform.position = Vector3.SmoothDamp(
+            transform.position,
+            desiredPosition,
+            ref cinematicVelocity,
+            0.05f
+        );
 
         Vector3 lookPosition =
             cinematicTarget.position
-            + cinematicTarget.forward *
-              cinematicLookAhead;
+            + cinematicTarget.forward * cinematicLookAhead;
 
-
-        Vector3 direction =
-            lookPosition -
-            transform.position;
-
+        Vector3 direction = lookPosition - transform.position;
 
         if (direction.sqrMagnitude <= 0.001f)
             return;
 
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-        Quaternion targetRotation =
-            Quaternion.LookRotation(
-                direction
-            );
-
-
-        transform.rotation =
-            Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                cinematicRotationSmoothness *
-                Time.deltaTime
-            );
+        // Framerate-independent responsive rotation damping
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            1f - Mathf.Exp(-16f * Time.deltaTime)
+        );
     }
 
 

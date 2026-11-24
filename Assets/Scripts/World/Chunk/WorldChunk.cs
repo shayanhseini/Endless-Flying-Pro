@@ -37,67 +37,20 @@ public class WorldChunk : MonoBehaviour
 
         try
         {
-            // 1. Deactivate redundant duplicate props in finalGround to slash vertex count and draw calls by >60%.
-            // Saves >750,000 vertices and >100 draw calls while keeping the military airfield fully populated!
+            // 1. Ensure all military base props are active and visible (no empty airfield!).
+            // Re-activate any previously disabled props so the base is full, dense, and visually rich.
             Transform[] transforms = finalGround.GetComponentsInChildren<Transform>(true);
             foreach (Transform t in transforms)
             {
                 if (t == null || t == finalGround.transform) continue;
 
                 string objName = t.gameObject.name;
-
-                // Deactivate redundant AWACS duplicates (keeping only 2 magnificent AWACS: "awacs" and "awacs (6)")
-                if (objName.StartsWith("awacs", System.StringComparison.OrdinalIgnoreCase) &&
-                    objName != "awacs" && objName != "awacs (6)")
+                // Keep hit effects or special invisible objects managed by their own controllers
+                if (!objName.Contains("Missile Hit Effect") && !objName.Contains("Particle"))
                 {
-                    t.gameObject.SetActive(false);
-                    continue;
-                }
-
-                // Deactivate redundant hidden back-row buildings (keeping front row and outer buildings)
-                if (objName == "building02 (5)" || objName == "building02 (6)" || objName == "building02 (7)" ||
-                    objName == "building02 (8)" || objName == "building02 (9)")
-                {
-                    t.gameObject.SetActive(false);
-                    continue;
-                }
-
-                // Deactivate redundant outer obscured buildings
-                if (objName == "building01" || objName == "building01 (1)" || objName == "building01 (2)")
-                {
-                    t.gameObject.SetActive(false);
-                    continue;
-                }
-
-                // Deactivate redundant duplicate shelters (keeping front row and side shelters)
-                if (objName == "shelter (6)" || objName == "shelter (7)" || objName == "shelter (8)" ||
-                    objName == "shelter (9)" || objName == "shelter (10)")
-                {
-                    t.gameObject.SetActive(false);
-                    continue;
-                }
-
-                // Deactivate clustered humvees (keeping single vehicles at each station)
-                if (objName == "dchumvee (4)" || objName == "dchumvee (5)")
-                {
-                    t.gameObject.SetActive(false);
-                    continue;
-                }
-
-                // Deactivate extreme lateral power towers
-                if (objName == "Power_Tower (1)" || objName == "Power_Tower (4)" ||
-                    objName == "Power_Tower (5)" || objName == "Power_Tower (6)")
-                {
-                    t.gameObject.SetActive(false);
-                    continue;
-                }
-
-                // General lateral boundary cull for any other stray props outside the airfield corridor
-                if (t.parent == finalGround.transform || (t.parent != null && t.parent.name.Contains("Enve_Objects")))
-                {
-                    if (t.localPosition.x < -32f || t.localPosition.x > 38f)
+                    if (!t.gameObject.activeSelf)
                     {
-                        t.gameObject.SetActive(false);
+                        t.gameObject.SetActive(true);
                     }
                 }
             }
