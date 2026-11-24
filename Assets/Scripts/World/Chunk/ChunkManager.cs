@@ -151,7 +151,7 @@ public class ChunkManager : MonoBehaviour
                     c.Length * 0.5f;
 
                 // Deactivate immediately once passed behind the camera
-                if (endZ < player.position.z - 5f)
+                if (endZ < player.position.z - 2f)
                 {
                     c.gameObject.SetActive(false);
                 }
