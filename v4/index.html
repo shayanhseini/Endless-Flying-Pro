@@ -2,6 +2,9 @@
 <html lang="fa">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0d1424">
   <title>Endless Flying Project</title>
@@ -88,9 +91,9 @@
   </div>
 
   <!-- DroneVision engine: starts loading the pose model while Unity loads -->
-  <script type="module" src="dronevision/unity-bridge.js"></script>
+  <script type="module" src="dronevision/unity-bridge.js?v=0.1.2611242043"></script>
 
-  <script src="Build/WebGL.loader.js"></script>
+  <script src="Build/739fc499463b4e21f0f51e5760f9fe6b.loader.js?v=0.1.2611242043"></script>
   <script>
     var bar = document.getElementById('loading-bar');
     var loadingText = document.getElementById('loading-text');
@@ -104,13 +107,13 @@
     dpr = Math.max(1.0, Math.min(dpr, 1.25));
 
     createUnityInstance(document.querySelector('#unity-canvas'), {
-      dataUrl: "Build/WebGL.data.unityweb",
-      frameworkUrl: "Build/WebGL.framework.js.unityweb",
-      codeUrl: "Build/WebGL.wasm.unityweb",
+      dataUrl: "Build/d9b4cde88abad03a6f0023f3280dd120.data",
+      frameworkUrl: "Build/59c11e9b5001ee51e4fba78442b58445.framework.js",
+      codeUrl: "Build/5340e5e01bdf0890e481a2e0076cb095.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "ShayanHsseini",
       productName: "Endless Flying Project",
-      productVersion: "0.1.0",
+      productVersion: "0.1.2611242043",
       devicePixelRatio: dpr,
     }, function (p) {
       if (bar) bar.style.width = (100 * p) + '%';
