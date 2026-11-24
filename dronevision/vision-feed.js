@@ -7,7 +7,9 @@
 // Performance (2026-11-18 rewrite for hosted builds, see pose.js for the measurements):
 //   · the model runs in a Web Worker on the CPU (desktops): the game's main thread and
 //     its GPU never wait for it; one frame in flight, always the newest
-//   · lite model, 640×360 camera (bigger inputs measured the same time and landmarks)
+//   · model 'auto': lite on phones and on PCs with ≤ 4 CPU threads, full (as the PC app) on
+//     the others, dropping to lite by itself when too slow (_adapt: < 18 FPS AND model
+//     > 40 ms for 5 s); 640×360 camera (bigger inputs measured the same time and landmarks)
 //   · setPaused(true) stops inference entirely (menus, results) while keeping the camera
 //
 // Accuracy in crowds and bad light (image-cues.js): adaptive shadow lift (back-light),
@@ -36,7 +38,7 @@ const store = {
 
 export class VisionFeed {
   /**
-   * @param o.model       'lite' (default) | 'full'
+   * @param o.model       'auto' (default: lite on phones / ≤ 4 threads, else full) | 'full' | 'lite'
    * @param o.delegate    'auto' (default: CPU on desktops, GPU/CPU probe on phones) | 'GPU' | 'CPU'
    * @param o.numPoses    1 (default, like the Python app): MediaPipe follows the one person it
    *                    found and never looks for a second, so a neighbour is not even seen.

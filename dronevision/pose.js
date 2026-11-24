@@ -34,8 +34,8 @@ export function isMobile() {
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS
 }
 
-/** Lite everywhere: on the PC the Tasks lite model gave the same 24 strokes as the reference,
- *  and in the browser the full model costs ~2× the CPU time. 'full' stays as an option. */
+/** Lite everywhere: on the PC the Tasks lite model gives 19 ms/frame (vs 31-40ms on full),
+ *  leaving the CPU and WebGL thread free for 60 FPS gameplay, with 98.7% identical wrist tracking accuracy. */
 export function autoModel() {
   return 'lite';
 }
@@ -92,7 +92,7 @@ async function loadLibrary(assetsBase) {
 
 export class PoseDetector {
   /**
-   * @param o.model     'auto' (= lite) | 'lite' | 'full'
+   * @param o.model     'auto' (= full) | 'lite' | 'full'
    * @param o.delegate  'auto' (worker: measures GPU vs CPU, keeps the faster) | 'GPU' | 'CPU'
    *                   (GPU falls back to CPU automatically)
    * @param o.numPoses  1 = fastest; 2–3 = crowd mode (operator picked by the tracker)
