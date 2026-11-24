@@ -48,7 +48,10 @@ namespace Mirage.Impostors.Elements
             if (!AssetDatabase.IsValidFolder(dirPath))
                 Directory.CreateDirectory(dirPath);
             
-            prefabPath = AssetDatabase.GenerateUniqueAssetPath(prefabPath);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
+            {
+                AssetDatabase.DeleteAsset(prefabPath);
+            }
 
             GameObject go = new GameObject();
             go.transform.localScale = Vector3.one;

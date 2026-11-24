@@ -10,6 +10,21 @@ using Mirage.Impostors.Elements;
 
 public static class MirageFinalChunkBaker
 {
+    private static readonly Dictionary<string, Vector3> PrefabOriginalScales = new Dictionary<string, Vector3>()
+    {
+        { "shelter", new Vector3(5f, 5f, 5f) },
+        { "building01", new Vector3(7.5f, 7.5f, 7.5f) },
+        { "building02", new Vector3(7f, 7f, 7f) },
+        { "main-building", new Vector3(12f, 12f, 12f) },
+        { "Power_Tower", new Vector3(4f, 4f, 4f) },
+        { "borge", new Vector3(8f, 8f, 8f) },
+        { "radar", new Vector3(9.611679f, 9.611679f, 9.611679f) },
+        { "helicopter", new Vector3(1f, 1f, 1f) },
+        { "awacs", new Vector3(1f, 1f, 1f) },
+        { "dchumvee", new Vector3(0.042834204f, 0.042834204f, 0.042834204f) },
+        { "Patriot", new Vector3(1f, 1f, 1f) }
+    };
+
     private static readonly string[] PrefabPaths = new string[]
     {
         "Assets/Update-05/prefabs/awacs.prefab",
@@ -93,14 +108,24 @@ public static class MirageFinalChunkBaker
         if (instance == null)
             instance = UnityEngine.Object.Instantiate(sourcePrefab);
 
-        // Record original transform so baking doesn't destroy custom scale/offsets
+        // Record original position and rotation
         Vector3 origPos = instance.transform.localPosition;
         Quaternion origRot = instance.transform.localRotation;
-        Vector3 origScale = instance.transform.localScale;
+
+        // Determine the true original scale for this prefab to prevent scale shrinkage
+        Vector3 targetScale = Vector3.one;
+        if (PrefabOriginalScales.TryGetValue(prefabName, out Vector3 trueScale))
+        {
+            targetScale = trueScale;
+        }
+        else
+        {
+            targetScale = instance.transform.localScale;
+        }
 
         instance.transform.position = Vector3.zero;
         instance.transform.rotation = Quaternion.identity;
-        instance.transform.localScale = origScale;
+        instance.transform.localScale = targetScale;
 
         // Clean any previous impostor instances or LOD groups if already baked
         LODGroup existingLod = instance.GetComponent<LODGroup>();
@@ -206,10 +231,10 @@ public static class MirageFinalChunkBaker
                 impostorPrefabPath
             );
 
-            // Restore original local transform before saving
+            // Restore original local transform with the true scale before saving
             instance.transform.localPosition = origPos;
             instance.transform.localRotation = origRot;
-            instance.transform.localScale = origScale;
+            instance.transform.localScale = targetScale;
 
             // Save changes back to original prefab asset
             PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
