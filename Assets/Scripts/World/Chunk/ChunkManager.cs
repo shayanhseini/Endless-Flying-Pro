@@ -22,6 +22,7 @@ public class ChunkManager : MonoBehaviour
     private bool startChunkActive;
     private bool finalGroundPending;
     private bool finalGroundActivated;
+    private static bool s_finalGroundWarmedUp;
     
     private void Awake()
     {
@@ -48,6 +49,19 @@ public class ChunkManager : MonoBehaviour
                 difficultyManager,
                 gameManager.CurrentGroundType
             );
+        }
+    }
+
+    private void Start()
+    {
+        if (!s_finalGroundWarmedUp && chunks != null && chunks.Length > 0)
+        {
+            s_finalGroundWarmedUp = true;
+            WorldChunk farthestChunk = chunks[^1];
+            if (farthestChunk != null)
+            {
+                farthestChunk.WarmupFinalGround();
+            }
         }
     }
     

@@ -115,6 +115,10 @@ public static class BuildWebGL
             // Explicitly set WebGL template to DroneVision
             PlayerSettings.WebGL.template = "PROJECT:DroneVision";
 
+            // Unique version per build so Chrome HTTP cache and UnityCache IndexedDB never serve stale assets
+            PlayerSettings.bundleVersion = "0.1." + DateTime.UtcNow.ToString("yyMMddHHmm");
+            Debug.Log($"[BuildWebGL] Build version set to {PlayerSettings.bundleVersion}");
+
             // 1. Settings, Textures, Audio, and Mesh Optimizations
             WebGLOptimizer.ApplyOptimizations();
             ApplyAllOptimizations.ExecuteAll();
@@ -139,6 +143,16 @@ public static class BuildWebGL
             if (!Directory.Exists(fullOutputPath))
             {
                 Directory.CreateDirectory(fullOutputPath);
+            }
+
+            // Clean old Build/ artifacts so hashed filenames and compression switches don't leave stale files
+            string buildSubdir = Path.Combine(fullOutputPath, "Build");
+            if (Directory.Exists(buildSubdir))
+            {
+                foreach (string oldFile in Directory.GetFiles(buildSubdir))
+                {
+                    File.Delete(oldFile);
+                }
             }
 
             Debug.Log($"[BuildWebGL] Starting BuildPlayer with CleanBuildCache to: {fullOutputPath}");

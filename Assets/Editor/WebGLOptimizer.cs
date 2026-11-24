@@ -17,8 +17,9 @@ public static class WebGLOptimizer
         PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.WebGL, Il2CppCompilerConfiguration.Master);
 
         // 2. WebGL Player Settings
-        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
-        PlayerSettings.WebGL.decompressionFallback = true;
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+        PlayerSettings.WebGL.decompressionFallback = false;
+        PlayerSettings.WebGL.nameFilesAsHashes = true;
         PlayerSettings.WebGL.dataCaching = true;
         PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
         PlayerSettings.WebGL.memorySize = 256;
@@ -109,9 +110,9 @@ public static class WebGLOptimizer
                 AudioImporter importer = AssetImporter.GetAtPath(path) as AudioImporter;
                 if (importer == null) continue;
 
-                bool isMusic = path.Contains("/Music/") || path.Contains("Hans Zimmer") || path.Contains("Drone Approach");
+                bool isMusic = path.Contains("/Music/") || path.Contains("Hans Zimmer") || path.Contains("Drone Approach") || path.Contains("blizzard");
                 var settings = importer.GetOverrideSampleSettings("WebGL");
-                settings.loadType = isMusic ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
+                settings.loadType = isMusic ? AudioClipLoadType.CompressedInMemory : AudioClipLoadType.DecompressOnLoad;
                 settings.compressionFormat = AudioCompressionFormat.Vorbis;
                 settings.quality = 0.70f; // 70% Vorbis = transparent ~128-160kbps, indistinguishable from original
                 settings.preloadAudioData = true;

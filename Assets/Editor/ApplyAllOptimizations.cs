@@ -23,7 +23,7 @@ public static class ApplyAllOptimizations
 
             bool isMusic = path.Contains("/Music/") || path.Contains("Hans Zimmer") || path.Contains("Drone Approach") || path.Contains("blizzard");
             var settings = importer.GetOverrideSampleSettings("WebGL");
-            settings.loadType = isMusic ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
+            settings.loadType = isMusic ? AudioClipLoadType.CompressedInMemory : AudioClipLoadType.DecompressOnLoad;
             settings.compressionFormat = AudioCompressionFormat.Vorbis;
             settings.quality = 0.70f; // High quality 70% Vorbis (transparent audio)
             settings.preloadAudioData = true;
