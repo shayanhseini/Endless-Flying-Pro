@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BillboardWireframe
+  m_Shader: {fileID: 4800000, guid: 59dcea63152c37c4db1126c2a2747473, type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _BILLBOARDINGENABLED_ON
+  - _CLAMPLATITUDE_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _BillboardingEnabled: 1
+    - _ClampLatitude: 1
+    - _FadeDistance: 3
+    - _LatitudeOffset: 4
+    - _LatitudeSamples: 4
+    - _LatitudeStep: 2
+    - _Opacity: 0.5
+    - _ZOffset: 0.15
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []

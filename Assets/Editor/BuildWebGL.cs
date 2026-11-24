@@ -43,6 +43,14 @@ public static class BuildWebGL
             return;
         }
 
+        if (content == "bake_mirage")
+        {
+            Debug.Log("[BuildWebGL] Baking Mirage impostors for final chunk...");
+            MirageFinalChunkBaker.BakeAll();
+            File.WriteAllText(StatusPath, "MIRAGE_BAKED");
+            return;
+        }
+
         if (content == "profile_meshes")
         {
             Debug.Log("[BuildWebGL] Profiling meshes...");
