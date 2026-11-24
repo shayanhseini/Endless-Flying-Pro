@@ -133,9 +133,15 @@ namespace Mirage.Impostors.Elements
                 if (lodGroup == null || !isPartOfLodGroup)
                 {
                     LOD[] lods = new LOD[2];
-                    lods[0].renderers = new Renderer[sourceFilters.Count];
+                    List<Renderer> validRenderers = new List<Renderer>();
                     for (int i = 0; i < sourceFilters.Count; ++i)
-                        lods[0].renderers[i] = sourceFilters[i].GetComponent<Renderer>();
+                    {
+                        if (sourceFilters[i] == null) continue;
+                        Renderer r = sourceFilters[i].GetComponent<Renderer>();
+                        if (r != null && r.enabled)
+                            validRenderers.Add(r);
+                    }
+                    lods[0].renderers = validRenderers.ToArray();
                     lods[0].screenRelativeTransitionHeight = lodGroupSettings.lodPerformance;
                     lods[0].fadeTransitionWidth = 0.1f;
                     lodGroup = Undo.AddComponent<LODGroup>(sourceGo);
@@ -143,11 +149,20 @@ namespace Mirage.Impostors.Elements
                     lodGroup.animateCrossFading = false;
                     GameObject impostor = PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), sourceGo.transform) as GameObject;
                     Undo.RegisterCreatedObjectUndo(impostor, "Impostor Instance");
-                    impostor.transform.position = pivotExcentricity;
+                    
+                    // Compensate for parent local/lossy scale so impostor has exact 1:1 world scale
+                    Vector3 lossy = sourceGo.transform.lossyScale;
+                    if (Mathf.Abs(lossy.x) > 0.0001f && Mathf.Abs(lossy.y) > 0.0001f && Mathf.Abs(lossy.z) > 0.0001f)
+                    {
+                        impostor.transform.localScale = new Vector3(1f / lossy.x, 1f / lossy.y, 1f / lossy.z);
+                    }
+                    impostor.transform.localPosition = sourceGo.transform.InverseTransformPoint(pivotExcentricity);
+
                     lods[1].renderers = new MeshRenderer[] { impostor.GetComponent<MeshRenderer>() };
                     lods[1].screenRelativeTransitionHeight = lodGroupSettings.lodSizeCulling;
                     lods[1].fadeTransitionWidth = 0.1f;
                     lodGroup.SetLODs(lods);
+                    lodGroup.RecalculateBounds();
                     Undo.AddComponent<ImpostorReference>(lodGroup.gameObject).impostorObject = impostor;
                 }
                 else
@@ -161,11 +176,19 @@ namespace Mirage.Impostors.Elements
                         lods.CopyTo(newLods, 0);
                         GameObject impostor = PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), lodGroup.transform) as GameObject;
                         Undo.RegisterCreatedObjectUndo(impostor, "Impostor Instance");
-                        impostor.transform.position = pivotExcentricity;
+                        
+                        Vector3 lossy = lodGroup.transform.lossyScale;
+                        if (Mathf.Abs(lossy.x) > 0.0001f && Mathf.Abs(lossy.y) > 0.0001f && Mathf.Abs(lossy.z) > 0.0001f)
+                        {
+                            impostor.transform.localScale = new Vector3(1f / lossy.x, 1f / lossy.y, 1f / lossy.z);
+                        }
+                        impostor.transform.localPosition = lodGroup.transform.InverseTransformPoint(pivotExcentricity);
+
                         newLods[lods.Length - 1].screenRelativeTransitionHeight = lodGroupSettings.lodPerformance;
                         newLods[lods.Length].renderers = new MeshRenderer[] { impostor.GetComponent<MeshRenderer>() };
                         newLods[lods.Length].screenRelativeTransitionHeight = lodGroupSettings.lodSizeCulling;
                         lodGroup.SetLODs(newLods);
+                        lodGroup.RecalculateBounds();
                         if (reference == null)
                             Undo.AddComponent<ImpostorReference>(lodGroup.gameObject).impostorObject = impostor;
                         else

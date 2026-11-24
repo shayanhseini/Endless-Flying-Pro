@@ -20,13 +20,15 @@ public static class MirageFinalChunkBaker
         "Assets/Update-05/prefabs/Power_Tower.prefab",
         "Assets/Update-05/prefabs/helicopter.prefab",
         "Assets/Update-05/prefabs/borge.prefab",
-        "Assets/Update-05/prefabs/radar.prefab"
+        "Assets/Update-05/prefabs/radar.prefab",
+        "Assets/Update-05/prefabs/dchumvee.prefab",
+        "Assets/Prefabs/Game/Patriot.prefab"
     };
 
     [MenuItem("Mirage/Bake Final Chunk Props")]
     public static void BakeAll()
     {
-        Debug.Log("[MirageBaker] Starting Mirage Impostor generation for final chunk heavy props...");
+        Debug.Log("[MirageBaker] Starting Mirage Impostor generation for final chunk & defense props...");
 
         string outputFolder = "Assets/Mirage/Generated/FinalChunk";
         if (!AssetDatabase.IsValidFolder("Assets/Mirage/Generated"))
@@ -50,8 +52,8 @@ public static class MirageFinalChunkBaker
 
         ImpostorLODGroupPreset lodPreset = ScriptableObject.CreateInstance<ImpostorLODGroupPreset>();
         lodPreset.setupLOD = true;
-        lodPreset.lodPerformance = 0.20f; // Switch to impostor when screen height < 20%
-        lodPreset.lodSizeCulling = 0.01f; // Cull when screen height < 1%
+        lodPreset.lodPerformance = 0.06f; // Switch to impostor when screen height < 6% (seamless transition)
+        lodPreset.lodSizeCulling = 0.0001f; // Do NOT cull in distance (never turn off or vanish)
 
         int successCount = 0;
         foreach (string path in PrefabPaths)
@@ -98,13 +100,20 @@ public static class MirageFinalChunkBaker
 
         instance.transform.position = Vector3.zero;
         instance.transform.rotation = Quaternion.identity;
-        instance.transform.localScale = Vector3.one;
+        instance.transform.localScale = origScale;
 
         // Clean any previous impostor instances or LOD groups if already baked
         LODGroup existingLod = instance.GetComponent<LODGroup>();
         if (existingLod != null)
         {
             UnityEngine.Object.DestroyImmediate(existingLod);
+        }
+        ImpostorReference existingImpRef = instance.GetComponent<ImpostorReference>();
+        if (existingImpRef != null)
+        {
+            if (existingImpRef.impostorObject != null)
+                UnityEngine.Object.DestroyImmediate(existingImpRef.impostorObject);
+            UnityEngine.Object.DestroyImmediate(existingImpRef);
         }
         for (int i = instance.transform.childCount - 1; i >= 0; i--)
         {

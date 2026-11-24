@@ -43,6 +43,14 @@ public static class BuildWebGL
             return;
         }
 
+        if (content == "check_mirage")
+        {
+            Debug.Log("[BuildWebGL] Checking Mirage status...");
+            CheckFinalChunkMirage.RunDiagnostic();
+            File.WriteAllText(StatusPath, "MIRAGE_CHECKED");
+            return;
+        }
+
         if (content == "bake_mirage")
         {
             Debug.Log("[BuildWebGL] Baking Mirage impostors for final chunk...");
