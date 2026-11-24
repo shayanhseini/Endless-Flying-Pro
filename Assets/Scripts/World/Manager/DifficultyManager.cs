@@ -31,7 +31,7 @@ public class DifficultyManager : MonoBehaviour
     [SerializeField] private int easyMaxObstacles = 2;
     [SerializeField] private float easyBaseSpeed = 9.0f;
     [SerializeField] private float easyMaxSpeed = 10.5f;
-    [SerializeField, Range(0f, 1f)] private float easyDefenseChance = 0.0f;
+    [SerializeField, Range(0f, 1f)] private float easyDefenseChance = 0.60f;
     [SerializeField] private Vector2 easyTurnSpeedRange = new Vector2(0.20f, 0.30f);
     [SerializeField] private Vector2 easyPredictionRange = new Vector2(0.10f, 0.20f);
     [SerializeField] private int easyShieldBonusScore = 150;
@@ -41,7 +41,7 @@ public class DifficultyManager : MonoBehaviour
     [SerializeField] private int normalMaxObstacles = 11;
     [SerializeField] private float normalBaseSpeed = 10.0f;
     [SerializeField] private float normalMaxSpeed = 12.0f;
-    [SerializeField, Range(0f, 1f)] private float normalDefenseChance = 0.60f;
+    [SerializeField, Range(0f, 1f)] private float normalDefenseChance = 0.90f;
     [SerializeField] private Vector2 normalTurnSpeedRange = new Vector2(0.70f, 0.85f);
     [SerializeField] private Vector2 normalPredictionRange = new Vector2(0.65f, 0.85f);
     [SerializeField] private int normalShieldBonusScore = 0;

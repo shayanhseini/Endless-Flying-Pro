@@ -6460,7 +6460,7 @@ MonoBehaviour:
   gameManager: {fileID: 4439528306922798773}
   progressBar: {fileID: 85330997}
   movingImage: {fileID: 2144512219}
-  extraTime: 0
+  extraTime: 6
   pathSegments: 24
   checkpointCount: 7
   pathStart: {x: -340, y: -15}
@@ -15069,7 +15069,7 @@ MonoBehaviour:
   easyMaxObstacles: 2
   easyBaseSpeed: 9
   easyMaxSpeed: 10.5
-  easyDefenseChance: 0
+  easyDefenseChance: 0.6
   easyTurnSpeedRange: {x: 0.2, y: 0.3}
   easyPredictionRange: {x: 0.1, y: 0.2}
   easyShieldBonusScore: 150
@@ -15077,7 +15077,7 @@ MonoBehaviour:
   normalMaxObstacles: 11
   normalBaseSpeed: 10
   normalMaxSpeed: 12
-  normalDefenseChance: 0.6
+  normalDefenseChance: 0.9
   normalTurnSpeedRange: {x: 0.7, y: 0.85}
   normalPredictionRange: {x: 0.65, y: 0.85}
   normalShieldBonusScore: 0

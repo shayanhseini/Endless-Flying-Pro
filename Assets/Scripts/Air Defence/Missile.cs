@@ -143,7 +143,8 @@ public class Missile : MonoBehaviour
         isLocked = false;
         isMoving = true;
         
-        moveSoundEffect.SetActive(true);
+        if (moveSoundEffect != null)
+            moveSoundEffect.SetActive(true);
     }
 
 
@@ -452,6 +453,14 @@ public class Missile : MonoBehaviour
             Time.deltaTime;
     }
 
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision != null && collision.collider != null)
+        {
+            OnTriggerEnter(collision.collider);
+        }
+    }
 
     private void OnTriggerEnter(Collider other)
     {

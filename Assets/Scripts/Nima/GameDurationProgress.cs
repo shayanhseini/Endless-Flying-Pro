@@ -9,7 +9,7 @@ public class GameDurationProgress : MonoBehaviour
     [SerializeField] private RectTransform movingImage;
 
     [Header("Extra Time")]
-    [SerializeField] private float extraTime = 0f;
+    [SerializeField] private float extraTime = 6f;
 
     [Header("Cinematic Path")]
     [SerializeField] private int pathSegments = 24;
@@ -90,11 +90,11 @@ public class GameDurationProgress : MonoBehaviour
         if (gameManager == null || gameManager.State != GameState.Playing)
             return;
 
-        float duration = totalDuration > 0f ? totalDuration : 65f;
-        float remaining = Mathf.Clamp(gameManager.RemainingTime, 0f, duration);
+        float baseDuration = totalDuration > 0f ? totalDuration : 65f;
+        float fullDuration = baseDuration + extraTime;
 
-        // Perfectly synchronized with flight duration and runway touchdown
-        float progress = Mathf.Clamp01((duration - remaining) / duration);
+        timer += Time.deltaTime;
+        float progress = Mathf.Clamp01(timer / fullDuration);
 
         if (Mathf.Abs(progress - lastVisualProgress) >= 0.001f || progress >= 1f || progress <= 0f)
         {

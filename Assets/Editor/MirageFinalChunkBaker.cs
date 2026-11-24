@@ -22,7 +22,7 @@ public static class MirageFinalChunkBaker
         { "helicopter", new Vector3(1f, 1f, 1f) },
         { "awacs", new Vector3(1f, 1f, 1f) },
         { "dchumvee", new Vector3(0.042834204f, 0.042834204f, 0.042834204f) },
-        { "Patriot", new Vector3(1f, 1f, 1f) }
+        { "Patriot", new Vector3(0.026742278f, 0.026742278f, 0.026742278f) }
     };
 
     private static readonly string[] PrefabPaths = new string[]

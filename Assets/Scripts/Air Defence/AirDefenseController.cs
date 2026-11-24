@@ -46,6 +46,18 @@ public class AirDefenseController : MonoBehaviour
     {
         hasFired = false;
 
+        if (player == null)
+        {
+            GameObject playerObject =
+                GameObject.FindGameObjectWithTag("Player");
+
+            if (playerObject != null)
+            {
+                player = playerObject.transform;
+                SetInitialRotation();
+            }
+        }
+
         if (radar != null)
             radar.gameObject.SetActive(true);
 
@@ -131,6 +143,7 @@ public class AirDefenseController : MonoBehaviour
 
         missile.SetTarget(player);
 
-        launchSound.Play();
+        if (launchSound != null)
+            launchSound.Play();
     }
 }
