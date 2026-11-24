@@ -37,27 +37,12 @@ public class WorldChunk : MonoBehaviour
 
         try
         {
-            // 1. Ensure all military base props are active and visible (no empty airfield!).
-            // Re-activate any previously disabled props so the base is full, dense, and visually rich.
-            Transform[] transforms = finalGround.GetComponentsInChildren<Transform>(true);
-            foreach (Transform t in transforms)
-            {
-                if (t == null || t == finalGround.transform) continue;
+            // Do NOT touch SetActive on any child object!
+            // Retain the exact original prefab active/inactive hierarchy arrangement.
 
-                string objName = t.gameObject.name;
-                // Keep hit effects or special invisible objects managed by their own controllers
-                if (!objName.Contains("Missile Hit Effect") && !objName.Contains("Particle"))
-                {
-                    if (!t.gameObject.activeSelf)
-                    {
-                        t.gameObject.SetActive(true);
-                    }
-                }
-            }
-
-            // 2. Disable shadow casting and expensive shader features on ALL objects in finalGround (background props, AWACS, humvees, buildings, towers).
+            // Disable shadow casting and expensive shader features on active background props.
             // This cuts massive shadow-caster draw calls in WebGL while keeping the visual fidelity 100% intact.
-            Renderer[] renderers = finalGround.GetComponentsInChildren<Renderer>(true);
+            Renderer[] renderers = finalGround.GetComponentsInChildren<Renderer>(false);
             foreach (Renderer r in renderers)
             {
                 if (r == null) continue;
@@ -73,9 +58,9 @@ public class WorldChunk : MonoBehaviour
                 r.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
             }
 
-            // 3. Disable static colliders in finalGround that the player plane never hits.
+            // Disable static colliders on active props in finalGround that the player plane never hits.
             // When chunk.Move() moves finalGround every frame, active static colliders force PhysX BVH rebuild!
-            Collider[] colliders = finalGround.GetComponentsInChildren<Collider>(true);
+            Collider[] colliders = finalGround.GetComponentsInChildren<Collider>(false);
             foreach (Collider c in colliders)
             {
                 if (c == null) continue;
