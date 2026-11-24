@@ -18,7 +18,6 @@ public static class MirageFinalChunkBaker
         "Assets/Update-05/prefabs/building02.prefab",
         "Assets/Update-05/prefabs/main-building.prefab",
         "Assets/Update-05/prefabs/Power_Tower.prefab",
-        "Assets/Update-05/prefabs/dchumvee.prefab",
         "Assets/Update-05/prefabs/helicopter.prefab",
         "Assets/Update-05/prefabs/borge.prefab",
         "Assets/Update-05/prefabs/radar.prefab"
@@ -91,6 +90,11 @@ public static class MirageFinalChunkBaker
         GameObject instance = PrefabUtility.InstantiatePrefab(sourcePrefab) as GameObject;
         if (instance == null)
             instance = UnityEngine.Object.Instantiate(sourcePrefab);
+
+        // Record original transform so baking doesn't destroy custom scale/offsets
+        Vector3 origPos = instance.transform.localPosition;
+        Quaternion origRot = instance.transform.localRotation;
+        Vector3 origScale = instance.transform.localScale;
 
         instance.transform.position = Vector3.zero;
         instance.transform.rotation = Quaternion.identity;
@@ -192,6 +196,11 @@ public static class MirageFinalChunkBaker
                 lodPreset,
                 impostorPrefabPath
             );
+
+            // Restore original local transform before saving
+            instance.transform.localPosition = origPos;
+            instance.transform.localRotation = origRot;
+            instance.transform.localScale = origScale;
 
             // Save changes back to original prefab asset
             PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
