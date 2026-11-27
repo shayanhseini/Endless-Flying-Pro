@@ -91,9 +91,9 @@
   </div>
 
   <!-- DroneVision engine: starts loading the pose model while Unity loads -->
-  <script type="module" src="dronevision/unity-bridge.js?v=0.1.2611242043"></script>
+  <script type="module" src="dronevision/unity-bridge.js?v=0.1.2611271840"></script>
 
-  <script src="Build/739fc499463b4e21f0f51e5760f9fe6b.loader.js?v=0.1.2611242043"></script>
+  <script src="Build/739fc499463b4e21f0f51e5760f9fe6b.loader.js?v=0.1.2611271840"></script>
   <script>
     var bar = document.getElementById('loading-bar');
     var loadingText = document.getElementById('loading-text');
@@ -107,13 +107,13 @@
     dpr = Math.max(1.0, Math.min(dpr, 1.25));
 
     createUnityInstance(document.querySelector('#unity-canvas'), {
-      dataUrl: "Build/d9b4cde88abad03a6f0023f3280dd120.data",
+      dataUrl: "Build/d21b7ab94bc23dc1cfb2411abe290812.data",
       frameworkUrl: "Build/59c11e9b5001ee51e4fba78442b58445.framework.js",
       codeUrl: "Build/5340e5e01bdf0890e481a2e0076cb095.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "ShayanHsseini",
       productName: "Endless Flying Project",
-      productVersion: "0.1.2611242043",
+      productVersion: "0.1.2611271840",
       devicePixelRatio: dpr,
     }, function (p) {
       if (bar) bar.style.width = (100 * p) + '%';
